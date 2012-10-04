@@ -1,0 +1,23 @@
+#-*-Python-*-
+# Sconscipt for <dcmw>/test/test
+# T. M. Kelley
+# Jan 03, 2011
+# Input to scons: meant to be called from a master SConstruct script
+# primary target: check
+# (c) Copyright 2011 LANSLLC all rights reserved.
+
+
+# add these to the "check" target
+# Alias("check",lib_target)
+# Alias("check",test_targets)
+
+SConscript([
+    "./lib/SConscript",
+    ])
+
+# version
+
+__id__ = "$Id: template_test_SConscript,v 1.1.1.1 2008/12/02 23:27:42 tkelley Exp $"
+
+# End of file
+

@@ -1,0 +1,119 @@
+#-*-Python-*-
+# Sconstruct for nut
+# T. M. Kelley
+# Dec 18, 2010
+# Input to scons
+# (c) Copyright 2010 LANSLLC all rights reserved.
+
+import os
+
+package_name = "bh-3"
+
+target  = package_name
+
+excluded_sources = ["bh-2.cc"]
+
+# source files
+sources = filter( lambda x: x[-3:] == ".cc" and x not in excluded_sources,
+                  os.listdir('.'))
+
+# headers for export 
+headers = filter( lambda x: x[-3:] == ".hh", os.listdir('.'))
+
+
+
+# pick up information from master
+Import('env','build_root','export_libdir','export_incdir',"export_bindir",
+       'project_incdir',"libs","libpaths","cpppaths","cxxflags","cflags",
+       "cppflags","cppdefines",
+       "ldflags","arflags")
+
+# # external pieces:
+# scons_dir = "../scons"
+# execfile(scons_dir + "/scons_master")
+# execfile(scons_dir + "/scons_project")
+
+# where to build
+from os.path import join
+build_dir    = join(build_root,package_name)
+full_target  = join(build_dir,target)
+full_sources = map( lambda x: join(build_dir,x), sources)
+full_headers = map( lambda x: join(build_dir,x), headers)
+
+# install dirs
+
+install_bindir = export_bindir
+install_incdir = join(export_incdir,package_name)
+install_cnfdir = join(export_incdir,package_name,package_name)
+
+cpppaths += [
+    ".",
+    project_incdir,
+    install_incdir, # provide the C++ build with access to pkg/config.h
+    ]
+
+
+cxxflags += ""
+
+libpaths += [export_libdir]
+
+libs += ["nut"]
+
+# Another avenue for user to influence preprocessing 
+try:
+    external_cppflags = os.environ['CPPFLAGS']
+    cppflags += " %s " % external_cppflags
+except KeyError: pass
+
+# # load the build environment
+# compiler_file = "scons_compiler_%s_%s_%s" % (par, arch, comp_family)
+# execfile(scons_dir + "/%s" % compiler_file)
+
+# build in the build dir, not in the source dir!
+env.VariantDir(build_dir, '.')
+
+
+# What to do:
+# 1. configure config.h
+
+## pass key,value pairs to the configure gen script through this dictionary.
+## You'll need to supply a python module named gen_<package_name>_config; that
+## module must have a function named generate_config_h.  See
+## draco/src/par/gen_c4_config for an example.
+# config_h_config = {
+#     }
+
+# env['config'] = config_h_config
+# import gen_nut_config 
+# configurator  = Builder( action = gen_nut_config.generate_config_h)
+# env["BUILDERS"]["GenConfig"] = configurator
+# config_target = env.GenConfig( join(build_dir,package_name,'config.h'),
+#                                'config.h.pyin')
+# env.Alias("configure", config_target)
+
+# 2. build the library
+bin_target = env.Program( full_target, full_sources,LIBPATH=libpaths, LIBS=libs)
+
+# Requires(lib_target, config_target)
+
+# 3. install targets for library, headers
+env.Install( install_bindir, bin_target)
+env.Install( install_incdir, headers)
+# config_install = env.Install( install_cnfdir,
+#                               [join(build_dir,package_name,"config.h")])
+
+# influential alias
+install_target = env.Alias( "install", [install_bindir,
+                                        install_incdir])
+
+# List of default tasks:
+env.Default( [
+    # config_install,   # install config.h before compiling
+    install_target    # make lib, install lib, headers
+    ])
+
+# version
+__id__ = "$Id$"
+
+# End of file
+

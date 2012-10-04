@@ -1,0 +1,111 @@
+#-*-Python-*-
+# Sconscipt for <dcmw>/test/libtest
+# T. M. Kelley
+# Jan 03, 2011
+# Input to scons: meant to be called from a master SConstruct script
+# primary target: check
+# (c) Copyright 2011 LANSLLC all rights reserved.
+
+package_name = "nut"
+
+tested_lib  = package_name
+
+import os
+
+Import('env','build_root','export_libdir','export_incdir',
+       'project_incdir','project_libdir',"libs","libpaths","cpppaths",
+       "cxxflags","cflags","cppflags","cppdefines",
+       "ldflags","arflags"
+       )
+
+excluded_sources = ["nut_Test_application.cc"]
+
+# source files, targets
+tst_sources      = ["main.cc"]
+tst_targets      = [src[:-3] for src in tst_sources]
+test_lib         = package_name + "_test"
+test_lib_sources = [test_lib + ".cc","test_aux.cc","expect.cc"] + \
+                   filter( lambda x: (x[-3:] == ".cc") and \
+                           "Test" in x and \
+                           x not in excluded_sources,
+                           os.listdir('.')) \
+                           
+test_lib_headers = [test_lib + ".hh"]
+
+# external pieces:
+# scons_dir = "/Users/tkelley/dev/cvs/neutrino/nut/nut-scalar/scons"
+# execfile(scons_dir + "/scons_master")
+# execfile(scons_dir + "/scons_project")
+
+# where to build
+from os.path import join
+build_dir     = join(build_root,package_name,"test")
+full_test_lib = join(build_dir,test_lib)
+full_tst_sources = map( lambda x: join(build_dir,x), tst_sources)
+full_lib_sources = map( lambda x: join(build_dir,x), test_lib_sources)
+full_headers     = map( lambda x: join(build_dir,x), test_lib_headers)
+full_tst_targets = map( lambda x: join(build_dir,x), tst_targets)
+
+install_files = ["spherical-d-to-b-tests-cxx.txt",
+                 "generate-power-law-energies-tests-cxx.txt"
+    ]
+
+# install dirs
+install_incdir = join(export_incdir,package_name)
+
+libs += [
+    test_lib,
+    tested_lib,
+    ]
+
+libpaths += [
+    build_dir,
+    project_libdir,
+    ]
+
+cpppaths += [
+    #project_incdir,
+    #install_incdir, # provide the C++ build with access to pkg/config.h
+    ]
+
+cxxflags += ""
+
+env['CPPPATH'] += cpppaths
+
+# Another avenue for user to influence preprocessing
+try:
+    external_cppflags = os.environ['CPPFLAGS']
+    cppflags += " %s " % external_cppflags
+except KeyError: pass
+
+# # build environment
+# compiler_file = "scons_compiler_%s_%s_%s" % (par, arch, comp_family)
+# execfile(scons_dir + "/%s" % compiler_file)
+
+# build in the build directory
+env.VariantDir(build_dir, '.')
+
+
+# What to do:
+# 1. build the test library
+lib_target = env.Library( full_test_lib, full_lib_sources)
+
+# 2. build the test programs
+test_targets = [env.Program( t,s, LIBS=libs, LIBPATH=libpaths) \
+                for (t,s) in zip(full_tst_targets,full_tst_sources)]
+
+# 3. install test files
+install_target = env.Install(build_dir,install_files)
+
+# add these to the "check" target
+Alias("check",lib_target)
+Alias("check",test_targets)
+Alias("check",install_target)
+
+
+# version
+
+__id__ = "$Id: template_test_SConscript,v 1.1.1.1 2008/12/02 23:27:42 tkelley Exp $"
+
+# End of file
+

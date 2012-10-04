@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# scons_project.py
+# T. M. Kelley
+# Jan 22, 2007
+# Header for scons_project
+# (c) Copyright 2006 LANSLLC all rights reserved.
+
+# Top level paths. Modify these as needed
+
+# where built libs & headers go
+# There are currently three possible suffixes:
+#     1. architecture ('x86' )
+#     2. scalar/mpi
+# Could add more for (non-)debug, (non-)opt?
+
+"""
+scons_project: scons input file that structures the build and export trees.
+
+No changes need be made to this file, unless one wishes to change those structures.  Be warned that this may break the build system, which relies on a consistent notion of how these directories are laid out.
+
+The user must furnish a file in this directory called 'paths'. See
+'sample_paths' for a template.
+"""
+
+l_paths_err_msg = """Need to furnish a paths file in the scons directory
+Please consult the file 'readme_scons' in the scons directory."""
+
+from os.path import join
+import os
+
+try:
+    execfile( join(scons_dir, "paths"))
+except IOError, msg:
+    if "No such file or directory" in msg:
+        raise RuntimeError(l_paths_err_msg)
+    else:
+        raise
+
+## insert debug into path name if doing debug build
+if debug != 0:
+    export_head, export_tail = os.path.split(export_stem)
+    build_head, build_tail   = os.path.split(build_stem)
+    export_stem = os.path.join( export_head,"debug-" + export_tail)
+    build_stem  = os.path.join( build_head, "debug-" + build_tail)
+
+## insert opt into paths
+if opt != 0:
+    export_head, export_tail = os.path.split(export_stem)
+    build_head, build_tail   = os.path.split(build_stem)
+    export_stem = os.path.join( export_head,"opt-%i-" % opt + export_tail)
+    build_stem  = os.path.join( build_head, "opt-%i-" % opt + build_tail)
+    
+export_stem  = os.path.expanduser(export_stem)
+build_stem   = os.path.expanduser(build_stem)
+
+print export_stem
+print build_stem
+
+export_root = export_stem % (arch, par)
+build_root  = build_stem % (arch, par)
+
+# allow for command line override
+try:
+    export_root = ARGUMENTS.get("prefix",export_root)
+    build_root  = ARGUMENTS.get("build_root",build_root)
+except:
+    pass
+
+
+# End of top level paths--everything else will be done relative to these
+
+## --- Binary dirs
+export_bindir = join(export_root, "bin")
+
+
+## --- Include dirs
+export_incdir      = join(export_root, "include")
+
+## --- Lib dirs
+export_libdir      = join(export_root, "lib")
+
+## Import directories: where to find imports. Not surprisingly, the same as the export
+## dirs, just different names to use.
+
+## --- inc dirs
+project_incdir = export_incdir
+
+## --- lib dirs
+project_libdir = export_libdir
+
+
+
+# version
+__id__ = "$Id$"
+
+# End of file

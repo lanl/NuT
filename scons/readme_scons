@@ -1,0 +1,87 @@
+SCons Quick Start
+-----------------
+1. in directory scons, cp sample_local_paths paths.
+2. uncomment/edit strings export_stem and build_stem to point somewhere reasonable.
+3. edit scons/random123 to point to wherever you have the Random123 include files (the directory that has Random123 directory in it; iow we include Random123/philox.h).
+4. from top directory, run 
+$ scons
+or 
+$ scons -j <p>
+5. build tests: from top dir,
+$ scons check
+or
+$ scons check -j <p>
+6. run tests from tests/lib:
+$ /path/to/build/nut/tests/main
+
+Use
+---
+To build with scons, first configure your top level directory structure. Kindly copy 'sample_local_paths' to 'paths' (the name is important), then edit the values for build_stem and export_stem to wherever you'd like builds and installs to be based.  Note that the build system expects to append _<arch>_<c4> to your selections, so be sure to allow room for them with '%s's.  The example in sample_local_paths should clarify that.
+
+export_stem sets the path to which headers, libraries, and executables will be exported.  The build system is set to mangle this stem with architecture, parallelism, and reproducibility, so you need to provide a string with 3 format symbols to resolve. 
+
+build_stem similarly sets the root build directory.
+
+Update 1/20/09: Paul and I have been working on a script  called "build_all.py" in the bin directory (sibling of scons, draco, etc.)  It builds everything, or tries to.  Use build_all.py --help for command line options. 
+
+In the following command line, options are shown as [optname=choice1,choice2], with the default indicated. 
+
+Command line options:
+---------------------
+
+arch: architecture. acceptable values are [x86 (default), ppe].
+
+c4: [mpi (or just m, default), scalar (or just s)]
+
+compiler: [gnu(default)] 
+
+Note: arch, c4, and compiler together determine which compiler scons file is selected, which in turn determines which compiler is used, and how.
+
+
+Then build:
+scons [c4=scalar,mpi(default)] [arch=ppe,x86(default)] [compiler=xlc,gnu(default)] [repro=0,1(default)] [-j num_nodes]
+
+Then, if desired, build the tests:
+scons check
+
+--or--
+
+scons [c4=scalar,mpi(default)] [arch=ppe,x86(default)] [compiler=xlc,gnu(default)] [repro=0,1(default)] [-j num_nodes] check
+
+(You want the same option set for check as for the regular build.)
+
+This builds the tests, but does not run them. We're working on a script to do that.
+
+To clean,
+scons [options] -c
+scons [options] -c check
+
+Configuration
+-------------
+Our configuration is limited to generating a few macros in config.h files. 
+
+Previously, generating config.h files was a separate step; I have now added this to the list of default build targets, so you should no longer need to "scons config". The following caveat may still apply.
+
+Note that the configure step is brittle: it won't detect that you have changed what controls the input to that file. That is, suppose you have built repro=1, and now you want to build repro=0: you must first clean out the configure products, build configure again, and then build.  
+
+Philosophy
+----------
+Each source directory has one or two input files for scons; these are called SConstruct or SConscript.  When scons is invoked, it reads these files.  In many directories, the SCons input file points to one or more subdirectories; the scons input files in those directories get read as well.  From reading these input files, scons constructs a list of things to build, including dependencies.  SCons then builds these in parallel. It's pretty good at figuring out the dependence graph, and keeping the specified number of processes busy. 
+
+The scons input files are themselves Python scripts, so you can do a lot of the things you can do with a full-on programming language.  (Namespace visibility issues seem a bit wonky, but that may be the dim understanding of the present user.) SCons itself forces very little structure on the user, so a lot of the structure you see was made up for our project.  
+
+The basic idea is that we factor information about compilers, external pieces, and build/export trees into a set of small(ish) files, and place them in the "scons" directory.  The scons input files define the source and header files, what to build, and where to install the build products.  The input files get a framework from the scons files; they load these files (via execfile*) in a particular order. First, they define scons_dir, the relative path to our directory named "scons".  Next they load scons_master, which sifts through command line arguments and defines a number of variables configuring the build; scons_master also defines a set of variables like cpppaths, cxxflags, etc. with null values.  The source input file (and the scons files) configures the build by adding to these variables programatically. For instance, in the imc/test directory, it's necessary to link against librtt_mc, so one adds "libs += [rtt_mc]".  
+
+SCons uses objects called Environments to build.  One of the nice things about scons is you can define multiple environments to get multiple builds out of the same source.  Once all the configuration is done, the scons input file loads the compiler file, which uses the values of cxxflags & co. to configure itself. For instance, the source input file uses the values of 'arch', 'c4', and 'compiler' to decide which scons_compiler file to load. The scons_compiler file defines the build environment.  This is important--scons allows us to factor out the compiler from the set of build instructions. 
+
+In each library source directory, we add a custom "Builder" object to the environment. This "configurator" generates the config.h file for that library. So configuration is really just another build step. 
+
+Finally, we define some things for the environment to do. In lib dirs, we build the library, and install it, its headers, and its config.h. In test dirs, we build the test lib, build the list of test programs, and (wherever we've thought of it) copy resource files to the test build directory.
+In some cases, the build environment is given a default list of things to do, in other cases, the things to do are attached to targets (like check).
+
+
+* execfile is perhaps a bit harsh as it dumps a lot of stuff into the global namespace, but it gets the job done. We'll make the next one even better ;)
+
+
+The End. 
+

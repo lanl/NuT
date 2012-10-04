@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+# scons_master.py
+# T. M. Kelley
+# Dec. 18, 2010
+# scons_master for NuT. Parses command line and initializes the build
+# requirements. 
+# (c) Copyright 2006 LANSLLC all rights reserved.
+
+import os
+
+# build variables: parse, validate CL 
+par = ARGUMENTS.get("par","scalar")
+if par == 's': par = "scalar"
+if par == 'm': par = "mpi"
+par = par.lower()
+if par not in ('mpi', 'scalar'):
+    raise ValueError("par must be 'mpi' ('m', default) or 'scalar' ('s')")
+
+mpi_flavor = ARGUMENTS.get("mpi","openmpi")
+mpi_flavor = mpi_flavor.lower()
+if mpi_flavor not in ('openmpi'):
+    raise ValueError("supported MPI distributions are 'openmpi' (you indicated '%s')" % mpi_flavor)
+
+arch = ARGUMENTS.get("arch","x86")
+if arch == 'x': arch = "x86"
+arch = arch.lower()
+if arch not in ('x86',):
+    raise ValueError("arch must be 'x86' ('x', default) ")
+
+comp_family = ARGUMENTS.get("comp_family","gnu")
+comp_family = ARGUMENTS.get("comp",comp_family)
+if comp_family == 'g': comp_family = "gnu"
+#if comp_family == 'p': comp_family = "ppc"
+comp_family = comp_family.lower()
+if comp_family not in ('gnu'):
+    raise ValueError("""comp_family family must be 'gnu' ('g', default)\nwrite scons_comp_family_%s_%s_%s to extend""" % (par, arch, comp_family))
+
+opt = ARGUMENTS.get("opt",'3')
+opt = int(opt)
+
+debug = ARGUMENTS.get("debug",'0')
+debug = int(debug)
+if debug not in [0,1]:
+    msg = "debug must be one of 0 (off, default) or 1 (debug on)"
+    msg += " (you specified '%s')" % debug
+    raise ValueError(msg)
+
+dbc = ARGUMENTS.get("dbc",'0')
+dbc = int(dbc)
+if dbc not in range(8):
+    msg = "dbc must be one of 0 (off, default) or 1-7 (cf. DBC documentation)"
+    msg += " (you specified '%s')" % dbc
+    raise ValueError(msg)
+    
+loglevel = ARGUMENTS.get("loglevel",'0')
+loglevel = int(loglevel)
+if loglevel not in range(8):
+    msg = "loglevel must be one of 0 (off, default) or 1-7 (cf. CLUBIMC_DIAGNOSTICS documentation in clubimc/src/utils/Diagnostics.hh)"
+    msg += " (you specified '%s')" % loglevel
+    raise ValueError(msg)
+    
+timelevel = ARGUMENTS.get("timelevel",'0')
+timelevel = int(timelevel)
+if timelevel not in range(3):
+    msg = "timelevel must be one of 0 (off, default) or 1-2 (cf. CLUBIMC_TIMING documentation in clubimc/src/utils/Timing.hh)"
+    msg += " (you specified '%s')" % timelevel
+    raise ValueError(msg)
+    
+# select the abi to use
+# ansatz: if there's something about '64' in uname, it's a 64b system
+default_abi = '64'
+if sum(map(lambda x: 'x86_64' in x or 'ppc64' in x,os.uname())):
+    default_abi = '64'
+build_precision = ARGUMENTS.get("abi",default_abi)
+if build_precision not in ('32', '64'):
+    msg = "abi must be 32 or 64 (default),"
+    msg += " (you entered '%s')" % build_precision
+    raise ValueError(msg)
+if build_precision == '32':
+    build_precision = 32
+else:
+    build_precision = 64
+
+# get a build number
+# look first on command line
+build_no = ARGUMENTS.get("build_num",0)
+# if nothing from CL, look for file 'build_num' in scons dir
+if build_no == 0:
+    build_no_file = "build_num"
+    # get directory in which scons files (e.g. this one) live
+    import inspect
+    sm_filename = inspect.getfile( inspect.currentframe())
+    this_dir = os.path.dirname( os.path.abspath(sm_filename))
+    # use value of build number cached in that file
+    # Note this doesn't change that value.  The idea is that a build
+    # number will be assigned by a script like build_all, and invocations
+    # of this script will simply use that value.
+    try:
+        intext = file(os.path.join(this_dir, build_no_file)).readlines()
+        build_no = int(intext[0].split()[-1])
+    except IOError,msg:
+        # if file doesn't exist, provide user with one
+        if "No such file or directory" in msg:
+            build_no = 1
+            outtext = "build_num = %i\n" % build_no
+            file(os.path.join(this_dir, build_no_file),"w").write(outtext)
+            
+isLinux  = (os.uname()[0] == "Linux")
+isDarwin = (os.uname()[0] == "Darwin")
+
+# these variables are populated by the scripts that use the build system.
+# They enable scripts to specify their requirements to the compiler.
+libs       = []
+libpaths   = []
+cpppaths   = []
+cxxflags   = ""
+cflags     = ""
+cppflags   = ""
+cppdefines = []
+ldflags    = ""
+arflags    = ""
+
+# End of file

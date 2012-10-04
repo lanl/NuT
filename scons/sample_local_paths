@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# sample_local_paths.py
+# T. M. Kelley
+# Dec 03, 2008
+# (c) Copyright 2008 LANSLLC all rights reserved.
+
+"""
+sample_local_paths: template + example of how to set up your paths. Copy this
+to 'local_paths', and commence with customization.
+
+You must define the following strings:
+    export_stem
+    build_stem
+"""
+
+## You must provide an export stem, scons_project will resolve the strings
+## to form the prefix, or export root.  (It's written this way for a reason!)
+## The three strings resolve to architecture (x86/cell), c4 (scalar/mpi), and
+## reproducibility (""/"_nr").
+
+## Example:
+## export_stem = "/home/me/code/mcphd/export/091912_%s_%s"
+
+# where would you like your code built? Same deal, except 
+## Example:
+## build_stem = "/home/me/code/mcphd/export/091912_%s_%s" 
+
+# End of file
