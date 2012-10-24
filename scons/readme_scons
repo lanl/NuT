@@ -1,7 +1,7 @@
 SCons Quick Start
 -----------------
 1. in directory scons, cp sample_local_paths paths.
-2. uncomment/edit strings export_stem and build_stem to point somewhere reasonable.
+2. uncomment/edit strings export_stem and build_stem to point somewhere you find reasonable.
 3. edit scons/random123 to point to wherever you have the Random123 include files (the directory that has Random123 directory in it; iow we include Random123/philox.h).
 4. from top directory, run 
 $ scons

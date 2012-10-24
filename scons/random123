@@ -1,0 +1,10 @@
+# -*- Python -*-
+# Sconstruct for Random123
+# T. M. Kelley
+# Jan 6, 2012
+# Input to scons
+# (c) Copyright 2010 LANSLLC all rights reserved.
+
+cpppaths += ["/PATH/TO/Random123-1.04/include"]
+
+# end of file
