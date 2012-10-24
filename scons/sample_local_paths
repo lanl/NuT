@@ -19,10 +19,10 @@ You must define the following strings:
 ## reproducibility (""/"_nr").
 
 ## Example:
-## export_stem = "/home/me/code/mcphd/export/091912_%s_%s"
+## export_stem = "/home/me/code/NuT/export/091912_%s_%s"
 
 # where would you like your code built? Same deal, except 
 ## Example:
-## build_stem = "/home/me/code/mcphd/build/091912_%s_%s" 
+## build_stem = "/home/me/code/NuT/build/091912_%s_%s" 
 
 # End of file
