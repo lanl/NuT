@@ -23,6 +23,6 @@ You must define the following strings:
 
 # where would you like your code built? Same deal, except 
 ## Example:
-## build_stem = "/home/me/code/mcphd/export/091912_%s_%s" 
+## build_stem = "/home/me/code/mcphd/build/091912_%s_%s" 
 
 # End of file
