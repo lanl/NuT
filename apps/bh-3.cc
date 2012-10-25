@@ -37,42 +37,50 @@
 #include <execinfo.h>
 #include <iterator>
 
-using namespace nut;
+typedef nut::Opacity<nut::geom_t>        op_t;
+typedef nut::Velocity<nut::geom_t>       Velocity_t;
 
-typedef nut::Opacity<geom_t>        op_t;
-typedef nut::Velocity<geom_t>       Velocity_t;
-
-typedef nut::Particle<geom_t,rng_t> p_t;
-typedef nut::Tally<geom_t>          tally_t;
+typedef nut::Particle<nut::geom_t,nut::rng_t> p_t;
+typedef nut::Tally<nut::geom_t>          tally_t;
 typedef nut::Census<p_t>            census_t;
 
-typedef std::vector<geom_t>   vg;
+typedef std::vector<nut::geom_t>   vg;
 typedef std::vector<size_t>   vsz;
 typedef nut::Null_Log         log_t;
 // typedef nut::Std_Log         log_t;
-typedef nut::MatState<geom_t> MatState_t;
+typedef nut::MatState<nut::geom_t> MatState_t;
 
-typedef nut::Sphere_1D<cell_t,geom_t,nut::bdy_types::descriptor> Mesh_t;
+typedef nut::Sphere_1D<nut::cell_t,nut::geom_t,nut::bdy_types::descriptor> Mesh_t;
 typedef std::pair<MatState_t,Mesh_t> state_t;
-typedef nut::src_stats_t<geom_t,nut::id_t> src_stat_t;
+typedef nut::src_stats_t<nut::geom_t,nut::id_t> src_stat_t;
 typedef nut::Chunker<src_stat_t> Chnker;
 
 
 void run_cycle(src_stat_t const & stats
-               ,Mesh_t const & mesh
-               ,op_t const & op
-               ,Velocity_t const & vel
-               ,geom_t const alpha
-               ,nut::Species const s
-               ,uint32_t const seed
-               ,tally_t & tally
-               ,census_t & census
-               ,key_t const & key
-               ,uint32_t const chkSz
-               ,uint32_t rank
-               ,uint32_t commSz
+               , Mesh_t const & mesh
+               , op_t const & op
+               , Velocity_t const & vel
+               , nut::geom_t const alpha
+               , nut::Species const s
+               , uint32_t const seed
+               , tally_t & tally
+               , census_t & census
+               , nut::key_t const & key
+               , uint32_t const chkSz
+               , uint32_t rank
+               , uint32_t commSz
     )
 {
+    using nut::cell_t;
+    using nut::geom_t;
+    using nut::Require;
+    using nut::cntr_t;
+    using nut::Chunk;
+    using nut::ChunkId;
+    using nut::ChunkIdVec;
+    using nut::PtclId;
+    using nut::LessThan;
+
     cell_t const n_cells = mesh.n_cells();
     Require(stats.ns.size()  == n_cells && 
             stats.es.size()  == n_cells && 
@@ -81,8 +89,8 @@ void run_cycle(src_stat_t const & stats
     // CAUTION: this can make sims take a very long time!
     geom_t const particle_dt = 1e12;
 
-    cntr_t ctr(0);  // for counting events
-    cntr_t n_tot = std::accumulate(stats.ns.begin(),stats.ns.end(),0);
+    nut::cntr_t ctr(0);  // for counting events
+    nut::cntr_t n_tot = std::accumulate(stats.ns.begin(),stats.ns.end(),0);
     cntr_t const rep_frac = n_tot > 5 ? n_tot/5 : 1; // report frequency
 
     log_t log;
@@ -91,8 +99,8 @@ void run_cycle(src_stat_t const & stats
     Chnker::ChunkVec chunks;
     Chnker::chunks(chkSz,stats,chunks,schunks);
     uint32_t const n_chks_tot(chunks.size());
-    ChunkIdVec chkIds;
-    getChunks(rank,commSz,n_chks_tot,chkIds);
+    nut::ChunkIdVec chkIds;
+    nut::getChunks(rank,commSz,n_chks_tot,chkIds);
 
     std::cout << "We have " << n_chks_tot << " total chunks." << std::endl;
 
@@ -108,7 +116,7 @@ void run_cycle(src_stat_t const & stats
     for(size_t ci = 0; ci < n_chks_tot; ++ci)
     {
         // for each chunk that this PE does
-        ChunkId const chkId = chkIds[ci];
+        nut::ChunkId const chkId = chkIds[ci];
         Chunk const & chunk = chunks[chkId];
         src_stat_t const & ss = *schunks[chkId];
         PtclId curr(chunk.pstart);
@@ -133,14 +141,14 @@ void run_cycle(src_stat_t const & stats
                 LessThan(curr,chunk.pend+1,"current ptcl id","last ptcl id");
                 // std::cout << "\nProcessing particle " << curr << std::endl;
                 id_t const ptcl_id(curr);
-                ctr_t ptcl_ctr(rng_t::make_ctr(ptcl_id,0u,0u,0u));
-                rng_t ptcl_rng(ptcl_ctr,key); // for generating the particle
-                p_t p_in = nut::gen_init_particle<Mesh_t,geom_t,rng_t,p_t>(
+                nut::ctr_t ptcl_ctr(nut::rng_t::make_ctr(ptcl_id,0u,0u,0u));
+                nut::rng_t ptcl_rng(ptcl_ctr,key); // for generating the particle
+                p_t p_in = nut::gen_init_particle<Mesh_t,geom_t,nut::rng_t,p_t>(
                     mesh,cidx,particle_dt,alpha,s,ew,
                     op.temp(cidx),vel.v(cidx),
                     ptcl_rng);
-                ctr_t evt_ctr(rng_t::make_ctr(0u,0u,ptcl_id,0u)); 
-                rng_t evt_rng(evt_ctr,key);   // for generating events
+                nut::ctr_t evt_ctr(nut::rng_t::make_ctr(0u,0u,ptcl_id,0u)); 
+                nut::rng_t evt_rng(evt_ctr,key);   // for generating events
                 p_in.rng = evt_rng;
                 // p_t p_out = 
                 nut::transport_particle(p_in,mesh,op,
@@ -170,10 +178,11 @@ void run_cycle(src_stat_t const & stats
 /*!\brief generate a mesh & material state info by reading a material
  * state file and parsing it into MatState and Mesh objects. */
 state_t get_mat_state(std::string const filename,
-                      geom_t const llimit,
-                      geom_t const ulimit)
+                      nut::geom_t const llimit,
+                      nut::geom_t const ulimit)
 {
-    typedef std::vector<nut::MatStateRowP<geom_t> > vecrows;
+    using nut::Require;
+    typedef std::vector<nut::MatStateRowP<nut::geom_t> > vecrows;
     std::ifstream infile(filename.c_str());
     if(!infile)
     {
@@ -181,14 +190,14 @@ state_t get_mat_state(std::string const filename,
         errstr << "Unable to open file \"" << filename << "\"";
         throw(std::runtime_error(errstr.str()));
     }
-    vecrows rows(nut::read_mat_state_file<geom_t>(infile));
+    vecrows rows(nut::read_mat_state_file<nut::geom_t>(infile));
     infile.close();
     
     // get a mesh that includes only those cells within the 
     // specified limits; also, get back the indices corresponding
     // to the limits. 
     size_t llimitIdx(0),ulimitIdx(0);
-    Mesh_t mesh = nut::rows_to_mesh<Mesh_t,geom_t>(
+    Mesh_t mesh = nut::rows_to_mesh<Mesh_t,nut::geom_t>(
         rows, llimit, ulimit, llimitIdx, ulimitIdx);
     Require( ulimitIdx >= llimitIdx,"invalid limits");
     size_t const nrows(ulimitIdx - llimitIdx);
@@ -206,6 +215,7 @@ void run_one_species(nut::Species const spec,
                      args_t const & args,
                      state_t const & state)
 {
+    using nut::Check;
     MatState_t const & mat = state.first;
     Mesh_t const & mesh    = state.second;
 
@@ -218,7 +228,7 @@ void run_one_species(nut::Species const spec,
     size_t const ncells(mesh.n_cells());
     size_t const ncen(0);
 
-    std::vector<cell_t> cidxs(mesh.n_cells());
+    std::vector<nut::cell_t> cidxs(mesh.n_cells());
     for(size_t i = 0; i < cidxs.size(); ++i){ cidxs[i] = i+1; }
     Check(cidxs.size() == v.size(),"Cell indexes size != velocity size");
 
@@ -246,8 +256,8 @@ void run_one_species(nut::Species const spec,
 
     summarize_stats(stats,std::cout,spec,cycle);
 
-    seed_t const lo = species_seed(spec);
-    key_t key = rng_t::make_key(args.seed,lo);
+    nut::seed_t const lo = species_seed(spec);
+    nut::key_t key = nut::rng_t::make_key(args.seed,lo);
 
     uint32_t const rank(0);
     uint32_t const commSz(1);
