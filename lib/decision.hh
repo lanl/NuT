@@ -9,7 +9,7 @@
 #include "types.hh"
 #include "constants.hh"
 #include <utility> // pair
-#include <stdexcept> 
+#include <stdexcept>
 #include <sstream>
 #include <iostream>
 #include <cmath>
@@ -20,24 +20,24 @@
 namespace nut
 {
 
-    namespace 
-    {        
+    namespace
+    {
         /** throw an exception when code fails to decide an event */
         void
         unresolved_event(size_t lineno, std::string const & eventstr);
 
         /** Compare std::pairs on the second element. */
         template <typename pair> bool
-        pair_min_2nd(pair const & p1, pair const & p2){ 
+        pair_min_2nd(pair const & p1, pair const & p2){
             return p1.second < p2.second;}
 
     }
 
     template <typename particle_t, typename mesh_t, typename opacity_t,
               typename velocity_t>
-    event_n_dist 
+    event_n_dist
     decide_event( particle_t & p, // non-const b/c of RNG
-                  mesh_t const & mesh, 
+                  mesh_t const & mesh,
                   opacity_t const & opacity,
                   velocity_t const & velocity)
     {
@@ -54,10 +54,10 @@ namespace nut
         fp_t const tleft   = p.t;
         fp_t const x       = p.x;
         Species const species = p.species;
-        
+
         // compute distance to events, push onto vector
         // compute cross-section in comoving frame
-        
+
         geom_t v = velocity.v(cell);
         geom_t const eli  = p.e;
         geom_t const oli  = p.omega;
@@ -70,7 +70,7 @@ namespace nut
         fp_t const random_dev = p.rng.random();
         fp_t const ignored    = p.rng.random(); // to keep pace with McPhD
 
-        geom_t const d_coll     = (sig_coll != fp_t(0)) ? 
+        geom_t const d_coll     = (sig_coll != fp_t(0)) ?
             -std::log(random_dev)/sig_coll : huge;
         e_n_ds.push_back(event_n_dist(events::collision,d_coll));
 
@@ -81,22 +81,22 @@ namespace nut
         geom_t const d_step_end = c * tleft;
         e_n_ds.push_back(event_n_dist(events::step_end,d_step_end));
 
-        // pick (event,dist) pair with shortest distance 
+        // pick (event,dist) pair with shortest distance
         event_n_dist closest = *(std::min_element(e_n_ds.begin(),e_n_ds.end(),
                                                   pair_min_2nd<event_n_dist>));
 
-        // if needed, further resolve events 
+        // if needed, further resolve events
         if(closest.first == events::collision)
         {
             // need to compute the comoving energy at the scattering site,
             // in order to compute the different cross sections there.
-            
+
             typename mesh_t::coord_t const scat_site(
                 mesh.new_coordinate(x,oli,d_coll));
             geom_t const o_sct = scat_site.omega;
             EandOmega const eno_scat = LT_to_comoving_sphere1D(v,eli,o_sct);
             fp_t const ecscat = eno_scat.first;
-            closest.first = 
+            closest.first =
                 decide_scatter_event(p.rng,ecscat,cell,opacity,species);
         }
         else
@@ -148,9 +148,9 @@ namespace nut
         typedef const fp_t fp_c;
         // cell_t const idx = cell - 1;
         fp_c sig_collide = op.sigma_collide(cell,nu_nrg,s);
-        
+
         // selectors
-        fp_c p_type_sel = rng.random();  // particle interactor        
+        fp_c p_type_sel = rng.random();  // particle interactor
         events::Event event(events::null);
 
         fp_c N_total = op.sigma_N_total(cell,nu_nrg);    // nucleon
@@ -185,9 +185,9 @@ namespace nut
         }
         return event;
     } // decide_scatter_event
-    
 
-    namespace 
+
+    namespace
     {
         void
         unresolved_event(size_t lineno, std::string const & eventstr)
