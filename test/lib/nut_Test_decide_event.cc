@@ -73,7 +73,7 @@ namespace Nut_Test
         // call additional tests here.
 
         return passed1 and passed2 and passed3 and passed4 and passed5
-            and passed6 and passed7 and passed8 
+            and passed6 and passed7 and passed8
             and passed9
             ;
     }
@@ -87,7 +87,7 @@ namespace Nut_Test
         using nut::cell_t;
         using nut::geom_t;
         using nut::bdy_types::descriptor;
-        
+
         typedef double                    fp_t;
         typedef std::vector<fp_t>         vf;
         typedef nut::Density<fp_t>        rho_t;
@@ -102,7 +102,7 @@ namespace Nut_Test
 
         fp_t const pmg = 1.67262e-24;  // proton mass in gram
 
-        // create empty Density and Temperature objects: tests can copy 
+        // create empty Density and Temperature objects: tests can copy
         // and modify these.
         rho_t const rho( nullv, nullv, nullv, nullv, nullv, nullv);
         T_t const T( nullv, nullv, nullv);
@@ -112,7 +112,7 @@ namespace Nut_Test
 
 
         /* This test uses the setup of Python test_2 of decide_event to test
-         * decide_scatter_event. We use the same random seeds, starting at the 
+         * decide_scatter_event. We use the same random seeds, starting at the
          * third seed, since the test of decide_event burns the first one for
          * sampling the exponential to come up with d_collision, and the second
          * to choose the interaction channel. */
@@ -129,21 +129,21 @@ namespace Nut_Test
             OpB op(rho1,T1);
             // from Python test_2 of decide_event
             fp_t const rns[] = {// 0.30897681610609407, 1st seed burned for d_coll
-                                // 0.92436920169905545, 
+                                // 0.92436920169905545,
                                 0.21932404923057958};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
-            
+
             Event event_exp = nucleon_abs;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << event << ", should have been " 
+                std::cout << "event was " << event << ", should have been "
                           << nut::events::nucleon_abs << std::endl;
             }
             return passed;
@@ -224,7 +224,7 @@ namespace Nut_Test
             Event const exp_ev5(escape);
             Event ev5 = decide_boundary_event(mesh,c5,f5);
             passed = exp_ev5 == ev5 and passed;
-            if(!passed) std::cout << "FAILED: " << ev5 << ":" 
+            if(!passed) std::cout << "FAILED: " << ev5 << ":"
                                   << __LINE__ << std::endl;
 
             return passed;
@@ -247,10 +247,10 @@ namespace Nut_Test
             rho1.rho_p[0] = 1.0;
 
             OpB op(rho1,T1);
-            fp_t const rns[] = {0.30897681610609407, 
-                                0.92436920169905545, 
+            fp_t const rns[] = {0.30897681610609407,
+                                0.92436920169905545,
                                 0.21932404923057958};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const x = 0.5, omega = 1.0, e = 5.0, t = 1.0, wt = 1.0;
             cell_t const cell = 1;
             Species const s(nut::nu_e);
@@ -268,13 +268,13 @@ namespace Nut_Test
             p_t p(x,omega,e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
-            
+
             Event const event_exp = cell_high_x_boundary;
             Event const event = e_n_d.first;
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << event << ", should have been " 
+                std::cout << "event was " << event << ", should have been "
                           << nut::events::nucleon_abs << std::endl;
             }
             return passed;
@@ -298,7 +298,7 @@ namespace Nut_Test
 
             OpB op(rho1,T1);
             fp_t const rns[] = {0,0,0,0,0,0,0,0,0,0};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const x = 0.5, omega = 1.0, e = 5.0, t = 1.0, wt = 1.0;
             cell_t const cell = 1;
             Species const s(nut::nu_e);
@@ -318,22 +318,22 @@ namespace Nut_Test
             for(size_t i = 0; i < 9; ++i)
             {
                 nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
-                std::cout << nut::events::event_name(e_n_d.first) 
+                std::cout << nut::events::event_name(e_n_d.first)
                           << ", d = " << e_n_d.second << std::endl;
                 p.x += e_n_d.second;
                 p.cell += 1;
             }
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
-            
+
             Event const event_exp = escape;
             Event const event = e_n_d.first;
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event << ", AKA "
-                          << nut::events::event_name(event) 
-                          << ", should have been " 
+                          << nut::events::event_name(event)
+                          << ", should have been "
                           << event_exp << std::endl;
             }
             geom_t const d_exp = 1.0;
@@ -343,10 +343,10 @@ namespace Nut_Test
 
 
         /* This test uses the setup of Python test_3 of decide_event to test
-         * decide_scatter_event. We use the same random seeds, starting at the 
+         * decide_scatter_event. We use the same random seeds, starting at the
          * third seed, since the test of decide_event burns the first one for
          * sampling the exponential to come up with d_collision, and the second
-         * is used to choose the particle interaction. This test 
+         * is used to choose the particle interaction. This test
          * should result in nucleon elastic scatter. */
         bool test_5()
         {
@@ -357,26 +357,26 @@ namespace Nut_Test
             rho_t rho1(rho);
             T_t   T1(T);
             rho1.rho_p[0] = 1e14/pmg;
-            
+
             OpB op(rho1,T1);
             // from Python test_2 of decide_event
-            fp_t const rns[] = {// 0.21932404923057958, 1st used for d_coll 
-                                // 0.20867489035315723, 
+            fp_t const rns[] = {// 0.21932404923057958, 1st used for d_coll
+                                // 0.20867489035315723,
                                 0.91525579001682567};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
-            
+
             Event event_exp = nucleon_elastic_scatter;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << nut::events::event_name(event)
-                          << ", should have been " 
+                          << ", should have been "
                           << nut::events::nucleon_elastic_scatter << std::endl;
             }
             return passed;
@@ -397,24 +397,24 @@ namespace Nut_Test
             rho1.rho_p[0] = nut::tiny;
             rho1.rho_e_minus[0] = 1e14/pmg;
             T1.T_e_minus[0] = 1.0;
-            
+
             OpB op(rho1,T1);
             // from Python test_2 of decide_event
             fp_t const rns[] = {0.9,0.1};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
-            
+
             Event event_exp = electron_scatter;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
-                          << ", should have been " 
+                          << ", should have been "
                           << event_name(event_exp) << std::endl;
             }
             return passed;
@@ -422,7 +422,7 @@ namespace Nut_Test
 
 
         /* This test uses the setup of Python test_2 of decide_event to test
-         * decide_event. We use the same random seeds, skipping the 
+         * decide_event. We use the same random seeds, skipping the
          * second seed, since the test of decide_event burns the first one for
          * sampling the exponential to come up with d_collision. In the Python code,
          * the second seed is used to select which type of particle to scatter from;
@@ -447,15 +447,15 @@ namespace Nut_Test
             rho_t rho1(rho);
             T_t   T1(T);
             rho1.rho_p[0] = 1e14/pmg;
-            
+
             OpB op(rho1,T1);
 
             // create particle
             // from Python test_2 of decide_event
             fp_t const rns[] = {0.30897681610609407, // 1st seed burned for d_coll
-                                // 0.92436920169905545, 
+                                // 0.92436920169905545,
                                 0.21932404923057958};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
@@ -465,17 +465,17 @@ namespace Nut_Test
             fp_t const wt = 1.0;
             p_t p(x,omega,e,t,wt,cell,rng,s);
 
-            
+
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
-            
+
             Event const & event = e_n_d.first;
             Event event_exp = nucleon_abs;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
-                          << ", should have been " 
+                          << ", should have been "
                           << event_name(nut::events::nucleon_abs) << std::endl;
             }
             geom_t const d_exp = 7343.827;
@@ -484,7 +484,7 @@ namespace Nut_Test
             passed = nut::soft_equiv(d,d_exp,epsilon) && passed;
             if(!passed)
             {
-                std::cout << "distance to event was " << std::setprecision(15) <<  d 
+                std::cout << "distance to event was " << std::setprecision(15) <<  d
                           << "expected distance was " << std::setprecision(15) << d_exp
                           << std::endl;
             }
@@ -494,10 +494,10 @@ namespace Nut_Test
 
 
         /* This test uses the setup of Python test_3 of decide_event to test
-         * decide_scatter_event. We use the same random seeds, skipping the 
+         * decide_scatter_event. We use the same random seeds, skipping the
          * second seed, since the test of decide_event burns the first one for
          * sampling the exponential to come up with d_collision. See comment to
-         * test_7 for more on the rationale. This test 
+         * test_7 for more on the rationale. This test
          * should result in nucleon elastic scatter. */
         bool test_8()
         {
@@ -518,13 +518,13 @@ namespace Nut_Test
             rho_t rho1(rho);
             T_t   T1(T);
             rho1.rho_p[0] = 1e14/pmg;
-            
+
             OpB op(rho1,T1);
             // from Python test_2 of decide_event
-            fp_t const rns[] = {0.21932404923057958, // 1st used for d_coll 
-                                // 0.20867489035315723, 
+            fp_t const rns[] = {0.21932404923057958, // 1st used for d_coll
+                                0.20867489035315723,
                                 0.91525579001682567};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
@@ -535,15 +535,15 @@ namespace Nut_Test
             p_t p(x,omega,e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
-            
+
             Event const event = e_n_d.first;
             Event const event_exp = nucleon_elastic_scatter;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
-                          << ", should have been " 
+                          << ", should have been "
                           << event_name(nucleon_elastic_scatter) << std::endl;
             }
             geom_t const d_exp = 9486.756;
@@ -552,7 +552,7 @@ namespace Nut_Test
             passed = nut::soft_equiv(d,d_exp,epsilon) && passed;
             if(!passed)
             {
-                std::cout << "distance to event was " << d 
+                std::cout << "distance to event was " << d
                           << "expected distance was " << d_exp << std::endl;
             }
             return passed;
@@ -581,11 +581,11 @@ namespace Nut_Test
             rho1.rho_p[0] = nut::tiny;
             rho1.rho_e_minus[0] = 1e14/pmg;
             T1.T_e_minus[0] = 1.0;
-            
+
             OpB op(rho1,T1);
             // from Python test_2 of decide_event
             fp_t const rns[] = {0.9,0.9,0.1};
-            BRNG rng(rns,3); 
+            BRNG rng(rns,3);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
@@ -596,16 +596,16 @@ namespace Nut_Test
             p_t p(x,omega,e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
-            
+
             Event const event = e_n_d.first;
-            
+
             Event const event_exp = electron_scatter;
-            
+
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
-                          << ", should have been " 
+                          << ", should have been "
                           << event_name(event_exp) << std::endl;
             }
             fp_t const d = e_n_d.second;
@@ -614,7 +614,7 @@ namespace Nut_Test
             passed = nut::soft_equiv(d,d_exp,epsilon) && passed;
             if(!passed)
             {
-                std::cout << "distance to event was " << d 
+                std::cout << "distance to event was " << d
                           << "expected distance was " << d_exp << std::endl;
             }
             return passed;
