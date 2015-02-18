@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <tr1/functional>
+#include <functional>
 
 
 namespace Nut_Test
@@ -60,10 +60,10 @@ namespace Nut_Test
          * The test cases were generated using Mathematica and random sampling.
          * Here, we use a Buffer_RNG object loaded with the random values from
          * Mathematica as inputs and verify the outputs. */
-        namespace 
+        namespace
         {
-            using std::tr1::bind;
-            using namespace std::tr1::placeholders;  // for _1, _2, etc in bind
+            using std::bind;
+            using namespace std::placeholders;  // for _1, _2, etc in bind
 
             /*\param rns: vector to hold random numbers
              *\param nrgs: vector to hold sampled energies
@@ -131,14 +131,14 @@ namespace Nut_Test
 
             vf es(es_exp.size());
             std::generate(es.begin(),es.end(),
-                          std::tr1::bind( nut::gen_power_law_energy<rng_t,fp_t>,
+                          std::bind( nut::gen_power_law_energy<rng_t,fp_t>,
                                           alpha,ebar,rng));
 
             // soft_eq_bound_tol<fp_t> seq(tol);
             bool es_passed = std::equal(es.begin(),es.end(),es_exp.begin());
-            
+
             passed = es_passed and passed;
-            
+
             return passed;
         } // test_1
 
@@ -181,9 +181,9 @@ namespace Nut_Test
             soft_eq_bound_tol<fp_t> seq(1e-15);
             bool rejs_passed = std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),
                                           bind(nut::soft_equiv<fp_t>,_1,_2,1e-15));
-            
+
             passed = rejs_passed and passed;
-            
+
             return passed;
         } // test_2
 
@@ -213,9 +213,9 @@ namespace Nut_Test
 
             // soft_eq_bound_tol<fp_t> seq(tol);
             bool es_passed = std::equal(es.begin(),es.end(),es_exp.begin());
-            
+
             passed = es_passed and passed;
-            
+
             return passed;
         } // test_3
 
@@ -247,17 +247,17 @@ namespace Nut_Test
             //                pl_rej_a2<fp_t>(e_a));
             std::transform(xs.begin(),xs.end(),rejs.begin(),
                            bind(nut::pwr_law_reject_alpha2<fp_t>,_1));
-                           
+
             // accept a relative error less than 10^(-15)
             soft_eq_bound_tol<fp_t> seq(1e-15);
-            // bool rejs_passed = 
+            // bool rejs_passed =
             //     std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),seq);
-            bool rejs_passed = 
+            bool rejs_passed =
                 std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),
                            bind(nut::soft_equiv<fp_t>,_1,_2,1e-15));
-            
+
             passed = rejs_passed and passed;
-            
+
             return passed;
         } // test_4
 
@@ -265,8 +265,8 @@ namespace Nut_Test
         // define additional tests above here.
 
 
-        // functors for use with older compilers without tr1::bind:
-        namespace 
+        // functors for use with older compilers without ::bind:
+        namespace
         {
 
             // run the power law generator, wd be nice to replace with boost::bind
@@ -292,7 +292,7 @@ namespace Nut_Test
             }; // pl_rej
 
 
-            // run the power law generator specialized to alpha = 2, 
+            // run the power law generator specialized to alpha = 2,
             // wd be nice to replace with boost::bind
             template <typename fp_t, typename rng_t>
             struct pl_gen_a2
