@@ -18,7 +18,7 @@ cxx = "g++"
 abi_flag = "-m%s " % build_precision
 
 # from old build system
-compile_flags = " -std=c++0x -Wall -pedantic " 
+compile_flags = " -std=c++11 -Wall -pedantic " 
 
 if opt:
     compile_flags += " -O%s" % opt
