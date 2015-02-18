@@ -115,6 +115,7 @@ namespace Nut_Test
             bool passed(true);
 
             using nut::gen_power_law_energy;
+            using namespace test_aux;
 
             typedef double fp_t;
             typedef std::vector<fp_t> vf;
@@ -134,8 +135,7 @@ namespace Nut_Test
                           std::bind( nut::gen_power_law_energy<rng_t,fp_t>,
                                           alpha,ebar,rng));
 
-            // soft_eq_bound_tol<fp_t> seq(tol);
-            bool es_passed = std::equal(es.begin(),es.end(),es_exp.begin());
+            bool es_passed = check_same_verb(&es,&es_exp,comp_verb<fp_t>("energies",1e-15));
 
             passed = es_passed and passed;
 
@@ -193,6 +193,7 @@ namespace Nut_Test
             bool passed(true);
 
             using nut::gen_power_law_energy;
+            using namespace test_aux;
 
             typedef double fp_t;
             typedef std::vector<fp_t> vf;
@@ -211,8 +212,7 @@ namespace Nut_Test
             std::generate(es.begin(),es.end(),
                           bind(nut::gen_power_law_energy_alpha2<rng_t,fp_t>,ebar,rng));
 
-            // soft_eq_bound_tol<fp_t> seq(tol);
-            bool es_passed = std::equal(es.begin(),es.end(),es_exp.begin());
+            bool es_passed = check_same_verb(&es,&es_exp,comp_verb<fp_t>("energies",1e-15));
 
             passed = es_passed and passed;
 
