@@ -8,18 +8,19 @@
 #include "apply_event.hh"
 #include "types.hh"
 #include <sstream>
-#include <tr1/functional>  // bind & co
+// #include <tr1/functional>  // bind & co
+#include <functional>  // bind & co
 
 
 namespace nut
 {
 
-    template <typename ParticleT, typename MeshT, typename OpacityT, 
+    template <typename ParticleT, typename MeshT, typename OpacityT,
               typename VelocityT,
               typename CensusT, typename fp_t,
               typename LogT>
     ParticleT
-    transport_particle(ParticleT const & in_p, 
+    transport_particle(ParticleT const & in_p,
                        MeshT const & mesh,
                        OpacityT const & opacity,
                        VelocityT const & velocity,
@@ -27,21 +28,21 @@ namespace nut
                        CensusT & census,
                        LogT & log);
 
-    template <typename ParticleT, typename MeshT, typename OpacityT, 
+    template <typename ParticleT, typename MeshT, typename OpacityT,
               typename VelocityT,
               typename CensusT, typename fp_t>
     ParticleT
-    transport_particle_no_log(ParticleT const & in_p, 
+    transport_particle_no_log(ParticleT const & in_p,
                               MeshT const & mesh,
                               OpacityT const & opacity,
                               VelocityT const & velocity,
                               Tally<fp_t> & tally,
                               CensusT & census);
 
-    /** transport a collection of particles, populating a collection of 
+    /** transport a collection of particles, populating a collection of
      * new particles, accumulating statistics in a tally, banking particles
      * in a census, and optionally logging Monte Carlo steps. */
-    template <typename PContainer, typename MeshT, typename OpacityT, 
+    template <typename PContainer, typename MeshT, typename OpacityT,
               typename VelocityT,
               typename CensusT, typename fp_t,
               typename LogT>
@@ -58,7 +59,7 @@ namespace nut
     {
         typedef typename PContainer::value_type p_t;
 
-        using namespace std::tr1::placeholders;
+        using namespace std::placeholders;
 
 
         if(p_sink.size() != p_source.size())
@@ -76,7 +77,7 @@ namespace nut
                                                   CensusT,fp_t>,
                                _1,mesh,opacity,vel,tally,census,alpha)
                 );
-            
+
         }
         else
         {
@@ -90,14 +91,14 @@ namespace nut
         }
         return;
     } // transport
-              
 
-    template <typename ParticleT, typename MeshT, typename OpacityT, 
+
+    template <typename ParticleT, typename MeshT, typename OpacityT,
               typename VelocityT,
               typename CensusT, typename fp_t,
               typename LogT>
     ParticleT
-    transport_particle(ParticleT const & in_p, 
+    transport_particle(ParticleT const & in_p,
                        MeshT const & mesh,
                        OpacityT const & opacity,
                        VelocityT const & vel,
@@ -113,19 +114,19 @@ namespace nut
             event_n_dist e_n_d = decide_event(particle,mesh,opacity,vel);
             events::Event const event = e_n_d.first;
             geom_t const dist         = e_n_d.second;
-            apply_event(particle, event, dist, mesh, opacity, vel, tally, 
+            apply_event(particle, event, dist, mesh, opacity, vel, tally,
                         census, alpha);
             i++;
             // // logging: does this get optimized out for Null_Log? No.
             // {
             //     std::stringstream strm;
-            //     strm << "step " << i 
-            //          << ": event = " 
+            //     strm << "step " << i
+            //          << ": event = "
             //          << events::event_name(event)
             //          << ", dist = " << dist
             //          << ", weight = " << particle.weight
             //          << ", omega_i_l = " << oli
-            //          << ", omega_f_l = " << particle.omega 
+            //          << ", omega_f_l = " << particle.omega
             //          << ", x = " << particle.x
             //          << ", time = " << particle.t;
             //     log(strm.str());
@@ -133,13 +134,13 @@ namespace nut
         }
         return particle;
     } // transport_particle
-    
-    
-    template <typename ParticleT, typename MeshT, typename OpacityT, 
+
+
+    template <typename ParticleT, typename MeshT, typename OpacityT,
               typename VelocityT,
               typename CensusT, typename fp_t>
     ParticleT
-    transport_particle_no_log(ParticleT const & in_p, 
+    transport_particle_no_log(ParticleT const & in_p,
                               MeshT const & mesh,
                               OpacityT const & opacity,
                               VelocityT const & vel,
@@ -154,14 +155,14 @@ namespace nut
             event_n_dist e_n_d = decide_event(particle,mesh,opacity,vel);
             events::Event const event = e_n_d.first;
             geom_t const dist         = e_n_d.second;
-            apply_event(particle, event, dist, mesh, opacity, vel, tally, 
+            apply_event(particle, event, dist, mesh, opacity, vel, tally,
                         census, alpha);
         }
         return particle;
     } // transport_particle_no_log
-    
-    
-              
+
+
+
 
 } // nut::
 

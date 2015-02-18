@@ -10,6 +10,7 @@
 #include <vector>
 #include <istream>
 #include <stdint.h>
+#include <sstream>
 
 
 namespace nut
@@ -22,13 +23,13 @@ namespace nut
         fp_t radius;
         fp_t density;
         fp_t velocity;
-        
+
         fp_t ye;
         fp_t eta;
         fp_t temperature;
         fp_t entropy;
         fp_t u;
-        
+
         fp_t lnue_capture;
         fp_t enue_capture;
         fp_t lnueb_capture;
@@ -42,25 +43,25 @@ namespace nut
         fp_t enux_pair;
 
         bool operator==(MatStateRowP<fp_t> const & a) const {
-            return 
+            return
                 zone == a.zone &&
                 m_encl == a.m_encl &&
                 radius == a.radius &&
                 density == a.density &&
                 velocity == a.velocity &&
-                
+
                 ye == a.ye &&
                 eta == a.eta &&
                 temperature == a.temperature &&
                 entropy == a.entropy &&
                 u == a.u &&
-                
+
                 lnue_capture == a.lnue_capture &&
                 enue_capture == a.enue_capture &&
                 lnueb_capture == a.lnueb_capture &&
                 enueb_capture == a.enueb_capture &&
                 lnue_pair == a.lnue_pair &&
-                
+
                 enue_pair == a.enue_pair &&
                 lnueb_pair == a.lnueb_pair &&
                 enueb_pair == a.enueb_pair &&
@@ -70,19 +71,19 @@ namespace nut
 
     }; // MatStateRowP
 
-    /*!\brief read a material state file into a vector of structures, 
+    /*!\brief read a material state file into a vector of structures,
     * one structure per line. Conversion from string to number is
     * performed, but that's it. */
     template <typename fp_t>
-    std::vector< MatStateRowP<fp_t> > 
+    std::vector< MatStateRowP<fp_t> >
     read_mat_state_file( std::istream & i);
 
     /*!\brief convert a line (string) to a MatStateRowP */
     template <typename fp_t>
     MatStateRowP<fp_t> line_to_struct(std::string const & l);
-                                                
+
     template <typename fp_t>
-    std::vector< MatStateRowP<fp_t> > 
+    std::vector< MatStateRowP<fp_t> >
     read_mat_state_file( std::istream & i)
     {
         std::vector<MatStateRowP<fp_t> > v;
@@ -107,17 +108,17 @@ namespace nut
     {
         MatStateRowP<fp_t> row;
         std::stringstream sstr(l);
-        sstr >> row.zone          >> row.m_encl        >> row.radius       >> 
-                row.density       >> row.velocity      >> row.ye           >> 
-                row.eta           >> row.temperature   >> row.entropy      >> 
-                row.u             >> row.lnue_capture  >> row.enue_capture >> 
+        sstr >> row.zone          >> row.m_encl        >> row.radius       >>
+                row.density       >> row.velocity      >> row.ye           >>
+                row.eta           >> row.temperature   >> row.entropy      >>
+                row.u             >> row.lnue_capture  >> row.enue_capture >>
                 row.lnueb_capture >> row.enueb_capture >> row.lnue_pair    >>
-                row.enue_pair     >> row.lnueb_pair    >> row.enueb_pair   >> 
+                row.enue_pair     >> row.lnueb_pair    >> row.enueb_pair   >>
                 row.lnux_pair     >> row.enux_pair;
 
         return row;
     } // line_to_struct
-    
+
 } // nut ::
 
 #endif // include guard
