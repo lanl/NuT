@@ -124,7 +124,12 @@ namespace Nut_Test
             fp_t const alpha(2.0);
 
             // load values
-            read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            bool read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            if(!read_ok)
+            {
+                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+                return true;
+            }
 
             // construct Buffer_RNG from rns
             typedef nut::Buffer_RNG<fp_t> rng_t;
@@ -154,7 +159,12 @@ namespace Nut_Test
             vf rns, x_rns, es_exp, rejs_exp;
 
             // load values
-            read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            if(!read_ok)
+            {
+                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+                return true;
+            }
 
             fp_t const e_a(0.1353352832366127); // exp(-2)
             fp_t const alpha(2.0);
@@ -201,7 +211,12 @@ namespace Nut_Test
             fp_t const ebar(2.0);
 
             // load values
-            read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            if(!read_ok)
+            {
+                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+                return true;
+            }
 
             // construct Buffer_RNG from rns
             typedef nut::Buffer_RNG<fp_t> rng_t;
@@ -231,7 +246,12 @@ namespace Nut_Test
             vf rns, x_rns, es_exp, rejs_exp;
 
             // load values
-            read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
+            if(!read_ok)
+            {
+                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+                return true;
+            }
 
             // divide energies by ebar (= 2.0 MeV) to get xs.
             vf xs(es_exp.size());
