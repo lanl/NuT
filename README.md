@@ -11,7 +11,7 @@ This compact app captures many of the computational characteristics and challeng
 
 NuT uses the [scons build system](http://www.scons.org/ "SCons"). To get started, please see the file "readme_scons" in the scons directory.
 
-LA-CC 11-087
+Los Alamos National Security, LLC (LANS) owns the copyright to NuT, which it identifies internally as LA-CC-11-087. The license is BSD 3-Clause.
 
 [1]. "Parallel random numbers: as easy as 1,2,3" J. K. Salmon, Mark A. Moraes, Ron O. Dror, David E. Shaw. Proceeding SC '11 Proceedings of 2011 International Conference for High Performance Computing, Networking, Storage and Analysis. doi 10.1145/2063384.2063405
 
