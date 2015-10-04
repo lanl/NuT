@@ -32,7 +32,7 @@ namespace NutTest_standalones
 
     namespace
     {
-        bool check_requests(test_map & tests, 
+        bool check_requests(test_map & tests,
                             std::vector<std::string> const & names);
     }
 
@@ -66,15 +66,15 @@ namespace NutTest_standalones
         tests["tally"]      =  Test_Desc(Tally_tests::target, test_Tally);
         tests["assert_off"]   =  Test_Desc(Assert_off_tests::target,
                                            test_Assert_off);
-        tests["spec_name"]    =  Test_Desc(species_name_tests::target, 
+        tests["spec_name"]    =  Test_Desc(species_name_tests::target,
                                            test_species_name);
-        tests["temperature"]  =  Test_Desc(Temperature_tests::target, 
+        tests["temperature"]  =  Test_Desc(Temperature_tests::target,
                                            test_Temperature);
-        tests["decide_event"] =  Test_Desc(decide_event_tests::target, 
+        tests["decide_event"] =  Test_Desc(decide_event_tests::target,
                                            test_decide_event);
-        tests["apply_event"]  =  Test_Desc(apply_event_tests::target, 
+        tests["apply_event"]  =  Test_Desc(apply_event_tests::target,
                                            test_apply_event);
-        tests["mat_state"]    =  Test_Desc(MatState_tests::target, 
+        tests["mat_state"]    =  Test_Desc(MatState_tests::target,
                                            test_MatState);
         tests["transport_particle"] = Test_Desc(
             transport_particle_tests::target, test_transport_particle);
@@ -109,43 +109,43 @@ namespace NutTest_standalones
         using test_aux::test;
         using namespace Nut_Test;
 
-        bool assert_passed =  test(Assert_tests::target, "all", 
+        bool assert_passed =  test(Assert_tests::target, "all",
                                    test_Assert);
 
         bool assert_off_passed =  test(Assert_off_tests::target,
                                        "all", test_Assert_off);
 
-        bool density_passed =  test(Density_tests::target, "all", 
+        bool density_passed =  test(Density_tests::target, "all",
                                        test_Density);
 
-        bool mesh_passed  =  test(Mesh_tests::target, "all", 
+        bool mesh_passed  =  test(Mesh_tests::target, "all",
                                  test_Mesh);
 
-        bool opacity_passed  =  test(Opacity_tests::target, "all", 
+        bool opacity_passed  =  test(Opacity_tests::target, "all",
                                  test_Opacity);
 
-        bool planck_passed  =  test(Planck_tests::target, "all", 
+        bool planck_passed  =  test(Planck_tests::target, "all",
                                  test_Planck);
 
-        bool ptcl_passed =  test(particle_tests::target, "all", 
+        bool ptcl_passed =  test(particle_tests::target, "all",
                                  test_Particle);
 
-        bool rng_passed  =  test(RNG_tests::target, "all", 
+        bool rng_passed  =  test(RNG_tests::target, "all",
                                  test_RNG);
 
-        bool spec_name_passed =  test(species_name_tests::target, "all", 
+        bool spec_name_passed =  test(species_name_tests::target, "all",
                                       test_species_name);
 
-        bool tally_passed =  test(Tally_tests::target, "all", 
+        bool tally_passed =  test(Tally_tests::target, "all",
                                        test_Tally);
 
-        bool temperature_passed =  test(Temperature_tests::target, 
+        bool temperature_passed =  test(Temperature_tests::target,
                                         "all", test_Temperature);
 
         bool decide_event_passed  =  test(decide_event_tests::target,
                                           "all", test_decide_event);
 
-        bool apply_event_passed =  test(apply_event_tests::target, 
+        bool apply_event_passed =  test(apply_event_tests::target,
                                         "all", test_apply_event);
 
         bool transport_particle_passed = test(transport_particle_tests::target,
@@ -153,10 +153,10 @@ namespace NutTest_standalones
 
         bool fileio_passed =  test(fileio_tests::target, "all", test_fileio);
 
-        bool mat_state_passed =  test(MatState_tests::target, "all", 
+        bool mat_state_passed =  test(MatState_tests::target, "all",
                                       test_MatState);
 
-        return 
+        return
             apply_event_passed
             and assert_passed
             and assert_off_passed
@@ -172,33 +172,34 @@ namespace NutTest_standalones
             and transport_particle_passed
             and fileio_passed
             and mat_state_passed
+            and spec_name_passed
             ;
     } // run_standalone_tests
 
 
-    namespace 
+    namespace
     {
 
-        bool check_requests(NutTest_standalones::test_map & tests, 
+        bool check_requests(NutTest_standalones::test_map & tests,
                             std::vector<std::string> const & names)
         {
             bool ok(true);
-        
+
             if(names.size() > tests.size())
             {
                 ok = false;
             }
-        
+
             for(size_t i = 0; i < names.size(); ++i)
             {
                 if(tests.count(names[i]) == 0)
                 {
                     ok = false;
-                    std::cerr << "could not find requested test '" 
+                    std::cerr << "could not find requested test '"
                               << names[i] << "'" << std::endl;
                 }
             }
-        
+
             return ok;
         } // check_requests
 
