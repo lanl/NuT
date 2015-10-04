@@ -466,14 +466,9 @@ namespace Nut_Test
 
             geom_t position = mesh.sample_position(0.1,2);
 
-            // Sp1D::extents_t xs = mesh.cell_extents(2);
-
             passed = soft_expect(position,1.193483191927337,"sampled position")
                 and passed;
-            // if(!passed)
-            // {
-            //     std::cerr << ""
-            // }
+
             return passed;
         } // test_10
 
