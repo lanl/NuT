@@ -68,7 +68,7 @@ namespace nut
         fp_t const sig_coll   = opacity.sigma_collide(cell,eci,species);
 
         fp_t const random_dev = p.rng.random();
-        fp_t const ignored    = p.rng.random(); // to keep pace with McPhD
+        /* fp_t const ignored    =*/ p.rng.random(); // to keep pace with McPhD
 
         geom_t const d_coll     = (sig_coll != fp_t(0)) ?
             -std::log(random_dev)/sig_coll : huge;
