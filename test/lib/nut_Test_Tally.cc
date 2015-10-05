@@ -120,7 +120,7 @@ namespace Nut_Test
         // call additional tests here.
 
         return passed1 and passed2 and passed3 and passed4 and passed5
-            and passed6 and passed7 and passed8 and passed9 and passed10 
+            and passed6 and passed7 and passed8 and passed9 and passed10
             and passed11 and passed12 and passed13 and passed14 and passed15
             and passed16 and passed17 and passed18 and passed19 and passed20
             and passed21 and passed22 and passed23;
@@ -140,7 +140,6 @@ namespace Nut_Test
             bool passed(true);
 
             typedef float fp_t;
-            typedef std::vector<fp_t> v_t;
 
             size_t n_cells(100);
 
@@ -154,7 +153,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> v_t;
             size_t n_cells(100);
 
             nut::Tally<fp_t> tally(n_cells), ref(n_cells);
@@ -192,7 +190,7 @@ namespace Nut_Test
             fp_t const e  = 3.0;
             tally.deposit_energy(c,wt,e);
 
-            passed = check_one_changed<t_t,vf>(tally,ref,&tally.energy) 
+            passed = check_one_changed<t_t,vf>(tally,ref,&tally.energy)
                 and passed;
 
             ref.energy[20] = 0.6;
@@ -220,7 +218,7 @@ namespace Nut_Test
             nut::cell_t const c(21);
             tally.deposit_momentum_elastic(c,o,e,wt);
 
-            passed = check_one_changed<t_t,vf>(tally,ref,&tally.momentum) 
+            passed = check_one_changed<t_t,vf>(tally,ref,&tally.momentum)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -238,7 +236,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -251,7 +248,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_lepton_scatter(c,s,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_e_el_scat) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_e_el_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -269,7 +266,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -283,12 +279,12 @@ namespace Nut_Test
             tally.count_lepton_scatter(c,s,n);
 
             passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_e_bar_pos_scat) 
+                                               &tally.n_nu_e_bar_pos_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
             ref.n_nu_e_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_e_bar_pos_scat, 
+            passed = check_same(&tally.n_nu_e_bar_pos_scat,
                                 &ref.n_nu_e_bar_pos_scat) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -301,7 +297,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -314,7 +309,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_lepton_scatter(c,s,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -332,7 +327,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -346,12 +340,12 @@ namespace Nut_Test
             tally.count_lepton_scatter(c,s,n);
 
             passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_x_bar_pos_scat) 
+                                               &tally.n_nu_x_bar_pos_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
             ref.n_nu_x_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_bar_pos_scat, 
+            passed = check_same(&tally.n_nu_x_bar_pos_scat,
                                 &ref.n_nu_x_bar_pos_scat) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -364,7 +358,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -377,7 +370,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_lepton_scatter(c,s,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -395,7 +388,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -409,12 +401,12 @@ namespace Nut_Test
             tally.count_lepton_scatter(c,s,n);
 
             passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_x_bar_pos_scat) 
+                                               &tally.n_nu_x_bar_pos_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
             ref.n_nu_x_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_bar_pos_scat, 
+            passed = check_same(&tally.n_nu_x_bar_pos_scat,
                                 &ref.n_nu_x_bar_pos_scat) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -427,11 +419,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -440,13 +430,13 @@ namespace Nut_Test
             fp_t const wt(59.2);
             t_t::cntr_t const n(1);
             tally.count_nucleon_abs(c,s,wt,n);
-            
+
             ref.n_nu_e_nucl_abs[c - 1] = 1;
             ref.ew_nu_e_nucl_abs[c - 1] = 59.2;
 
-            passed = check_same(&tally.n_nu_e_nucl_abs, 
+            passed = check_same(&tally.n_nu_e_nucl_abs,
                                   &ref.n_nu_e_nucl_abs) and passed;
-            passed = check_same(&tally.ew_nu_e_nucl_abs, 
+            passed = check_same(&tally.ew_nu_e_nucl_abs,
                                   &ref.ew_nu_e_nucl_abs) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -459,11 +449,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -473,13 +461,13 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_nucleon_abs(c,s,wt,n);
 
-            
+
             ref.n_nu_e_bar_nucl_abs[c - 1] = 1;
             ref.ew_nu_e_bar_nucl_abs[c - 1] = 59.2;
 
-            passed = check_same(&tally.n_nu_e_bar_nucl_abs, 
+            passed = check_same(&tally.n_nu_e_bar_nucl_abs,
                                 &ref.n_nu_e_bar_nucl_abs) and passed;
-            passed = check_same(&tally.ew_nu_e_bar_nucl_abs, 
+            passed = check_same(&tally.ew_nu_e_bar_nucl_abs,
                                 &ref.ew_nu_e_bar_nucl_abs) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -492,7 +480,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -504,7 +491,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_nucleon_elastic_scatter(c,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nucl_el_scat) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nucl_el_scat)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -522,11 +509,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -536,7 +521,7 @@ namespace Nut_Test
             tally.count_escape(c,ew,n);
 
             // two change
-            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape) 
+            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
             //     and passed;
             // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -559,11 +544,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -572,7 +555,7 @@ namespace Nut_Test
             tally.count_reflect(c,n);
 
             // two change
-            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape) 
+            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
             //     and passed;
             // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -589,7 +572,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -601,7 +583,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_cell_bdy(c,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cell_bdy) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cell_bdy)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -618,7 +600,6 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -630,7 +611,7 @@ namespace Nut_Test
             t_t::cntr_t const n(1);
             tally.count_cutoff(c,n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cutoff) 
+            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cutoff)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -647,11 +628,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -663,7 +642,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_e,
-                                       &tally.ew_census_nu_e) 
+                                       &tally.ew_census_nu_e)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -683,11 +662,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -699,7 +676,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_e_bar,
-                                       &tally.ew_census_nu_e_bar) 
+                                       &tally.ew_census_nu_e_bar)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -719,11 +696,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -735,7 +710,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_x,
-                                       &tally.ew_census_nu_x) 
+                                       &tally.ew_census_nu_x)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -755,11 +730,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -771,7 +744,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_x_bar,
-                                       &tally.ew_census_nu_x_bar) 
+                                       &tally.ew_census_nu_x_bar)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -791,11 +764,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -807,7 +778,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_x,
-                                       &tally.ew_census_nu_x) 
+                                       &tally.ew_census_nu_x)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -827,11 +798,9 @@ namespace Nut_Test
         {
             bool passed(true);
             typedef float fp_t;
-            typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -843,7 +812,7 @@ namespace Nut_Test
 
             passed = check_two_changed(tally,ref,
                                        &tally.n_census_nu_x_bar,
-                                       &tally.ew_census_nu_x_bar) 
+                                       &tally.ew_census_nu_x_bar)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -862,7 +831,7 @@ namespace Nut_Test
         // define additional tests here.
 
 
-        // additional helpers 
+        // additional helpers
 
     } // Tally_tests::
 
