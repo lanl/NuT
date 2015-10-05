@@ -92,21 +92,23 @@ There are a number of interactions that a neutrino can have with matter, such as
 
 NuT has a concept of time stepping and a mesh.
 The mesh is just a discretization of space that makes it easy to keep track of what is where.
+During the time step, the properties of the material medium are held constant.
 At the beginning of the time step, a certain amount of energy is going to be emitted as neutrinos.
-The energy varies from mesh cell to mesh cell.
- NuT divides this energy into particles.
+Additionally, there may be an initial population, or census, of particles left over from the preceding time step.
+The energy to be emitted varies from mesh cell to mesh cell.
+NuT divides this energy into particles.
 Then it transports each particle using the Monte Carlo method.
 
 The method is simple to state: until the particle is dead, gone, or its time is up,
+
 1. decide the next step,
 2. apply the event by advancing the particle to the event site, update its clock, and change the particle state,
 3. make notes about what happened (tally).
 
-Some of the outcomes from a Monte Carlo step include the particle being absorbed, the particle escaping from the region of interest, or the particle reaching the end of the time step.
+Some of the outcomes from a Monte Carlo step include the particle being absorbed, the particle escaping from the problem domain, or the particle reaching the end of the time step.
 The different interactions are relatively easy to encode.
 The famous Monte Carlo bit is that steps are chosen probabilistically:
 a probability is calculated for each event happening, and then one uses a (pseudo)random number to pick one of the events.
-It's a lovely method, invented by Stanislaw Ulam and Nick Metropolis at Los Alamos.
 
 
 [1]. "Parallel random numbers: as easy as 1,2,3" J. K. Salmon, Mark A. Moraes, Ron O. Dror, David E. Shaw. Proceeding SC '11 Proceedings of 2011 International Conference for High Performance Computing, Networking, Storage and Analysis. doi 10.1145/2063384.2063405
