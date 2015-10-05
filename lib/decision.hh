@@ -44,7 +44,6 @@ namespace nut
         typedef typename particle_t::fp_t fp_t;
         // typedef std::pair<events::Event,geom_t> event_n_dist;
         typedef std::vector<event_n_dist> vend_t;
-        typedef vend_t::iterator vend_it;
         typedef typename mesh_t::d_to_b_t d_to_b_t;
 
         vend_t e_n_ds(0);
