@@ -149,7 +149,6 @@ namespace nut
                               fp_t const alpha)
     {
         ParticleT particle = in_p;
-        cntr_t i = 1;
         while(particle.t >= 0.0 && particle.alive == true)
         {
             event_n_dist e_n_d = decide_event(particle,mesh,opacity,vel);
