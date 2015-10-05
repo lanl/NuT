@@ -86,9 +86,9 @@ namespace Nut_Test
 
         // call additional tests here.
 
-        return passed1 and passed2 and passed3 and passed4 and passed5 and 
+        return passed1 and passed2 and passed3 and passed4 and passed5 and
             passed6 and passed7 and passed8 and passed9 and passed11 and passed10
-            and passed12 and passed13;
+            and passed12 and passed13 and passed14;
     }
 
     namespace RNG_tests
@@ -135,7 +135,7 @@ namespace Nut_Test
             std::vector<fp_t> out_vals(vals_sz);
 
             std::generate(out_vals.begin(),out_vals.end(),rng);
-            passed = passed and 
+            passed = passed and
                 std::equal(&in_vals[0],&in_vals[vals_sz],out_vals.begin());
 
             return passed;
@@ -157,7 +157,7 @@ namespace Nut_Test
             std::vector<fp_t> out_vals(vals_sz);
 
             std::generate(out_vals.begin(),out_vals.end(),rng);
-            passed = passed and 
+            passed = passed and
                 std::equal(&in_vals[0],&in_vals[vals_sz],out_vals.begin());
 
             return passed;
@@ -179,9 +179,9 @@ namespace Nut_Test
             std::vector<fp_t> out_vals(2*vals_sz);
 
             std::generate(out_vals.begin(),out_vals.end(),rng);
-            passed = passed and 
+            passed = passed and
                 std::equal(&in_vals[0],&in_vals[vals_sz],out_vals.begin());
-            passed = passed and 
+            passed = passed and
                 std::equal(&in_vals[0],&in_vals[vals_sz],
                            out_vals.begin()+vals_sz);
 
@@ -212,7 +212,7 @@ namespace Nut_Test
             size_t const vals_sz(4);
 
             std::vector<double> out_vals(vals_sz);
-                        
+
             std::generate(out_vals.begin(),out_vals.end(),rng);
 
             std::copy(out_vals.begin(),out_vals.end(),
@@ -222,14 +222,14 @@ namespace Nut_Test
             return passed;
         } // test_6
 
-        namespace 
+        namespace
         {
             bool lessThanEq0(double const d){return d <= 0.0;}
             bool greaterThanEq1(double const d){return d >= 1.0;}
             std::string err_lte0("some values were < 0.0: FAIL");
             std::string err_gte1("some values were > 1.0: FAIL");
 
-            /* check an iterator range against a unary predicate, print a 
+            /* check an iterator range against a unary predicate, print a
              * string if predicate fails anywhere. */
             template <class it_t,class pred_t>
             bool checkPred(it_t first, it_t last, pred_t pred, std::string errstr)
@@ -270,7 +270,7 @@ namespace Nut_Test
             return passed;
         } // test_7
 
-       
+
         bool test_8()
         {
             bool passed(true);
@@ -294,7 +294,7 @@ namespace Nut_Test
             size_t const vals_sz(4);
 
             std::vector<double> out_vals(vals_sz);
-                        
+
             std::generate(out_vals.begin(),out_vals.end(),rng);
 
             std::copy(out_vals.begin(),out_vals.end(),
@@ -337,11 +337,11 @@ namespace Nut_Test
             int32_t const seed(42);
             rng_t rng_base1(seed);
             rng_adaptor<double,rng_t> rng1(rng_base1);
-            
+
             nut::MLCG::new_gens ngens = rng_base1.split();
             rng_adaptor<double,rng_t> rng2(ngens.first);
             rng_adaptor<double,rng_t> rng3(ngens.second);
-            
+
             // check old generator
             {
                 std::cout << "after split, state of RNG 1: ";
@@ -414,7 +414,7 @@ namespace Nut_Test
             size_t const vals_sz(10);
 
             std::vector<double> out_vals(vals_sz);
-                        
+
             std::generate(out_vals.begin(),out_vals.end(),rng);
 
             std::copy(out_vals.begin(),out_vals.end(),
@@ -442,13 +442,13 @@ namespace Nut_Test
             size_t const vals_sz(12);
 
             std::vector<double> out_vals(vals_sz);
-                        
+
             std::generate(out_vals.begin(),out_vals.end(),rng);
 
-            // These values generated via the function randoms in the 
+            // These values generated via the function randoms in the
             // Philo2 module of McPhD/basic, using same counter & key
             // as this test.
-            std::vector<double> exp_vals = { 
+            std::vector<double> exp_vals = {
                 0.9848038759115404,0.8800535828289092,0.8015360604392531,
                 0.2025851484105382,0.27783947633403117,0.634825162264666,
                 0.49563039019191557,0.769547123123007,0.7025144994130103,
