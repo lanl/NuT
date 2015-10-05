@@ -75,7 +75,7 @@ add_executable(nut_unittests ${NUT_UNITTESTS} )
 target_link_libraries(nut_unittests nut)
 
 # Build our tests with DBC assertions turned on.
-#add_definitions(-DREQUIRE_ON)
+add_definitions(-DREQUIRE_ON)
 
 
 
