@@ -51,11 +51,10 @@ namespace Nut_Test
             bool passed(true);
             typedef double fp_t;
             // bogus random number gen type: ok to test instantiation
-            typedef uint32_t rng_t; 
             typedef Opacity<fp_t> op_t;
             typedef nut::Density<fp_t> rho_t;
             typedef nut::Temperature<fp_t> temp_t;
-            
+
             std::vector<fp_t> nil(10,0);
             rho_t rho(nil,nil,nil,nil,nil,nil);
             temp_t T(nil,nil,nil);
@@ -70,11 +69,11 @@ namespace Nut_Test
         //     bool passed(false);
         //     typedef double fp_t;
         //     // bogus random number gen type: ok to test instantiation
-        //     typedef uint32_t rng_t; 
+        //     typedef uint32_t rng_t;
         //     typedef Opacity<fp_t,rng_t> op_t;
         //     typedef nut::Density<fp_t> rho_t;
         //     typedef nut::Temperature<fp_t> temp_t;
-            
+
         //     fp_t const e_nu = 1.0;
         //     fp_t const e_e_minus = 1.0;
         //     fp_t const rho = 1.0;
@@ -82,7 +81,7 @@ namespace Nut_Test
         //         e_nu,e_e_minus,rho);
 
         //     std::cout << "sigma = " << sigma << std::endl;
-                
+
         //     return passed;
         // } // test_2
 
