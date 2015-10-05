@@ -1,28 +1,25 @@
 # Top-level cmake file for NuT project
 
 # Quick start:
-# Dependencies: gtest 1.7.0
-# 1. specify environment variables GTEST_DIR and BOOST_DIR. These
+# Dependencies: Random123, obtain from D. E. Shaw:
+#    https://www.deshawresearch.com/resources_random123.html
+# Ranom123 is implemented entirely in header files, so installation is minimal.
+# 1. specify environment variables RANDOM123_DIR. These
 # should point to the root of the respective installations. For example,
-#    export GTEST_DIR=/home/me/downloads/google-test/gtest-1.7.0
+#    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
 # 2. Under the root NuT directory, create a directory called build:
 #    me@superMachine:~/dev/nut$ mkdir build
 #    me@superMachine:~/dev/nut$ cd build
-# 3. configure and build, including the Doxygen documentation:
-#    me@superMachine:~/dev/nut/build$ cmake -Dbuild_api_doc=1
-# -DCMAKE_INSTALL_PREFIX=./nut ..
+# 3. configure and build:
+#    me@superMachine:~/dev/nut/build$ cmake -DCMAKE_INSTALL_PREFIX=./nut ..
 #    me@superMachine:~/dev/nut/build$ make VERBOSE=on -j 4 2>&1 | tee -a make.out
 # 4. run unit tests
 #    me@superMachine:~/dev/nut/build$ ./test/nut_unittests
 # ... tests all pass!
-# 5. install
-#    me@superMachine:~/dev/nut/build$ make install
-# ... files installed to CMAKE_INSTALL_PREFIX
 
 # To do:
 #  1. incorporate build and version information into destination
 #  2. incorporate CTest
-
 
 # To remove all cmake added files and directories (after initial 'cmake .'):
 # > make clean-cmake
@@ -96,18 +93,6 @@ if (NOT DEFINED RANDOM123_ROOT)
   endif()
 
 endif()
-
-
-
-
-
-
-
-
-
-
-
-
 
 # add a local directory 'lib' to the include search path
 # # (This is for building ¬¬NuT unit tests)
