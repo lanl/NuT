@@ -22,9 +22,6 @@ namespace nut
                          uint32_t const cycle_no)
     {
         typedef typename stats_t::fp_t fp_t;
-        typedef typename stats_t::sz_t sz_t;
-        typedef typename stats_t::vsz vsz;
-        typedef typename stats_t::vfp vfp;
         fp_t const e_tot   = sum(stats.es);
         fp_t const n_p     = sum(stats.ns);
         fp_t const mn_e_wt = sum(stats.ews)/stats.size();
@@ -45,16 +42,14 @@ namespace nut
     {
         typedef typename Tally_T::FP_T fp_t;
         typedef typename Tally_T::cntr_t cntr_t;
-        typedef typename Tally_T::vf vf;
-        typedef typename Tally_T::vc vc;
 
-        std::string sname = species_name(s); 
+        std::string sname = species_name(s);
         fp_t const e_tot   = sum(tally.energy);
         fp_t const mom_tot = sum(tally.momentum);
         cntr_t const n_nucl_el     = sum(tally.n_nucl_el_scat);
         cntr_t const n_cell_bdy    = sum(tally.n_cell_bdy);
         cntr_t const n_reflections = sum(tally.n_reflect);
-        cntr_t const n_escapes     = sum(tally.n_escape); 
+        cntr_t const n_escapes     = sum(tally.n_escape);
         cntr_t n_lepton(0), n_nucl_abs(0);
         switch(s)
         {
@@ -76,15 +71,15 @@ namespace nut
         }
         o << "==================================================\n"
           << "Results for cycle " << cycle_no << ", " << sname << ":\n" << std::setprecision(15)
-          << "Total energy deposited: " << e_tot << "\n" 
-          << "Net radial momentum deposited: " << mom_tot << "\n" 
+          << "Total energy deposited: " << e_tot << "\n"
+          << "Net radial momentum deposited: " << mom_tot << "\n"
           << "Total path length: " << tally.path_length << "\n"
           << "Scatters:\n"
           << "\tnucleon elastic: " << n_nucl_el << "\n"
           << "\tlepton scatters: " << n_lepton << "\n"
           << "Absorptions:\n"
-          << "\tnucleon absorptions: " << n_nucl_abs << "\n" 
-          << "Mesh:\n" 
+          << "\tnucleon absorptions: " << n_nucl_abs << "\n"
+          << "Mesh:\n"
           << "\tcell boundary crossings: " << n_cell_bdy << "\n"
           << "\treflections: " << n_reflections << "\n"
           << "\tescapes: " << n_escapes << "\n"
@@ -243,7 +238,7 @@ namespace nut
             "ew_census_nu_x_bar",tally.ew_census_nu_x_bar.begin(),
             tally.ew_census_nu_x_bar.end(),o);
 
-        // escape spectrum 
+        // escape spectrum
         print_esc_spectrum<typename Tally_T::esc,
                            typename Tally_T::vesc::iterator>(
             "escape_spectrum", tally.escape_spectrum.begin(),
@@ -254,12 +249,12 @@ namespace nut
 
 
     template <typename Particle_T>
-    void write_particles(std::ostream & o, 
+    void write_particles(std::ostream & o,
                          std::vector<Particle_T> const & ps,
                          Species const s)
     {
         std::string const n = species_name(s);
-        o << "## " << n << "particle data\nn_particles = " 
+        o << "## " << n << "particle data\nn_particles = "
           << ps.size() << "\n";
         o << "## x \t omega \t weight \t energy \t cell \t species\n";
         o <<  n << "_pdata = [ \n";
@@ -277,7 +272,7 @@ namespace nut
     struct P_arrays
     {
         explicit P_arrays( size_t n)
-            : xs(n,fp_t(0)), 
+            : xs(n,fp_t(0)),
               os(n,fp_t(0)),
               ws(n,fp_t(0)),
               es(n,fp_t(0)),
@@ -320,10 +315,10 @@ namespace nut
     //     size_t n_particles(0u);
     //     s >> n_particles;
     //     Insist(n_particles > 0, "read_particles: cannot read 0 particles!");
-        
+
     //     P_arrays pas(n_particles);
 
-        
+
 
     //     // skip line with column headers
     //     o.getline(); o.getline();
@@ -343,16 +338,16 @@ namespace nut
     //     o.getline(); // skip termination of Python list
 
     //     return pas;
-        
+
     // } // read_particles
 
     // template <typename fp_t>
-    // Density 
+    // Density
     // read_density(std::istream & i)
     // {
     //     advance_to_string(i,"density class");
 
-        
+
     // }
 
 } // nut::
