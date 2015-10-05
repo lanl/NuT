@@ -9,13 +9,44 @@ Nut is a C++ analog to the Haskell McPhD code. It currently is serial. We intend
 
 This compact app captures many of the computational characteristics and challenges of Monte Carlo transport codes. Random number generation is handled by the Philox class of random number generators[1]. We use the Random123 implementation, [available from D. E. Shaw research](http://www.deshawresearch.com/downloads/download_random123.cgi/ "D. E. Shaw Research").
 
-NuT uses the [scons build system](http://www.scons.org/ "SCons"). To get started, please see the file "readme_scons" in the scons directory.
+NuT uses the [cmake build system](http://cmake.org/ "CMake").
 
 Los Alamos National Security, LLC (LANS) owns the copyright to NuT, which it identifies internally as LA-CC-11-087. The license is BSD 3-Clause.
 
+Quick Start
+===========
+1 Dependency: Random123, obtain from D. E. Shaw:
+   https://www.deshawresearch.com/resources_random123.html
+Random123 is implemented entirely in header files, so installation is minimal.
+
+1. Specify environment variables RANDOM123_DIR. These
+should point to the root of the respective installations. For example,
+
+   export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
+
+2. Under the root NuT directory, create a directory called build:
+
+   me@superMachine:~/dev/nut$ mkdir build
+
+   me@superMachine:~/dev/nut$ cd build
+
+3. Configure and build:
+
+   me@superMachine:~/dev/nut/build$ cmake -DCMAKE_INSTALL_PREFIX=./nut ..
+
+   me@superMachine:~/dev/nut/build$ make VERBOSE=on -j 4 2>&1 | tee -a make.out
+
+4. Run unit tests
+
+   me@superMachine:~/dev/nut/build$ ./test/nut_unittests
+
+... tests all pass!
+
+
+
 
 Repository Structure
---------------------
+====================
 
 lib: headers and source files to build libnut.
 
