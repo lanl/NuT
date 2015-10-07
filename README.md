@@ -73,7 +73,7 @@ Quick Introduction to Monte Carlo Neutrino Transport
 ====================================================
 
 Neutrinos are particles associated with the weak nuclear force.
-They are massless, or very nearly so.
+They are very nearly massless; we treat them as massless; i.e. they move at the speed of light.
 Note that neutrinos are very different from neutrons.
 Neutrinos are conventionally denoted by the Greek letter &nu; (thus nu transport, or NuT).
 Neutrinos come in three flavors, corresponding to the three types of lepton: electron (&nu;<sub>e</sub>), mu (&nu;<sub>&mu;</sub>), and tau (&nu;<sub>&tau;</sub>).
