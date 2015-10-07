@@ -9,14 +9,15 @@
 
 #include "Assert.hh"
 #include "types.hh"
-#include "utilities.hh"
+#include "utilities_io.hh"
 #include <vector>
 #include <sstream>
+#include <numeric>
 
 namespace nut
 {
     /*! \brief arrays to keep track of tally in each mesh cell
-     * \tparam <fp_t> {floating point type} 
+     * \tparam <fp_t> {floating point type}
      */
     template <typename fp_t>
     struct Tally
@@ -54,7 +55,7 @@ namespace nut
         vc n_nu_e_el_scat;       // nu_e -- electron scatter
         vc n_nu_e_bar_pos_scat;  // nu_e_bar -- positron scatter
         vc n_nu_x_el_scat;
-        vc n_nu_x_bar_pos_scat;        
+        vc n_nu_x_bar_pos_scat;
 
         vf ew_escaped;
 
@@ -66,7 +67,7 @@ namespace nut
         vf ew_nu_e_nucl_abs;
         vf ew_nu_e_bar_nucl_abs;
         vf ew_nu_x_nucl_abs;
-        
+
         // census counters
         vc n_census_nu_e;
         vc n_census_nu_e_bar;
@@ -130,9 +131,9 @@ namespace nut
             path_length += pl;
         }
 
-        uint32_t 
+        uint32_t
         total_mc_steps() const {
-            return std::accumulate(n_escape.begin(),n_escape.end(),0) 
+            return std::accumulate(n_escape.begin(),n_escape.end(),0)
                 + std::accumulate(n_reflect.begin(),n_reflect.end(),0)
                 + std::accumulate(n_cell_bdy.begin(),n_cell_bdy.end(),0)
                 + std::accumulate(n_cutoff.begin(),n_cutoff.end(),0)
@@ -150,25 +151,25 @@ namespace nut
                 + std::accumulate(n_census_nu_x_bar.begin(),n_census_nu_x_bar.end(),0)
                 ;
         } // total_mc_steps
-            
 
-        uint32_t 
+
+        uint32_t
         total_n_census() const {
-            return 
+            return
                 std::accumulate(n_census_nu_e.begin(),n_census_nu_e.end(),0)
                 + std::accumulate(n_census_nu_e_bar.begin(),n_census_nu_e_bar.end(),0)
                 + std::accumulate(n_census_nu_x.begin(),n_census_nu_x.end(),0)
                 + std::accumulate(n_census_nu_x_bar.begin(),n_census_nu_x_bar.end(),0)
                 ;
         } // total_mc_steps
-            
+
 
         void
         deposit_inelastic_scat(cell_t const cell, fp_cr e_i, fp_cr e_f,
                                fp_cr omega_i, fp_cr omega_f, fp_cr wt,
                                nut::Species const species){
             // We tally omega * ew, need to divide by c at end of time step
-            // Do we need to track momentum and energy seperately by species? 
+            // Do we need to track momentum and energy seperately by species?
             nrgOK(e_i, "initial energy");
             nrgOK(e_f, "final energy");
             cell_t index = make_idx(cell,m_n_cells);
@@ -198,7 +199,7 @@ namespace nut
             return;
         } // deposit_momentum_elastic
 
-        
+
         void count_lepton_scatter(cell_t const cell,Species const species,
                                     size_t const n=1){
             // GreaterThan(n,0,"# nucleon absorptions");
@@ -256,18 +257,18 @@ namespace nut
             }
             return;
         }
-    
 
-        void count_nucleon_elastic_scatter( cell_t const cell, 
+
+        void count_nucleon_elastic_scatter( cell_t const cell,
                                             cntr_t const n=1){
             GreaterThan(n,0u,"# nucleon elastic scatter");
             cell_t const index = make_idx(cell,m_n_cells);
             n_nucl_el_scat[index] += n;
             return;
         }
-    
 
-        void count_escape( cell_t const cell, 
+
+        void count_escape( cell_t const cell,
                            fp_cr ew,
                            fp_cr e,
                            cntr_t const n=1)
@@ -279,7 +280,7 @@ namespace nut
             escape_spectrum.push_back( esc(e,ew));
             return;
         }
-    
+
 
         void count_reflect( cell_t const cell, cntr_t const n=1){
             GreaterThan(n,0u,"# reflects");
@@ -287,23 +288,23 @@ namespace nut
             n_reflect[index] += n;
             return;
         }
-    
+
 
         void count_cell_bdy(cell_t const cell, cntr_t const n=1){
             GreaterThan(n,0u,"# cell bdys");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cell_bdy[index] += n;
         return;
-        }    
-        
+        }
+
         void count_cutoff(cell_t const cell, cntr_t const n=1){
             GreaterThan(n,0u,"# cutoffs");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cutoff[index] += n;
             return;
-        }    
-        
-        void count_census(cell_t const cell, fp_cr energy_weight, 
+        }
+
+        void count_census(cell_t const cell, fp_cr energy_weight,
                           Species const & species, cntr_t const n=1){
             GreaterThan(energy_weight,fp_t(0.0),"energy weight");
             cell_t const index = make_idx(cell,m_n_cells);
@@ -331,9 +332,9 @@ namespace nut
             }
             return;
         }
-        
+
     }; // Tally
-    
+
 } // nut::
 
 #endif

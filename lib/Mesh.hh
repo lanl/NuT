@@ -8,18 +8,17 @@
 #define MESH_H
 
 #include "soft_equiv.hh"
-#include "utilities.hh"
+#include "utilities_io.hh"
 #include "Assert.hh"
 #include "constants.hh"
 #include <vector>
 #include <string>
 #include <cmath>
-#include <cmath>
 
 
 namespace nut
 {
-    /*!\brief Mesh functions for 1D spherical geometry. 
+    /*!\brief Mesh functions for 1D spherical geometry.
      * \tparam <cell_t> {cell index type}
      * \tparam <boundary_t> {geometry (numerical) type}
      * \tparam <bdy_descriptor_t> {boundary descriptor type}
@@ -54,15 +53,15 @@ namespace nut
         }
 
 
-        cell_t 
+        cell_t
         n_cells() const {return m_ncells;}
 
 
         /*!\brief volume of spherical shell 'cell'. 0 < cell <= n_cells. */
-        geom_t 
+        geom_t
         volume(cell_t const cell) const {
             cellOK(cell);
-            cell_t const index(cell-1); 
+            cell_t const index(cell-1);
             geom_t const lo  = m_bdys.at(index);
             geom_t const hi  = m_bdys.at(index+1);
             geom_t const vol = 4./3.*pi*(hi*hi*hi - lo*lo*lo);
@@ -76,7 +75,7 @@ namespace nut
          * \param cell: 0 < cell <= n_cells
          * \param face: 0 (left) or 1 (right)
          */
-        cell_t 
+        cell_t
         cell_across_face(cell_t const cell,cell_t face) const {
             cellOK(cell);
             LessThan(face,cell_t(2),"face");
@@ -87,7 +86,7 @@ namespace nut
             cell_t result(-1);
             switch(btype)
             {
-            case bdy_types::T: 
+            case bdy_types::T:
                 result = cell - 1 + 2*face;
                 break;
             case bdy_types::R:
@@ -98,26 +97,26 @@ namespace nut
                 break;
             default:
                 std::stringstream errstr;
-                errstr << "Sphere_1D::cell_across_face" << __LINE__ 
+                errstr << "Sphere_1D::cell_across_face" << __LINE__
                        << " unknown boundary type: "<< btype;
                 Require(false,errstr.str().c_str());
             }
             return result;
         } // cell_across_face
 
-        geom_t 
+        geom_t
         sample_position( geom_t const urd,cell_t const cell) const {
             extents_t extents = this->cell_extents(cell);
             geom_t const lo = extents.first;
-            geom_t const hi = extents.second;            
+            geom_t const hi = extents.second;
             geom_t const lo3 = lo * lo * lo;
             geom_t const hi3 = hi * hi * hi;
             geom_t const r = std::pow( lo3 + (hi3 - lo3)*urd, 1.0/3.0);
             return r;
         }
-        
+
         /*!\brief type of cell boundary */
-        bdy_desc_t 
+        bdy_desc_t
         bdy_type(cell_t const c, cell_t const face) const {
             cell_t const idx = make_idx(c,m_ncells);
             cell_t const fidx = face_to_index(face);
@@ -132,18 +131,18 @@ namespace nut
             return extents_t(m_bdys[cell-1],m_bdys[cell]);
         }
 
-        
+
         /*!\brief compute the face part of the index into m_descs. */
         cell_t face_to_index(cell_t const f) const {
             LessThan(f,2u,"Mesh1D::face_to_index: face");
             return f;
         }
-        
+
 
         /*!\brief calculate new coordinate and new direction cosine at a given
          *        distance along direction cosine omega.  */
-        coord_t 
-        new_coordinate(geom_t const x, geom_t const omega, 
+        coord_t
+        new_coordinate(geom_t const x, geom_t const omega,
                        geom_t const distance) const {
             geom_t const theta = std::acos(omega);
             geom_t const s     = std::sin(theta);
@@ -156,9 +155,9 @@ namespace nut
             return coord;
         }
 
-        
+
         d_to_b_t
-        distance_to_bdy(geom_t const x, geom_t const omega, 
+        distance_to_bdy(geom_t const x, geom_t const omega,
                         cell_t const cell) const {
             cellOK(cell);
             extents_t extents = this->cell_extents(cell);
@@ -166,9 +165,9 @@ namespace nut
         } // distance_to_bdy
 
 
-        static 
+        static
         d_to_b_t
-        dist_to_bdy_impl(geom_t const x, geom_t const omega, 
+        dist_to_bdy_impl(geom_t const x, geom_t const omega,
                          geom_t const rlo, geom_t const rhi) {
             geom_t const rhisq = rhi * rhi;
             geom_t const rlosq = rlo * rlo;
@@ -177,13 +176,13 @@ namespace nut
             // need to (1-2) check for intersection with the two spheres that
             // bound the current cell, and (3) choose the first intersection
             // along the direction of travel.
-            
+
             // 1. Compute intersections with outer sphere
-            
+
             // get Tan(theta) from inverting omega=Cos(theta). We work with a
             // reduced polar angle, "abs_theta", in the range 0 <= theta <= pi/2,
             // then select the correct intercept between the line that the
-            // particle travels and the spherical shell using the full value of 
+            // particle travels and the spherical shell using the full value of
             // theta.
             geom_t const theta = std::acos(omega);
             geom_t const abs_theta = (theta > pi/2) ?  pi - theta : theta;
@@ -194,7 +193,7 @@ namespace nut
             geom_t const one_on_one_plus_tsq = 1.0/one_plus_tsq;
             // the determinant is r^2 + r^2 * t^2 - x^2 * t^2. Include the
             // square root and divide by 1+Tan(theta)^2 for convenience here.
-            geom_t const dethi = 
+            geom_t const dethi =
                 std::sqrt( rhisq * one_plus_tsq - xsq * tsq) * one_on_one_plus_tsq;
             // These parts don't depend on the radius of the sphere.
             geom_t const xterm1 = x*tsq*one_on_one_plus_tsq;
@@ -202,19 +201,19 @@ namespace nut
             // These are the two intersection with the outer sphere
             geom_t const xhip = xterm1 + dethi;
             geom_t const yhip = yterm1 + t * dethi;
-            geom_t const xhim = xterm1 - dethi; 
+            geom_t const xhim = xterm1 - dethi;
             geom_t const yhim = yterm1 - t * dethi;
             // if the polar angle is less than pi/2, we want the solution
-            // that adds the determinant. 
+            // that adds the determinant.
             geom_t const xhi = (theta < pi/2) ? xhip : xhim;
             geom_t const yhi = (theta < pi/2) ? yhip : yhim;
             geom_t const d_hi = std::sqrt( (xhi-x)*(xhi-x) + (yhi*yhi));
-            
+
             // 2. Look for intersection with inner sphere
             // There is if the absolute value of the polar angle is
             // less than atan(1/(b^2 -1)), where b = x/r_lo. In this case, we can
             // just use the "plus" solution, since that's always the closest.
-            // Note that you may want to know a real solution exists before 
+            // Note that you may want to know a real solution exists before
             // computing it--complicates branch removal.
             geom_t d_lo = huge;
             if(rlo > 0.0)
@@ -234,8 +233,8 @@ namespace nut
                     geom_t const theta_lim = std::atan(tan_theta_lim);
                     if(abs_theta <= theta_lim and theta > pi/2)
                     {
-                        geom_t const detlo = 
-                            std::sqrt( rlosq * one_plus_tsq - xsq * tsq) 
+                        geom_t const detlo =
+                            std::sqrt( rlosq * one_plus_tsq - xsq * tsq)
                             * one_on_one_plus_tsq;
                         geom_t const xlo = xterm1 + detlo;
                         geom_t const ylo = yterm1 + t * detlo;
@@ -261,7 +260,7 @@ namespace nut
             d2b.face = face;
             return d2b;
         } // dist_to_bdy_impl
-            
+
 
         vb const m_bdys;
 

@@ -8,7 +8,7 @@
 #define DENSITY_H
 
 #include "Assert.hh"
-#include "utilities.hh"
+#include "utilities_io.hh"
 #include <vector>
 #include <iostream>
 
@@ -16,7 +16,7 @@
 namespace nut
 {
     /*! \brief arrays to keep track of density in each mesh cell
-     * \tparam <fp_t> {floating point type} 
+     * \tparam <fp_t> {floating point type}
      */
     template <typename fp_t>
     struct Density
@@ -33,13 +33,13 @@ namespace nut
         cell_t const n_cells;
 
         bool have_composition;
-        
+
         /*!\brief structure of arrays to store density and composition data.
          *
-         * Densities should be number densities--sadly, do not enforce 
+         * Densities should be number densities--sadly, do not enforce
          * that at present.
 
-         * Densities are stored for the various quantities, as well as 
+         * Densities are stored for the various quantities, as well as
          * (optionally) the electron number fraction y_e = n_e/(n_p+n_n),
          * and the mean atomic number. The density vectors must all be the same
          * size (one element per mesh cell).  If y_e and abar are provided,
@@ -62,7 +62,7 @@ namespace nut
               rho_A(rho_A_),
               n_cells(rho_p.size())
             {
-                if( (y_e.empty() and !abar.empty() ) || 
+                if( (y_e.empty() and !abar.empty() ) ||
                     (!y_e.empty() and abar.empty() )  )
                 {
                     std::cerr << "Density ctor: abar and y_e must"
@@ -88,8 +88,8 @@ namespace nut
               have_composition(d.have_composition)
             {}
 
-        // size_t ctor 
-        Density(size_t const & sz, 
+        // size_t ctor
+        Density(size_t const & sz,
                 bool have_comp)
             : rho_p(sz),
               rho_e_minus(sz),
@@ -103,10 +103,10 @@ namespace nut
 
         /**Get neutron, proton, and A density summed. i in (0,n_cells]. */
         fp_t rho_nuc(cell_t const c) const {
-            cell_t const i = make_idx(c,n_cells); 
+            cell_t const i = make_idx(c,n_cells);
             return rho_p[i] + rho_A[i]; // rho_n[i];
         }
-         
+
 
         /*!\brief check sizes of arrays for consistency at construction */
         void check_sizes(){
@@ -128,10 +128,10 @@ namespace nut
     }; // Density
 
     template <typename fp_t>
-    struct dens_t 
+    struct dens_t
     {
         fp_t nucleon; // unbound nucleons
-        fp_t e_minus; 
+        fp_t e_minus;
         fp_t e_plus;
     }; //density_t
 
