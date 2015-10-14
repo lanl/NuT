@@ -13,6 +13,11 @@ file(GLOB bh-3_SOURCES
     cl-args.cc
  )
 
+# Need to do this for Clang only:
+set(GOMP_LIB_PATH "/Users/tkelley/exports/gcc-5.2.0/lib")
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${GOMP_LIB_PATH})
+link_directories( ${GOMP_LIB_PATH})
+
 message( " PROJECT_SOURCE_DIR = " ${PROJECT_SOURCE_DIR} )
 
 add_library(bh-3_support ${bh-3_SOURCES})
