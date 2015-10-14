@@ -83,11 +83,9 @@ namespace nut
 
         fp_t path_length;
 
-        cell_t const m_n_cells;
-
         /*!\brief structure of arrays to store tally data.
          */
-        explicit Tally(size_t const ncells)
+        explicit Tally(size_t const ncells = 0)
             : energy  (ncells,fp_t(0)),
               momentum(ncells,fp_t(0)),
               n_n      (ncells,cntr_t(0)),
@@ -125,6 +123,58 @@ namespace nut
               path_length( fp_t(0) ),
               m_n_cells(ncells)
             {}
+
+
+        void resize(size_t const ncells)
+        {
+            energy  .resize(ncells);
+            momentum.resize(ncells);
+            n_n      .resize(ncells);
+            n_p      .resize(ncells);
+            n_e_minus.resize(ncells);
+            n_e_plus .resize(ncells);
+            ew_n      .resize(ncells);
+            ew_p      .resize(ncells);
+            ew_e_minus.resize(ncells);
+            ew_e_plus .resize(ncells);
+            n_escape  .resize(ncells);
+            n_reflect .resize(ncells);
+            n_cell_bdy.resize(ncells);
+            n_cutoff  .resize(ncells);
+            n_nucl_el_scat     .resize(ncells);
+            n_nu_e_el_scat     .resize(ncells);
+            n_nu_e_bar_pos_scat.resize(ncells);
+            n_nu_x_el_scat     .resize(ncells);
+            n_nu_x_bar_pos_scat.resize(ncells);
+            ew_escaped.resize(ncells);
+            n_nu_e_nucl_abs     .resize(ncells);
+            n_nu_e_bar_nucl_abs .resize(ncells);
+            n_nu_x_nucl_abs     .resize(ncells);
+            ew_nu_e_nucl_abs    .resize(ncells);
+            ew_nu_e_bar_nucl_abs.resize(ncells);
+            ew_nu_x_nucl_abs    .resize(ncells);
+            n_census_nu_e    .resize(ncells);
+            n_census_nu_e_bar.resize(ncells);
+            n_census_nu_x    .resize(ncells);
+            n_census_nu_x_bar.resize(ncells);
+            ew_census_nu_e    .resize(ncells);
+            ew_census_nu_e_bar.resize(ncells);
+            ew_census_nu_x    .resize(ncells);
+            ew_census_nu_x_bar.resize(ncells);
+            m_n_cells =ncells;
+            return;
+        }
+
+        void merge(Tally<fp_t> const & other)
+        {
+            Require(other.n_cells() == this -> n_cells(),
+                "Cannot merge tallies with different sizes");
+            Require(false,"Incomplete");
+        } // merge
+
+
+        uint32_t n_cells() const {return m_n_cells;}
+
 
         void accum_pl(fp_t const pl){
             Require(pl >= fp_t(0),"path length < 0!");
@@ -332,6 +382,9 @@ namespace nut
             }
             return;
         }
+
+    private:
+        cell_t m_n_cells;
 
     }; // Tally
 
