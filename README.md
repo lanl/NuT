@@ -19,10 +19,12 @@ There is one external dependency: Random123, obtain from D. E. Shaw:
    https://www.deshawresearch.com/resources_random123.html
 Random123 is implemented entirely in header files, so installation is minimal.
 
-1. Specify environment variable RANDOM123_DIR. RANDOM123_DIR
+1. Specify environment variables RANDOM123_DIR, CC, and CXX. RANDOM123_DIR
 should point to the root of the installation. For example,
 
    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
+   export CC=/home/me/downloads/llvm/clang+llvm-3.7.0/bin/clang
+   export CXX=/home/me/downloads/llvm/clang+llvm-3.7.0/bin/clang++
 
 2. Under the root NuT directory, create a directory called build:
 
