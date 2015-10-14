@@ -7,10 +7,9 @@
 #define UTILITIES_HH
 
 #include "types.hh"
-// #include <sstream>
 #include <numeric>
 #include <cmath>
-// #include "Assert.hh"
+#include "Assert.hh"
 
 /**!\file Useful operators. */
 
@@ -62,6 +61,23 @@ namespace nut
         return std::accumulate(v.begin(),v.end(),
                                typename ContT::value_type(0));
     }
+
+    /** Add each element of v1 to corr. element v2. */
+    template <typename T>
+    inline
+    void merge_vectors(std::vector<T> const & v1, std::vector<T> & v2)
+    {
+        std::transform(v1.begin(),v1.end(),v2.begin(),v2.begin(),std::plus<T>());
+    }
+
+    /** Append the elements of v1 to v2. */
+    template <typename T>
+    inline
+    void append_vector(std::vector<T> const & v1, std::vector<T> & v2)
+    {
+        v2.insert(v2.end(),v1.begin(),v1.end());
+    }
+
 
 } // nut::
 
