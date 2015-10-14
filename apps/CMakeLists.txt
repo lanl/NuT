@@ -1,5 +1,6 @@
 # GCC
-set(bh-3_COMPILE_FLAGS "  -O3 ")
+set(bh-3_COMPILE_FLAGS "  -O3 -fopenmp")
+
 # set(bh-3_COMPILE_FLAGS " -fopenmp -O3 ")
 # set(bh-3_COMPILE_FLAGS "-O3 -msse4.1 -fopenmp -fopt-info-vec-all -march=corei7")
 
@@ -24,5 +25,5 @@ add_executable(bh-3 bh-3.cc)
 target_link_libraries(bh-3 bh-3_support nut)
 
 # Build with DBC assertions turned on.
-add_definitions(-DREQUIRE_ON)
+# add_definitions(-DREQUIRE_ON)
 
