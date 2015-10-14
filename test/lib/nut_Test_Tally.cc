@@ -63,6 +63,8 @@ namespace Nut_Test
         char aspect22[] = "count_census (nu_tau)";
         bool test_23();
         char aspect23[] = "count_census (nu_tau_bar)";
+        bool test_24();
+        char aspect24[] = "merge";
 
     }
 
@@ -117,13 +119,15 @@ namespace Nut_Test
 
         bool passed23 = test( target, aspect23, test_23);
 
+        bool passed24 = test( target, aspect24, test_24);
+
         // call additional tests here.
 
         return passed1 and passed2 and passed3 and passed4 and passed5
             and passed6 and passed7 and passed8 and passed9 and passed10
             and passed11 and passed12 and passed13 and passed14 and passed15
             and passed16 and passed17 and passed18 and passed19 and passed20
-            and passed21 and passed22 and passed23;
+            and passed21 and passed22 and passed23 and passed24;
     }
 
     namespace Tally_tests
@@ -133,6 +137,7 @@ namespace Nut_Test
         using test_aux::check_same;
         using test_aux::check_same_verb;
         using test_aux::comp_verb;
+        using test_aux::tallies_same;
 
 
         bool test_1()
@@ -826,6 +831,133 @@ namespace Nut_Test
 
             return passed;
         } // test_23
+
+
+        bool test_24()
+        {
+            size_t const n_cells(3);
+
+            typedef nut::Tally<double> tally_t;
+            tally_t t1(n_cells);
+            tally_t t2(n_cells);
+            tally_t ref(n_cells);
+
+            for(uint32_t i = 0; i < n_cells; ++i)
+            {
+                t1.energy[i] = (double)i;
+                t1.momentum[i] = (double)i;
+                t1.n_n[i] = (double)i;
+                t1.n_p[i] = (double)i;
+                t1.n_e_minus[i] = (double)i;
+                t1.n_e_plus[i] = (double)i;
+                t1.ew_n[i] = (double)i;
+                t1.ew_p[i] = (double)i;
+                t1.ew_e_minus[i] = (double)i;
+                t1.ew_e_plus[i] = (double)i;
+                t1.n_escape[i] = (double)i;
+                t1.n_reflect[i] = (double)i;
+                t1.n_cell_bdy[i] = (double)i;
+                t1.n_cutoff[i] = (double)i;
+                t1.n_nucl_el_scat[i] = (double)i;
+                t1.n_nu_e_el_scat[i] = (double)i;
+                t1.n_nu_e_bar_pos_scat[i] = (double)i;
+                t1.n_nu_x_el_scat[i] = (double)i;
+                t1.n_nu_x_bar_pos_scat[i] = (double)i;
+                t1.ew_escaped[i] = (double)i;
+                t1.n_nu_e_nucl_abs[i] = (double)i;
+                t1.n_nu_e_bar_nucl_abs[i] = (double)i;
+                t1.n_nu_x_nucl_abs[i] = (double)i;
+                t1.ew_nu_e_nucl_abs[i] = (double)i;
+                t1.ew_nu_e_bar_nucl_abs[i] = (double)i;
+                t1.ew_nu_x_nucl_abs[i] = (double)i;
+                t1.n_census_nu_e[i] = (double)i;
+                t1.n_census_nu_e_bar[i] = (double)i;
+                t1.n_census_nu_x[i] = (double)i;
+                t1.n_census_nu_x_bar[i] = (double)i;
+                t1.ew_census_nu_e[i] = (double)i;
+                t1.ew_census_nu_e_bar[i] = (double)i;
+                t1.ew_census_nu_x[i] = (double)i;
+                t1.ew_census_nu_x_bar[i] = (double)i;
+
+                t2.energy[i] = 2*(double)i;
+                t2.momentum[i] = 2*(double)i;
+                t2.n_n[i] = 2*(double)i;
+                t2.n_p[i] = 2*(double)i;
+                t2.n_e_minus[i] = 2*(double)i;
+                t2.n_e_plus[i] = 2*(double)i;
+                t2.ew_n[i] = 2*(double)i;
+                t2.ew_p[i] = 2*(double)i;
+                t2.ew_e_minus[i] = 2*(double)i;
+                t2.ew_e_plus[i] = 2*(double)i;
+                t2.n_escape[i] = 2*(double)i;
+                t2.n_reflect[i] = 2*(double)i;
+                t2.n_cell_bdy[i] = 2*(double)i;
+                t2.n_cutoff[i] = 2*(double)i;
+                t2.n_nucl_el_scat[i] = 2*(double)i;
+                t2.n_nu_e_el_scat[i] = 2*(double)i;
+                t2.n_nu_e_bar_pos_scat[i] = 2*(double)i;
+                t2.n_nu_x_el_scat[i] = 2*(double)i;
+                t2.n_nu_x_bar_pos_scat[i] = 2*(double)i;
+                t2.ew_escaped[i] = 2*(double)i;
+                t2.n_nu_e_nucl_abs[i] = 2*(double)i;
+                t2.n_nu_e_bar_nucl_abs[i] = 2*(double)i;
+                t2.n_nu_x_nucl_abs[i] = 2*(double)i;
+                t2.ew_nu_e_nucl_abs[i] = 2*(double)i;
+                t2.ew_nu_e_bar_nucl_abs[i] = 2*(double)i;
+                t2.ew_nu_x_nucl_abs[i] = 2*(double)i;
+                t2.n_census_nu_e[i] = 2*(double)i;
+                t2.n_census_nu_e_bar[i] = 2*(double)i;
+                t2.n_census_nu_x[i] = 2*(double)i;
+                t2.n_census_nu_x_bar[i] = 2*(double)i;
+                t2.ew_census_nu_e[i] = 2*(double)i;
+                t2.ew_census_nu_e_bar[i] = 2*(double)i;
+                t2.ew_census_nu_x[i] = 2*(double)i;
+                t2.ew_census_nu_x_bar[i] = 2*(double)i;
+
+                ref.energy[i] = 3*(double)i;
+                ref.momentum[i] = 3*(double)i;
+                ref.n_n[i] = 3*(double)i;
+                ref.n_p[i] = 3*(double)i;
+                ref.n_e_minus[i] = 3*(double)i;
+                ref.n_e_plus[i] = 3*(double)i;
+                ref.ew_n[i] = 3*(double)i;
+                ref.ew_p[i] = 3*(double)i;
+                ref.ew_e_minus[i] = 3*(double)i;
+                ref.ew_e_plus[i] = 3*(double)i;
+                ref.n_escape[i] = 3*(double)i;
+                ref.n_reflect[i] = 3*(double)i;
+                ref.n_cell_bdy[i] = 3*(double)i;
+                ref.n_cutoff[i] = 3*(double)i;
+                ref.n_nucl_el_scat[i] = 3*(double)i;
+                ref.n_nu_e_el_scat[i] = 3*(double)i;
+                ref.n_nu_e_bar_pos_scat[i] = 3*(double)i;
+                ref.n_nu_x_el_scat[i] = 3*(double)i;
+                ref.n_nu_x_bar_pos_scat[i] = 3*(double)i;
+                ref.ew_escaped[i] = 3*(double)i;
+                ref.n_nu_e_nucl_abs[i] = 3*(double)i;
+                ref.n_nu_e_bar_nucl_abs[i] = 3*(double)i;
+                ref.n_nu_x_nucl_abs[i] = 3*(double)i;
+                ref.ew_nu_e_nucl_abs[i] = 3*(double)i;
+                ref.ew_nu_e_bar_nucl_abs[i] = 3*(double)i;
+                ref.ew_nu_x_nucl_abs[i] = 3*(double)i;
+                ref.n_census_nu_e[i] = 3*(double)i;
+                ref.n_census_nu_e_bar[i] = 3*(double)i;
+                ref.n_census_nu_x[i] = 3*(double)i;
+                ref.n_census_nu_x_bar[i] = 3*(double)i;
+                ref.ew_census_nu_e[i] = 3*(double)i;
+                ref.ew_census_nu_e_bar[i] = 3*(double)i;
+                ref.ew_census_nu_x[i] = 3*(double)i;
+                ref.ew_census_nu_x_bar[i] = 3*(double)i;
+            }
+            t1.path_length = 1.0;
+            t2.path_length = 2.0;
+
+            t2.merge(t1);
+
+            bool passed = tallies_same(t2,ref);
+
+            return passed;
+        } // test_24
 
 
         // define additional tests here.

@@ -13,9 +13,18 @@
 #include <vector>
 #include <sstream>
 #include <numeric>
+#include <algorithm> // transform
 
 namespace nut
 {
+
+    /** Add each element of v1 to corr. element v2. */
+    template <typename T>
+    void merge_vectors(std::vector<T> const & v1, std::vector<T> & v2)
+    {
+        std::transform(v1.begin(),v1.end(),v2.begin(),v2.begin(),std::plus<T>());
+    }
+
     /*! \brief arrays to keep track of tally in each mesh cell
      * \tparam <fp_t> {floating point type}
      */
@@ -83,6 +92,9 @@ namespace nut
 
         fp_t path_length;
 
+
+    // interface
+
         /*!\brief structure of arrays to store tally data.
          */
         explicit Tally(size_t const ncells = 0)
@@ -121,47 +133,58 @@ namespace nut
               ew_census_nu_x    (ncells,fp_t(0)),
               ew_census_nu_x_bar(ncells,fp_t(0)),
               path_length( fp_t(0) ),
-              m_n_cells(ncells)
+              m_n_cells(ncells),
+              m_initialized( 0 == ncells ? false : true)
             {}
 
-
+        /** \brief Resize tally: only callable once. */
         void resize(size_t const ncells)
         {
-            energy  .resize(ncells);
+            Require(!m_initialized, "Tally already initialized");
+            m_initialized = true;
+
+            energy.resize(ncells);
             momentum.resize(ncells);
-            n_n      .resize(ncells);
-            n_p      .resize(ncells);
+            n_n.resize(ncells);
+            n_p.resize(ncells);
             n_e_minus.resize(ncells);
+
             n_e_plus .resize(ncells);
-            ew_n      .resize(ncells);
-            ew_p      .resize(ncells);
+            ew_n.resize(ncells);
+            ew_p.resize(ncells);
             ew_e_minus.resize(ncells);
-            ew_e_plus .resize(ncells);
-            n_escape  .resize(ncells);
-            n_reflect .resize(ncells);
+            ew_e_plus.resize(ncells);
+
+            n_escape.resize(ncells);
+            n_reflect.resize(ncells);
             n_cell_bdy.resize(ncells);
-            n_cutoff  .resize(ncells);
-            n_nucl_el_scat     .resize(ncells);
-            n_nu_e_el_scat     .resize(ncells);
+            n_cutoff.resize(ncells);
+            n_nucl_el_scat.resize(ncells);
+
+            n_nu_e_el_scat.resize(ncells);
             n_nu_e_bar_pos_scat.resize(ncells);
-            n_nu_x_el_scat     .resize(ncells);
+            n_nu_x_el_scat.resize(ncells);
             n_nu_x_bar_pos_scat.resize(ncells);
             ew_escaped.resize(ncells);
-            n_nu_e_nucl_abs     .resize(ncells);
-            n_nu_e_bar_nucl_abs .resize(ncells);
-            n_nu_x_nucl_abs     .resize(ncells);
-            ew_nu_e_nucl_abs    .resize(ncells);
+
+            n_nu_e_nucl_abs.resize(ncells);
+            n_nu_e_bar_nucl_abs.resize(ncells);
+            n_nu_x_nucl_abs.resize(ncells);
+            ew_nu_e_nucl_abs.resize(ncells);
             ew_nu_e_bar_nucl_abs.resize(ncells);
-            ew_nu_x_nucl_abs    .resize(ncells);
-            n_census_nu_e    .resize(ncells);
+
+            ew_nu_x_nucl_abs.resize(ncells);
+            n_census_nu_e.resize(ncells);
             n_census_nu_e_bar.resize(ncells);
-            n_census_nu_x    .resize(ncells);
+            n_census_nu_x.resize(ncells);
             n_census_nu_x_bar.resize(ncells);
-            ew_census_nu_e    .resize(ncells);
+
+            ew_census_nu_e.resize(ncells);
             ew_census_nu_e_bar.resize(ncells);
-            ew_census_nu_x    .resize(ncells);
+            ew_census_nu_x.resize(ncells);
             ew_census_nu_x_bar.resize(ncells);
-            m_n_cells =ncells;
+
+            m_n_cells = ncells;
             return;
         }
 
@@ -169,7 +192,44 @@ namespace nut
         {
             Require(other.n_cells() == this -> n_cells(),
                 "Cannot merge tallies with different sizes");
-            Require(false,"Incomplete");
+
+            merge_vectors(other.energy,energy);
+            merge_vectors(other.momentum,momentum);
+            merge_vectors(other.n_n,n_n);
+            merge_vectors(other.n_p,n_p);
+            merge_vectors(other.n_e_minus,n_e_minus);
+            merge_vectors(other.n_e_plus,n_e_plus);
+            merge_vectors(other.ew_n,ew_n);
+            merge_vectors(other.ew_p,ew_p);
+            merge_vectors(other.ew_e_minus,ew_e_minus);
+            merge_vectors(other.ew_e_plus,ew_e_plus);
+            merge_vectors(other.n_escape,n_escape);
+            merge_vectors(other.n_reflect,n_reflect);
+            merge_vectors(other.n_cell_bdy,n_cell_bdy);
+            merge_vectors(other.n_cutoff,n_cutoff);
+            merge_vectors(other.n_nucl_el_scat,n_nucl_el_scat);
+            merge_vectors(other.n_nu_e_el_scat,n_nu_e_el_scat);
+            merge_vectors(other.n_nu_e_bar_pos_scat,n_nu_e_bar_pos_scat);
+            merge_vectors(other.n_nu_x_el_scat,n_nu_x_el_scat);
+            merge_vectors(other.n_nu_x_bar_pos_scat,n_nu_x_bar_pos_scat);
+            merge_vectors(other.ew_escaped,ew_escaped);
+            merge_vectors(other.n_nu_e_nucl_abs,n_nu_e_nucl_abs);
+            merge_vectors(other.n_nu_e_bar_nucl_abs,n_nu_e_bar_nucl_abs);
+            merge_vectors(other.n_nu_x_nucl_abs,n_nu_x_nucl_abs);
+            merge_vectors(other.ew_nu_e_nucl_abs,ew_nu_e_nucl_abs);
+            merge_vectors(other.ew_nu_e_bar_nucl_abs,ew_nu_e_bar_nucl_abs);
+            merge_vectors(other.ew_nu_x_nucl_abs,ew_nu_x_nucl_abs);
+            merge_vectors(other.n_census_nu_e,n_census_nu_e);
+            merge_vectors(other.n_census_nu_e_bar,n_census_nu_e_bar);
+            merge_vectors(other.n_census_nu_x,n_census_nu_x);
+            merge_vectors(other.n_census_nu_x_bar,n_census_nu_x_bar);
+            merge_vectors(other.ew_census_nu_e,ew_census_nu_e);
+            merge_vectors(other.ew_census_nu_e_bar,ew_census_nu_e_bar);
+            merge_vectors(other.ew_census_nu_x,ew_census_nu_x);
+            merge_vectors(other.ew_census_nu_x_bar,ew_census_nu_x_bar);
+
+            path_length += other.path_length;
+            return;
         } // merge
 
 
@@ -386,14 +446,16 @@ namespace nut
     private:
         cell_t m_n_cells;
 
+        bool m_initialized;
+
     }; // Tally
 
 } // nut::
 
 #endif
 
-// handy Python list of all vectors for code generation:
-// ["energy","momentum","ew_escaped","n_n","n_p","n_e_minus","n_e_plus","ew_n","ew_p","ew_e_minus","ew_e_plus","n_escape","n_reflect","n_cell_bdy","n_cutoff","n_nucl_el_scat","n_nu_e_el_scat","n_nu_e_bar_pos_scat","n_nu_x_el_scat","n_nu_x_bar_pos_scat","n_nu_e_nucl_abs","n_nu_e_bar_nucl_abs","ew_nu_e_nucl_abs","ew_nu_e_bar_nucl_abs","n_census_nu_e","n_census_nu_e_bar","n_census_nu_x","n_census_nu_x_bar","ew_census_nu_e","ew_census_nu_e_bar","ew_census_nu_x","ew_census_nu_x_bar"]
+// handy list of all vectors for code generation:
+// ["energy","momentum","n_n","n_p","n_e_minus","n_e_plus","ew_n","ew_p","ew_e_minus","ew_e_plus","n_escape","n_reflect","n_cell_bdy","n_cutoff","n_nucl_el_scat","n_nu_e_el_scat","n_nu_e_bar_pos_scat","n_nu_x_el_scat","n_nu_x_bar_pos_scat","ew_escaped","n_nu_e_nucl_abs","n_nu_e_bar_nucl_abs","n_nu_x_nucl_abs","ew_nu_e_nucl_abs","ew_nu_e_bar_nucl_abs","ew_nu_x_nucl_abs","n_census_nu_e","n_census_nu_e_bar","n_census_nu_x","n_census_nu_x_bar","ew_census_nu_e","ew_census_nu_e_bar","ew_census_nu_x","ew_census_nu_x_bar"]
 
 
 // version
