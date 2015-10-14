@@ -8,6 +8,7 @@
 #define TEST_AUX_H
 
 #include "soft_equiv.hh"
+#include "expect.hh"
 #include <algorithm>        // std::equal
 #include <iostream>
 #include <iomanip>
@@ -158,6 +159,49 @@ namespace test_aux
         fp_t const m_tol;
     };
 
+    template <typename tally_t>
+    bool tallies_same(tally_t const & t1, tally_t const & t2)
+    {
+        bool same(true);
+        same = same && check_same(&t1.energy,&t2.energy);
+        same = same && check_same(&t1.momentum,&t2.momentum);
+        same = same && check_same(&t1.n_n,&t2.n_n);
+        same = same && check_same(&t1.n_p,&t2.n_p);
+        same = same && check_same(&t1.n_e_minus,&t2.n_e_minus);
+        same = same && check_same(&t1.n_e_plus,&t2.n_e_plus);
+        same = same && check_same(&t1.ew_n,&t2.ew_n);
+        same = same && check_same(&t1.ew_p,&t2.ew_p);
+        same = same && check_same(&t1.ew_e_minus,&t2.ew_e_minus);
+        same = same && check_same(&t1.ew_e_plus,&t2.ew_e_plus);
+        same = same && check_same(&t1.n_escape,&t2.n_escape);
+        same = same && check_same(&t1.n_reflect,&t2.n_reflect);
+        same = same && check_same(&t1.n_cell_bdy,&t2.n_cell_bdy);
+        same = same && check_same(&t1.n_cutoff,&t2.n_cutoff);
+        same = same && check_same(&t1.n_nucl_el_scat,&t2.n_nucl_el_scat);
+        same = same && check_same(&t1.n_nu_e_el_scat,&t2.n_nu_e_el_scat);
+        same = same && check_same(&t1.n_nu_e_bar_pos_scat,&t2.n_nu_e_bar_pos_scat);
+        same = same && check_same(&t1.n_nu_x_el_scat,&t2.n_nu_x_el_scat);
+        same = same && check_same(&t1.n_nu_x_bar_pos_scat,&t2.n_nu_x_bar_pos_scat);
+        same = same && check_same(&t1.ew_escaped,&t2.ew_escaped);
+        same = same && check_same(&t1.n_nu_e_nucl_abs,&t2.n_nu_e_nucl_abs);
+        same = same && check_same(&t1.n_nu_e_bar_nucl_abs,&t2.n_nu_e_bar_nucl_abs);
+        same = same && check_same(&t1.n_nu_x_nucl_abs,&t2.n_nu_x_nucl_abs);
+        same = same && check_same(&t1.ew_nu_e_nucl_abs,&t2.ew_nu_e_nucl_abs);
+        same = same && check_same(&t1.ew_nu_e_bar_nucl_abs,&t2.ew_nu_e_bar_nucl_abs);
+        same = same && check_same(&t1.ew_nu_x_nucl_abs,&t2.ew_nu_x_nucl_abs);
+        same = same && check_same(&t1.n_census_nu_e,&t2.n_census_nu_e);
+        same = same && check_same(&t1.n_census_nu_e_bar,&t2.n_census_nu_e_bar);
+        same = same && check_same(&t1.n_census_nu_x,&t2.n_census_nu_x);
+        same = same && check_same(&t1.n_census_nu_x_bar,&t2.n_census_nu_x_bar);
+        same = same && check_same(&t1.ew_census_nu_e,&t2.ew_census_nu_e);
+        same = same && check_same(&t1.ew_census_nu_e_bar,&t2.ew_census_nu_e_bar);
+        same = same && check_same(&t1.ew_census_nu_x,&t2.ew_census_nu_x);
+        same = same && check_same(&t1.ew_census_nu_x_bar,&t2.ew_census_nu_x_bar);
+        same = same && soft_expect(t1.path_length,t2.path_length,"path length");
+        return same;
+    }
+
+
     template <typename tally_t, typename v_t>
     bool
     check_one_changed(tally_t const & tally, tally_t const & ref,
@@ -166,69 +210,69 @@ namespace test_aux
         bool same(true);
         // for each tally field, if not the one in question,
         // make sure that the tally and ref fields are the same
-        same &= check_same_unless_changed( &tally.energy,
+        same = same && check_same_unless_changed( &tally.energy,
                                            & ref.energy, changed_v);
-        same &= check_same_unless_changed( &tally.momentum,
+        same = same && check_same_unless_changed( &tally.momentum,
                                            & ref.momentum, changed_v);
-        same &= check_same_unless_changed( &tally.ew_escaped,
+        same = same && check_same_unless_changed( &tally.ew_escaped,
                                            & ref.ew_escaped, changed_v);
-        same &= check_same_unless_changed( &tally.n_n,
+        same = same && check_same_unless_changed( &tally.n_n,
                                            & ref.n_n, changed_v);
-        same &= check_same_unless_changed( &tally.n_p,
+        same = same && check_same_unless_changed( &tally.n_p,
                                            & ref.n_p, changed_v);
-        same &= check_same_unless_changed( &tally.n_e_minus,
+        same = same && check_same_unless_changed( &tally.n_e_minus,
                                            & ref.n_e_minus, changed_v);
-        same &= check_same_unless_changed( &tally.n_e_plus,
+        same = same && check_same_unless_changed( &tally.n_e_plus,
                                            & ref.n_e_plus, changed_v);
-        same &= check_same_unless_changed( &tally.ew_n,
+        same = same && check_same_unless_changed( &tally.ew_n,
                                            & ref.ew_n, changed_v);
-        same &= check_same_unless_changed( &tally.ew_p,
+        same = same && check_same_unless_changed( &tally.ew_p,
                                            & ref.ew_p, changed_v);
-        same &= check_same_unless_changed( &tally.ew_e_minus,
+        same = same && check_same_unless_changed( &tally.ew_e_minus,
                                            & ref.ew_e_minus, changed_v);
-        same &= check_same_unless_changed( &tally.ew_e_plus,
+        same = same && check_same_unless_changed( &tally.ew_e_plus,
                                            & ref.ew_e_plus, changed_v);
-        same &= check_same_unless_changed( &tally.n_escape,
+        same = same && check_same_unless_changed( &tally.n_escape,
                                            & ref.n_escape, changed_v);
-        same &= check_same_unless_changed( &tally.n_reflect,
+        same = same && check_same_unless_changed( &tally.n_reflect,
                                            & ref.n_reflect, changed_v);
-        same &= check_same_unless_changed( &tally.n_cell_bdy,
+        same = same && check_same_unless_changed( &tally.n_cell_bdy,
                                            & ref.n_cell_bdy, changed_v);
-        same &= check_same_unless_changed( &tally.n_cutoff,
+        same = same && check_same_unless_changed( &tally.n_cutoff,
                                            & ref.n_cutoff, changed_v);
-        same &= check_same_unless_changed( &tally.n_nucl_el_scat,
+        same = same && check_same_unless_changed( &tally.n_nucl_el_scat,
                                            & ref.n_nucl_el_scat, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_e_el_scat,
+        same = same && check_same_unless_changed( &tally.n_nu_e_el_scat,
                                            & ref.n_nu_e_el_scat, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_e_bar_pos_scat,
+        same = same && check_same_unless_changed( &tally.n_nu_e_bar_pos_scat,
                                            & ref.n_nu_e_bar_pos_scat, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_x_el_scat,
+        same = same && check_same_unless_changed( &tally.n_nu_x_el_scat,
                                            & ref.n_nu_x_el_scat, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_x_bar_pos_scat,
+        same = same && check_same_unless_changed( &tally.n_nu_x_bar_pos_scat,
                                            & ref.n_nu_x_bar_pos_scat, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_e_nucl_abs,
+        same = same && check_same_unless_changed( &tally.n_nu_e_nucl_abs,
                                            & ref.n_nu_e_nucl_abs, changed_v);
-        same &= check_same_unless_changed( &tally.n_nu_e_bar_nucl_abs,
+        same = same && check_same_unless_changed( &tally.n_nu_e_bar_nucl_abs,
                                            & ref.n_nu_e_bar_nucl_abs, changed_v);
-        same &= check_same_unless_changed( &tally.ew_nu_e_nucl_abs,
+        same = same && check_same_unless_changed( &tally.ew_nu_e_nucl_abs,
                                            & ref.ew_nu_e_nucl_abs, changed_v);
-        same &= check_same_unless_changed( &tally.ew_nu_e_bar_nucl_abs,
+        same = same && check_same_unless_changed( &tally.ew_nu_e_bar_nucl_abs,
                                            & ref.ew_nu_e_bar_nucl_abs, changed_v);
-        same &= check_same_unless_changed( &tally.n_census_nu_e,
+        same = same && check_same_unless_changed( &tally.n_census_nu_e,
                                            & ref.n_census_nu_e, changed_v);
-        same &= check_same_unless_changed( &tally.n_census_nu_e_bar,
+        same = same && check_same_unless_changed( &tally.n_census_nu_e_bar,
                                            & ref.n_census_nu_e_bar, changed_v);
-        same &= check_same_unless_changed( &tally.n_census_nu_x,
+        same = same && check_same_unless_changed( &tally.n_census_nu_x,
                                            & ref.n_census_nu_x, changed_v);
-        same &= check_same_unless_changed( &tally.n_census_nu_x_bar,
+        same = same && check_same_unless_changed( &tally.n_census_nu_x_bar,
                                            & ref.n_census_nu_x_bar, changed_v);
-        same &= check_same_unless_changed( &tally.ew_census_nu_e,
+        same = same && check_same_unless_changed( &tally.ew_census_nu_e,
                                            & ref.ew_census_nu_e, changed_v);
-        same &= check_same_unless_changed( &tally.ew_census_nu_e_bar,
+        same = same && check_same_unless_changed( &tally.ew_census_nu_e_bar,
                                            & ref.ew_census_nu_e_bar, changed_v);
-        same &= check_same_unless_changed( &tally.ew_census_nu_x,
+        same = same && check_same_unless_changed( &tally.ew_census_nu_x,
                                            & ref.ew_census_nu_x, changed_v);
-        same &= check_same_unless_changed( &tally.ew_census_nu_x_bar,
+        same = same && check_same_unless_changed( &tally.ew_census_nu_x_bar,
                                            & ref.ew_census_nu_x_bar, changed_v);
 
         return same;
@@ -244,69 +288,69 @@ namespace test_aux
         bool same(true);
         // for each tally field, if not the one in question,
         // make sure that the tally and ref fields are the same
-        same &= check_same_unless_2changed( &tally.energy,
+        same = same && check_same_unless_2changed( &tally.energy,
                                             & ref.energy, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.momentum,
+        same = same && check_same_unless_2changed( &tally.momentum,
                                             & ref.momentum, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_escaped,
+        same = same && check_same_unless_2changed( &tally.ew_escaped,
                                             & ref.ew_escaped, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_n,
+        same = same && check_same_unless_2changed( &tally.n_n,
                                             & ref.n_n, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_p,
+        same = same && check_same_unless_2changed( &tally.n_p,
                                             & ref.n_p, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_e_minus,
+        same = same && check_same_unless_2changed( &tally.n_e_minus,
                                             & ref.n_e_minus, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_e_plus,
+        same = same && check_same_unless_2changed( &tally.n_e_plus,
                                             & ref.n_e_plus, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_n,
+        same = same && check_same_unless_2changed( &tally.ew_n,
                                             & ref.ew_n, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_p,
+        same = same && check_same_unless_2changed( &tally.ew_p,
                                             & ref.ew_p, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_e_minus,
+        same = same && check_same_unless_2changed( &tally.ew_e_minus,
                                             & ref.ew_e_minus, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_e_plus,
+        same = same && check_same_unless_2changed( &tally.ew_e_plus,
                                             & ref.ew_e_plus, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_escape,
+        same = same && check_same_unless_2changed( &tally.n_escape,
                                             & ref.n_escape, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_reflect,
+        same = same && check_same_unless_2changed( &tally.n_reflect,
                                             & ref.n_reflect, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_cell_bdy,
+        same = same && check_same_unless_2changed( &tally.n_cell_bdy,
                                             & ref.n_cell_bdy, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_cutoff,
+        same = same && check_same_unless_2changed( &tally.n_cutoff,
                                             & ref.n_cutoff, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nucl_el_scat,
+        same = same && check_same_unless_2changed( &tally.n_nucl_el_scat,
                                             & ref.n_nucl_el_scat, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_e_el_scat,
+        same = same && check_same_unless_2changed( &tally.n_nu_e_el_scat,
                                             & ref.n_nu_e_el_scat, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_e_bar_pos_scat,
+        same = same && check_same_unless_2changed( &tally.n_nu_e_bar_pos_scat,
                                             & ref.n_nu_e_bar_pos_scat, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_x_el_scat,
+        same = same && check_same_unless_2changed( &tally.n_nu_x_el_scat,
                                             & ref.n_nu_x_el_scat, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_x_bar_pos_scat,
+        same = same && check_same_unless_2changed( &tally.n_nu_x_bar_pos_scat,
                                             & ref.n_nu_x_bar_pos_scat, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_e_nucl_abs,
+        same = same && check_same_unless_2changed( &tally.n_nu_e_nucl_abs,
                                             & ref.n_nu_e_nucl_abs, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_nu_e_bar_nucl_abs,
+        same = same && check_same_unless_2changed( &tally.n_nu_e_bar_nucl_abs,
                                             & ref.n_nu_e_bar_nucl_abs, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_nu_e_nucl_abs,
+        same = same && check_same_unless_2changed( &tally.ew_nu_e_nucl_abs,
                                             & ref.ew_nu_e_nucl_abs, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_nu_e_bar_nucl_abs,
+        same = same && check_same_unless_2changed( &tally.ew_nu_e_bar_nucl_abs,
                                             & ref.ew_nu_e_bar_nucl_abs, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_census_nu_e,
+        same = same && check_same_unless_2changed( &tally.n_census_nu_e,
                                             & ref.n_census_nu_e, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_census_nu_e_bar,
+        same = same && check_same_unless_2changed( &tally.n_census_nu_e_bar,
                                             & ref.n_census_nu_e_bar, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_census_nu_x,
+        same = same && check_same_unless_2changed( &tally.n_census_nu_x,
                                             & ref.n_census_nu_x, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.n_census_nu_x_bar,
+        same = same && check_same_unless_2changed( &tally.n_census_nu_x_bar,
                                             & ref.n_census_nu_x_bar, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_census_nu_e,
+        same = same && check_same_unless_2changed( &tally.ew_census_nu_e,
                                             & ref.ew_census_nu_e, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_census_nu_e_bar,
+        same = same && check_same_unless_2changed( &tally.ew_census_nu_e_bar,
                                             & ref.ew_census_nu_e_bar, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_census_nu_x,
+        same = same && check_same_unless_2changed( &tally.ew_census_nu_x,
                                             & ref.ew_census_nu_x, chgd_v1, chgd_v2);
-        same &= check_same_unless_2changed( &tally.ew_census_nu_x_bar,
+        same = same && check_same_unless_2changed( &tally.ew_census_nu_x_bar,
                                             & ref.ew_census_nu_x_bar, chgd_v1, chgd_v2);
 
         return same;
