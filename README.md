@@ -15,12 +15,12 @@ Los Alamos National Security, LLC (LANS) owns the copyright to NuT, which it ide
 
 Quick Start
 ===========
-1 Dependency: Random123, obtain from D. E. Shaw:
+There is one external dependency: Random123, obtain from D. E. Shaw:
    https://www.deshawresearch.com/resources_random123.html
 Random123 is implemented entirely in header files, so installation is minimal.
 
-1. Specify environment variables RANDOM123_DIR. These
-should point to the root of the respective installations. For example,
+1. Specify environment variable RANDOM123_DIR. RANDOM123_DIR
+should point to the root of the installation. For example,
 
    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
 
