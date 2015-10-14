@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <execinfo.h>
 #include <iterator>
+#include <omp.h>
 
 typedef nut::Opacity<nut::geom_t>        op_t;
 typedef nut::Velocity<nut::geom_t>       Velocity_t;
@@ -82,6 +83,7 @@ void run_cycle(src_stat_t const & stats
     using nut::LessThan;
 
     cell_t const n_cells = mesh.n_cells();
+
     Require(stats.ns.size()  == n_cells &&
             stats.es.size()  == n_cells &&
             stats.ews.size() == n_cells, "correct array lenghts");
@@ -102,17 +104,30 @@ void run_cycle(src_stat_t const & stats
     nut::ChunkIdVec chkIds;
     nut::getChunks(rank,commSz,n_chks_tot,chkIds);
 
+    // create a pool of tallies and censuseses, one for each thread
+    uint32_t const n_threads(omp_get_max_threads());
+    std::vector<census_t> censuses(n_threads);
+    std::vector<tally_t> tallies(n_threads);
+    for(uint32_t tid = 0; tid < n_threads; ++tid)
+    {
+        tallies[tid].resize(n_cells);
+    }
+
     std::cout << "We have " << n_chks_tot << " total chunks." << std::endl;
 
-    std::cout << "This PE has " << chkIds.size() << " chunks." << std::endl;
+    std::cout << "This PE has " << chkIds.size() << " chunks for "
+        << n_threads << " threads."
+        << std::endl;
 
     /* This PE does the chunks scheduled by getChunks. Those chunks are listed
      * in chkIds; chkIds are indices into chunks and schunks arrays. For each
      * chunk, we look at the corresponding vector of source numbers in
      * schunks[chkId]: for each entry (cell) we run the corresponding number of
-     * particles. */
+     * particles.
+     */
 
 
+#pragma omp parallel for
     for(size_t ci = 0; ci < n_chks_tot; ++ci)
     {
         // for each chunk that this PE does
@@ -121,9 +136,15 @@ void run_cycle(src_stat_t const & stats
         src_stat_t const & ss = *schunks[chkId];
         PtclId curr(chunk.pstart);
 
+        uint32_t const tid(omp_get_thread_num());
+        tally_t & thr_tally(tallies[tid]);
+        census_t & thr_census(censuses[tid]);
+
         // std::cout << "Processing chunk " << chkId
         //           << ", pstart: " << chunk.pstart
         //           << ", pend: "  << chunk.pend
+        //           << ", taken by thread " << tid
+        //           << " of " << n_threads
         //           << std::endl;
 
         // for each cell in the chunk, process the particles that
@@ -150,9 +171,8 @@ void run_cycle(src_stat_t const & stats
                 nut::ctr_t evt_ctr(nut::rng_t::make_ctr(0u,0u,ptcl_id,0u));
                 nut::rng_t evt_rng(evt_ctr,key);   // for generating events
                 p_in.rng = evt_rng;
-                // p_t p_out =
                 nut::transport_particle(p_in,mesh,op,
-                                        vel,tally,census,
+                                        vel,thr_tally,thr_census,
                                         log,alpha);
                 // std::cout << "final state: " << p_out << std::endl;
                 ctr++;
@@ -162,10 +182,19 @@ void run_cycle(src_stat_t const & stats
                     std::cout << ctr << "/" << n_tot << " " << species_name(s)
                               << "'s complete" << std::endl;
                 }
-            }
+            } // loop over particles
+        } // loop over cells
+    } // chunk loop
 
-        }
+    // std::cout << "run_cycle: Transport complete\n";
+    for(uint32_t tid = 0; tid < n_threads; ++tid)
+    {
+        tally.merge(tallies[tid]);
+        census.merge(censuses[tid]);
     }
+
+    // std::cout << "run_cycle: Merge complete \n";
+
     // fix up momenta
     vg new_momenta(n_cells,0);
     std::transform(tally.momentum.begin(),tally.momentum.end(),
