@@ -10,6 +10,7 @@
 #include "Assert.hh"
 #include "types.hh"
 #include "utilities_io.hh"
+#include "utilities.hh"
 #include <vector>
 #include <sstream>
 #include <numeric>
@@ -17,13 +18,6 @@
 
 namespace nut
 {
-
-    /** Add each element of v1 to corr. element v2. */
-    template <typename T>
-    void merge_vectors(std::vector<T> const & v1, std::vector<T> & v2)
-    {
-        std::transform(v1.begin(),v1.end(),v2.begin(),v2.begin(),std::plus<T>());
-    }
 
     /*! \brief arrays to keep track of tally in each mesh cell
      * \tparam <fp_t> {floating point type}
