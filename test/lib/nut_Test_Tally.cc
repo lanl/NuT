@@ -951,6 +951,7 @@ namespace Nut_Test
             }
             t1.path_length = 1.0;
             t2.path_length = 2.0;
+            ref.path_length = 3.0;
 
             t2.merge(t1);
 
