@@ -100,7 +100,7 @@ namespace nut
         // body of deposition
         for(uint32_t cidx = 0; cidx < tally.n_cells(); ++cidx)
         {
-            o << std::setw(4) << std::setfill('0') << cidx
+            o << std::setw(4) << std::setfill('0') << cidx << ": "
               << std::setprecision(15) << tally.energy[cidx] << ", "
               << tally.momentum[cidx] << "\n";
         }
