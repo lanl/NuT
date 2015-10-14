@@ -43,14 +43,14 @@ namespace nut
         PtclId pend;
         Chunk(ChunkId const c,PtclId const s, PtclId const e)
             : cid(c),pstart(s),pend(e) {}
-        Chunk() 
+        Chunk()
             : cid(uint32_t(-1)),pstart(uint32_t(-1)),pend(uint32_t(-1)) {}
     };
 
     /** Compute the chunks for which a rank is responsible, given
      * the size of the communicator dividing work and the
      * total number of chunks.*/
-    void getChunks(uint32_t const rank, uint32_t const commSz, 
+    void getChunks(uint32_t const rank, uint32_t const commSz,
                    uint32_t const nc, ChunkIdVec & chunks);
 
     /** Split source statistics into chunks. Provides types via its *
@@ -70,7 +70,7 @@ namespace nut
          * chunked source statistics.                                */
         static
         void
-        chunks(uint32_t const chkSz, 
+        chunks(uint32_t const chkSz,
                src_stats const & statsIn,
                ChunkVec & chunks,
                StatsVec & statsVOut)
@@ -82,7 +82,7 @@ namespace nut
             std::transform(statsVOut.begin(),statsVOut.end(),ns.begin(),
                            &get_n_ps);
             vsz cums(n_chks,0);
-            // if n_chks == 1, next line ok (&cums[1]) 
+            // if n_chks == 1, next line ok (&cums[1])
             // b/c then ns.begin() == --ns.end()
             std::partial_sum(ns.begin(),--(ns.end()),&cums[1]);
             if(chunks.size() != n_chks)
@@ -95,13 +95,14 @@ namespace nut
             }
             return;
         } // chunks
+
         static
         sz_t get_n_ps(sp_stats const ss){return ss->n_particles();}
 
         static
         void
-        mkChunk( uint32_t const i, 
-                 sz_t const pid, 
+        mkChunk( uint32_t const i,
+                 sz_t const pid,
                  sz_t const chkSz,
                  Chunk & chunk)
         {
@@ -116,13 +117,13 @@ namespace nut
          * a multiple of n_chunks).                                        */
         static
         void
-        take_n_particles(uint32_t const chkSz, 
+        take_n_particles(uint32_t const chkSz,
                          src_stats const & statsIn,
                          StatsVec & statsVOut)
         {
             GreaterThan(chkSz,0u,"take_n_particles:chunk size");
             sz_t const n_ps_tot(statsIn.n_particles());
-            uint32_t const nchks(n_ps_tot / chkSz + 
+            uint32_t const nchks(n_ps_tot / chkSz +
                                  ((n_ps_tot % chkSz != 0) ? 1 : 0));
             statsVOut.reserve(nchks);
             statsVOut.resize(0);
@@ -148,7 +149,7 @@ namespace nut
                         n_used += n_rem;
                         n_rem = 0;
                     }
-                    else  
+                    else
                     {
                         // finalize this chunk, start new one
                         chk -> push_back(n_take,c,e,ew);
@@ -174,8 +175,8 @@ namespace nut
 
 
         /* Alternate implementation of take_n_particles.
-           Meh. Looks like this won't really be much savings. Could be 
-           a bit better if we had better notation for dealing with 
+           Meh. Looks like this won't really be much savings. Could be
+           a bit better if we had better notation for dealing with
            tuples and lists/vectors.
          */
         // // the information in the "head" of the input list. This changes as
@@ -200,7 +201,7 @@ namespace nut
 
 
         // static
-        // void take_n_ps(uint32_t const chkSz, 
+        // void take_n_ps(uint32_t const chkSz,
         //                src_stats const & statsIn,
         //                StatsVec & statsVOut)
         // {
@@ -211,7 +212,7 @@ namespace nut
         // }
 
         // static
-        // comm_ptr & 
+        // comm_ptr &
         // take_n(n,comm_ptr & curr)
         // {
         //     if(0 == curr.ph -> n) // then move to next cell
@@ -244,19 +245,19 @@ namespace nut
 
 } // :: nut
 
-// /** Parallel decomposition: divide up particles in each cell between 
+// /** Parallel decomposition: divide up particles in each cell between
 //  * processors. Every rank gets nc / commSz particles, plus one extra iff
 //  *
 //  *    r < nc % comm_sz.
-//  * 
-//  * This potentially puts more work onto processors with lower rank: each 
-//  * time, the lowest ranks get an extra particle. Alternatives are to 
+//  *
+//  * This potentially puts more work onto processors with lower rank: each
+//  * time, the lowest ranks get an extra particle. Alternatives are to
 //  * sacrifice reproducibility (simply replicate), or move toward a domain-
 //  * decomposed approach. The latter has its own load imbalances. Or could
 //  * get a little more clever about assigning the extra patricles in each cell.
 //  *
-//  * To get the same result regardless of the number of MPI ranks, we 
-//  * associate a counter with every particle. The mapping from rank and 
+//  * To get the same result regardless of the number of MPI ranks, we
+//  * associate a counter with every particle. The mapping from rank and
 //  * communicator size to particle ids is performed by genPtclIds.
 //  */
 // namespace nut
@@ -269,7 +270,7 @@ namespace nut
 //     {
 //         sz_t const nbase = n_cell / csz;
 //         sz_t const nextra = rank < (n_cell % csz) ? 1 : 0;
-//         return nbase + nextra;        
+//         return nbase + nextra;
 //     }
 
 
@@ -297,7 +298,7 @@ namespace nut
 //      *    offset = \sum_{i=0}^{i<r} ps_per_rank(i,c,n_cell) */
 //     template <typename sz_t>
 //     inline
-//     sz_t 
+//     sz_t
 //     rank_off( Rank const & rank, CommSz const & csz, sz_t const n_cll)
 //     {
 //         sz_t const c = sz_t(fromCommSz(csz));
@@ -311,8 +312,8 @@ namespace nut
 //     }
 
 
-//     /** Generate particle ids for one cell, implementing id of kth particle 
-//      * in cell j for rank r given by 
+//     /** Generate particle ids for one cell, implementing id of kth particle
+//      * in cell j for rank r given by
 //      *
 //      *     cumN + rank_offset + k
 //      *
@@ -344,15 +345,15 @@ namespace nut
 //         return;
 //     }
 
-//     /** Compute a set of unique particle ids for a given rank, total 
-//      * number of ranks, and global statistics. Correctly arranged, the 
+//     /** Compute a set of unique particle ids for a given rank, total
+//      * number of ranks, and global statistics. Correctly arranged, the
 //      * output for all ranks for a given communicator size should be the
 //      * the same as the output for all ranks for a different communicator
 //      * size. This is the core property of the invariant partition. */
 //     template <typename fp_t, typename sz_t>
 //     void
-//     gen_ptcl_ids(Rank const & rk, CommSz const & csz, 
-//                  src_stats_t<fp_t,sz_t> const & stats, 
+//     gen_ptcl_ids(Rank const & rk, CommSz const & csz,
+//                  src_stats_t<fp_t,sz_t> const & stats,
 //                  vid & ids)
 //     {
 //         size_t n_cells = stats.size();
@@ -369,7 +370,7 @@ namespace nut
 //             ids_per_cell(rk,csz,idx_low,stats.ns[i],
 //                          &ids[idx_low],&ids[idx_high]);
 //         }
-        
+
 //     } // gen_ptcl_ids
 
 // } // nut::
