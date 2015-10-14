@@ -8,6 +8,7 @@
 #define CENSUS_H
 
 #include "types.hh"
+#include "utilities.hh"
 #include <vector>
 
 namespace nut
@@ -47,13 +48,26 @@ namespace nut
                 nu_tau_bars.push_back(particle);
                 break;
             default: // should never get here
-                std::cerr << "Census::append unknown particle species: " 
+                std::cerr << "Census::append unknown particle species: "
                           << particle.species << std::endl;
             } // switch
             return;
         } // append
-        
+
+        void merge(Census<p_t> const & other)
+        {
+            append_vector(other.nu_es,nu_es);
+            append_vector(other.nu_e_bars,nu_e_bars);
+            append_vector(other.nu_mus,nu_mus);
+            append_vector(other.nu_mu_bars,nu_mu_bars);
+            append_vector(other.nu_taus,nu_taus);
+            append_vector(other.nu_tau_bars,nu_tau_bars);
+            return;
+        }
+
     }; // Census
+
+// ["nu_es","nu_e_bars","nu_mus","nu_mu_bars","nu_taus","nu_tau_bars"]
 
 } // nut::
 
