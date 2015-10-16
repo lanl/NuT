@@ -11,6 +11,7 @@
 #include "nut_Test_decide_event.hh"
 #include "nut_Test_Density.hh"
 #include "nut_Test_Mesh.hh"
+#include "nut_Test_Mesh3D.hh"
 #include "nut_Test_Opacity.hh"
 #include "nut_Test_Particle.hh"
 #include "nut_Test_Planck.hh"
@@ -58,6 +59,7 @@ namespace NutTest_standalones
         tests["assert"]     =  Test_Desc(Assert_tests::target, test_Assert);
         tests["density"]    =  Test_Desc(Density_tests::target, test_Density);
         tests["mesh"]       =  Test_Desc(Mesh_tests::target, test_Mesh);
+        tests["mesh3D"]       =  Test_Desc(Mesh3D_tests::target, test_Mesh3D);
         tests["opacity"]    =  Test_Desc(Opacity_tests::target, test_Opacity);
         tests["planck"]     =  Test_Desc(Planck_tests::target, test_Planck);
         tests["ptcl"]       =  Test_Desc(particle_tests::target, test_Particle);
@@ -121,6 +123,9 @@ namespace NutTest_standalones
         bool mesh_passed  =  test(Mesh_tests::target, "all",
                                  test_Mesh);
 
+        bool mesh3D_passed  =  test(Mesh3D_tests::target, "all",
+                                 test_Mesh3D);
+
         bool opacity_passed  =  test(Opacity_tests::target, "all",
                                  test_Opacity);
 
@@ -163,6 +168,7 @@ namespace NutTest_standalones
             and decide_event_passed
             and density_passed
             and mesh_passed
+            and mesh3D_passed
             and opacity_passed
             and planck_passed
             and ptcl_passed

@@ -1,8 +1,8 @@
-# build google tests for nut
-
 # Borrowed from J. Cohn's test cmake for ENAMR.
 # Notes:  CMAKE_SOURCE_DIR is cmake variable set to the
 # directory passed as an argument to cmake
+
+# Note 16 Oct 2016: references to gtest are purely aspirational at this point.
 
 # Borrowed from gtest-1.7.0/CMakeLists.txt, which builds gtest
 # libraries needed to use gtest as well as example unit tests
