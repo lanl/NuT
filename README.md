@@ -5,7 +5,7 @@ Monte Carlo code for Neutrino Transport
 
 NuT simulates neutrino transport. Currently, it runs in 1D, spherical and 3D Cartesian geometries (the mesh geometry and topology is carefully encapsulated, so adding another mesh requires a few hundred lines of interface implementation). Particles events are tallied in the lab frame, while scattering events (cross sections) are calculated in the co-moving frame. Cross-sections are computed via analytic formulae given in Herant et al [2].
 
-Nut is a C++ analog to the Haskell McPhD code. It currently has serial and OpenMP implementations. NuT is principally aimed at exploring on-node parallelism and performance issues. Like McPhD, NuT's driver application is currently configured to run electron neutrinos and antineutrinos; mu and tau neutrinos are approximated as nu_x. Changing this is a simple edit (give me a star and I'll add it).
+Nut is a C++ analog to the Haskell McPhD code. It currently has serial (master branch) and OpenMP (openmp branch) implementations. NuT is principally aimed at exploring on-node parallelism and performance issues. Like McPhD, NuT's driver application is currently configured to run electron neutrinos and antineutrinos; mu and tau neutrinos are approximated as nu_x. Changing this is a simple edit (give me a star and I'll add it).
 
 This compact app captures many of the computational characteristics and challenges of Monte Carlo transport codes. Random number generation is handled by the Philox class of random number generators[1]. We use the Random123 implementation, [available from D. E. Shaw research](http://www.deshawresearch.com/downloads/download_random123.cgi/ "D. E. Shaw Research").
 
