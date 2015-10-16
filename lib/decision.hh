@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+#include <array>
 #include <algorithm>
 #include "lorentz.hh"
 // #include <iomanip>
@@ -43,11 +44,13 @@ namespace nut
     {
         typedef typename particle_t::fp_t fp_t;
         // typedef std::pair<events::Event,geom_t> event_n_dist;
-        typedef std::vector<event_n_dist> vend_t;
+        // Currently there are always  three top-level events considered.
+        // Changing vector to std::array
+        typedef std::array<event_n_dist,3> vend_t;
         typedef typename mesh_t::d_to_b_t d_to_b_t;
 
-        vend_t e_n_ds(0);
-        e_n_ds.reserve(3);
+        vend_t e_n_ds;
+        // e_n_ds.reserve(3);
 
         cell_t const cell  = p.cell;
         fp_t const tleft   = p.t;
@@ -71,14 +74,15 @@ namespace nut
 
         geom_t const d_coll     = (sig_coll != fp_t(0)) ?
             -std::log(random_dev)/sig_coll : huge;
-        e_n_ds.push_back(event_n_dist(events::collision,d_coll));
+
+        e_n_ds[0] = event_n_dist(events::collision,d_coll);
 
         d_to_b_t dnf = mesh.distance_to_bdy(x,oli,cell);
         geom_t const d_bdy = dnf.d;
-        e_n_ds.push_back(event_n_dist(events::boundary,d_bdy));
+        e_n_ds[1] = event_n_dist(events::boundary,d_bdy);
 
         geom_t const d_step_end = c * tleft;
-        e_n_ds.push_back(event_n_dist(events::step_end,d_step_end));
+        e_n_ds[2] = event_n_dist(events::step_end,d_step_end);
 
         // pick (event,dist) pair with shortest distance
         event_n_dist closest = *(std::min_element(e_n_ds.begin(),e_n_ds.end(),
