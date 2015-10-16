@@ -23,7 +23,9 @@ Random123 is implemented entirely in header files, so installation is minimal.
 should point to the root of the installation. For example,
 
    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
+
    export CC=/home/me/downloads/llvm/clang+llvm-3.7.0/bin/clang
+
    export CXX=/home/me/downloads/llvm/clang+llvm-3.7.0/bin/clang++
 
 2. Under the root NuT directory, create a directory called build:
