@@ -4,18 +4,20 @@
 # Dependencies: Random123, obtain from D. E. Shaw:
 #    https://www.deshawresearch.com/resources_random123.html
 # Ranom123 is implemented entirely in header files, so installation is minimal.
-# 1. specify environment variables RANDOM123_DIR. These
+# 1. specify environment variables RANDOM123_DIR, CC, CXX. These
 # should point to the root of the respective installations. For example,
 #    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
 # 2. Under the root NuT directory, create a directory called build:
 #    me@superMachine:~/dev/nut$ mkdir build
 #    me@superMachine:~/dev/nut$ cd build
 # 3. configure and build:
-#    me@superMachine:~/dev/nut/build$ cmake -DCMAKE_INSTALL_PREFIX=./nut ..
+#    me@superMachine:~/dev/nut/build$ cmake -DCMAKE_INSTALL_PREFIX=./nut -DCMAKE_BUILD_TYPE=RELEASE ..
 #    me@superMachine:~/dev/nut/build$ make VERBOSE=on -j 4 2>&1 | tee -a make.out
 # 4. run unit tests
 #    me@superMachine:~/dev/nut/build$ ./test/nut_unittests
 # ... tests all pass!
+
+# Other build types: DEBUG,RELEASE,RELWITHDEBINFO
 
 # To do:
 #  1. incorporate build and version information into destination
@@ -34,30 +36,33 @@
 # ensure min cmake version, optional
 cmake_minimum_required (VERSION 3.0)
 
+
+# set compiler, looking first to the environment, defaulting to
+# GNU if nothing better is found
+#if (DEFINED ENV{CC})
+#   set(CMAKE_C_COMPILER $ENV{CC})
+#   set(CMAKE_CXX_COMPILER $ENV{CXX})
+#else()
+#   set(CMAKE_C_COMPILER gcc)
+#   set(CMAKE_CXX_COMPILER g++)
+#endif()
+
+
+
 # name the project
 # languages - CXX and C are included by default
 project (NuT LANGUAGES CXX)
 
-# set compiler, looking first to the environment, defaulting to
-# GNU if nothing better is found
-if (DEFINED ENV{CC})
-   set(CMAKE_C_COMPILER $ENV{CC})
-   set(CMAKE_CXX_COMPILER $ENV{CXX})
-   # set(CMAKE_FORTRAN_COMPILER $ENV{F90})
-else()
-   set(CMAKE_C_COMPILER gcc)
-   set(CMAKE_CXX_COMPILER g++)
-   # set(CMAKE_FORTRAN_COMPILER gfortran)
-endif()
-
 
 # create variable
-set(NuT_COMPILE_FLAGS "-std=c++11 -g -Wall ")
+set(NuT_COMPILE_FLAGS "-std=c++11 -g -Wall")
 
 # append CMAKE_CXX_FLAGS w/ above variable
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NuT_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}${NuT_COMPILE_FLAGS}")
 
-
+# Do these actually do anything useful???
+set_property(GLOBAL PROPERTY CXX_STANDARD 11)
+set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
 #--------- Random 123 --------------------------
 if (NOT DEFINED RANDOM123_ROOT)
