@@ -18,6 +18,8 @@
 # ... tests all pass!
 
 # Other build types: DEBUG,RELEASE,RELWITHDEBINFO
+# For Doxygen, add -Dbuild_api_doc=1 to CMake command line.
+# When you're tired of rebuilding Doxygen, re-run CMake with -Dbuild_api_doc=1
 
 # To do:
 #  1. incorporate build and version information into destination
