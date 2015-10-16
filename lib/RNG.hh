@@ -42,7 +42,7 @@ namespace nut
                 this->advance();
             }
             return ret;
-        } 
+        }
 
         static
         key_t make_key(uint32_t lo,uint32_t hi)
@@ -107,8 +107,8 @@ namespace nut
     public:
         /* get a random number */
         fp_t random();
-        
-        
+
+
         Buffer_RNG(fp_t const * const rns, size_t const n_rns, bool silent = false)
             : m_rns(rns,rns+n_rns),
               m_idx(0),
@@ -116,11 +116,12 @@ namespace nut
               m_old_idx(0),
               m_n_warns(0),
               m_max_warns(2),
-              m_warn_next(false)
+              m_warn_next(false),
+              m_silent(silent)
             {}
 
         bool operator==(Buffer_RNG const & r) const {
-            bool same = 
+            bool same =
                 m_rns == r.m_rns &&
                 m_n_issued == r.m_n_issued &&
                 m_old_idx == r.m_old_idx &&
@@ -131,30 +132,30 @@ namespace nut
         }
 
         new_gens split() const {return new_gens(*this, *this);}
-           
+
     private:
         std::vector<fp_t> m_rns; // shd be const, but can't use push_back if so
-        
+
         size_t   m_idx;
-        
+
         size_t   m_n_issued;
 
         // counters to track rolling over and warning about it
         size_t   m_old_idx;
 
         uint32_t m_n_warns;
-        
+
         uint32_t m_max_warns;
-        
-        bool     m_warn_next; 
+
+        bool     m_warn_next;
 
         bool     m_silent;
 
     private:
     }; // Buffer_RNG
-    
 
-    template <typename fp_t> 
+
+    template <typename fp_t>
     fp_t Buffer_RNG<fp_t>::random(){
         // warn if stream rolled over on the preceding call (see below)
         if(m_warn_next && !m_silent)
@@ -188,9 +189,9 @@ namespace nut
     } // random
 
 
-    /* Uses L'Ecuyer's Multiplicative Linear Congruential Generator 
-     * {Comm. ACM, v. 31, p. 742 (1988)}, as implemented in the Haskell 
-     * System.Random library, to permit direct comparison. Outdated after 
+    /* Uses L'Ecuyer's Multiplicative Linear Congruential Generator
+     * {Comm. ACM, v. 31, p. 742 (1988)}, as implemented in the Haskell
+     * System.Random library, to permit direct comparison. Outdated after
      * Nov-Dec 2011. */
     class MLCG
     {
@@ -227,7 +228,7 @@ namespace nut
             double x = (double) this->random_int();
             int64_t const h = int64_t(2147483647);
             int64_t const l = int64_t(-2147483648LL);
-            int64_t const k = h - l + 1;            
+            int64_t const k = h - l + 1;
             // int64_t const k = int64_t(4294967295LL + 1LL);
             double scaled_x = 0.5 + 1.0 / (double)k * x;
             return scaled_x;
@@ -239,7 +240,7 @@ namespace nut
         }
 
     private:
-        /*!\brief pull the next integer from the stream, and advance the 
+        /*!\brief pull the next integer from the stream, and advance the
          * state of this object. */
         int32_t next() {
             int32_t const c1 = 53668;
@@ -256,13 +257,13 @@ namespace nut
             int32_t const s2a = e2 * (m_s2 - k2 * c2) - k2 * d2;
             int32_t const s1b = s1a < 0 ? (s1a + 2147483563) : s1a;
             int32_t const s2b = s2a < 0 ? (s2a + 2147483399) : s2a;
-            
+
             this -> m_s1 = s1b;
             this -> m_s2 = s2b;
 
             int32_t const z  = s1b - s2b;
             int32_t const z1 = z < 1 ? (z + 2147483562) : z;
-            
+
             return z1;
         } // next
 
@@ -304,14 +305,14 @@ namespace nut
     /* Uses Numerical Recipe's LCG RNG */
     class LCG_RNG
     {
-        /* Long period (> 2 × 1018) random number generator of L’Ecuyer with 
+        /* Long period (> 2 × 1018) random number generator of L’Ecuyer with
            Bays-Durham shuffle and added safeguards. Returns a uniform random
-           deviate between 0.0 and 1.0 (exclusive of the endpoint values). 
+           deviate between 0.0 and 1.0 (exclusive of the endpoint values).
            Call with idum a negative integer to initialize; thereafter, do not
-           alter idum between successive deviates in a sequence. RNMX should 
+           alter idum between successive deviates in a sequence. RNMX should
            approximate the largest floating value that is less than 1.*/
 #define NTAB 32
-        
+
         int32_t const IM1;
         int32_t const IM2;
         int32_t const IMM1;
@@ -321,19 +322,19 @@ namespace nut
         int32_t const IQ2;
         int32_t const IR1;
         int32_t const IR2;
-        float    const AM; 
+        float    const AM;
         float    const NDIV;
         float    const EPS;
         float    const RNMX;
         double   const AM_d;
-        
+
         int32_t m_idum;
         int32_t m_idum2;
         int32_t m_iy;
         std::vector<int32_t> m_iv;
 
     public:
-        
+
         void dump_state(std::ostream & outstr) const {
             std::copy(&m_iv[0],&m_iv[NTAB],
                       std::ostream_iterator<int32_t>(outstr,","));
@@ -347,7 +348,7 @@ namespace nut
 
         // call with negative seed
         explicit LCG_RNG(int32_t const idum_init)
-            : 
+            :
             IM1(2147483563),
             IM2(2147483399),
             IMM1(IM1-1),
@@ -367,9 +368,9 @@ namespace nut
             m_idum2(123456789),
             m_iy(0),
             m_iv(NTAB,0)
-            
+
             {
-                
+
                 if (-(m_idum) < 1)
                 {
                     m_idum=1;  // Be sure to prevent idum = 0.
@@ -399,7 +400,7 @@ namespace nut
 
         // copy ctor
         LCG_RNG( LCG_RNG const & r)
-            : 
+            :
             IM1(r.IM1),
             IM2(r.IM2),
             IMM1(r.IMM1),
@@ -420,7 +421,7 @@ namespace nut
             m_iv(r.m_iv)
             {}
 
-        // hide assignment operator 
+        // hide assignment operator
         LCG_RNG & operator=(LCG_RNG const & l){
             this->m_idum  = l.m_idum;
             this->m_idum2 = l.m_idum2;
@@ -428,7 +429,7 @@ namespace nut
             this->m_iv    = l.m_iv;
             return *this;
         }
-        
+
 
 
         float ranf(){
@@ -436,7 +437,7 @@ namespace nut
             if (temp > RNMX) return RNMX; // Because users don’t expect endpoint values.
             else return temp;
         }
-        
+
         // use two floats to generate a double. Meh.
         double random(){
             // double const FLT_MULT = 2.3283064365386962891e-10;
@@ -444,22 +445,22 @@ namespace nut
             double f2 = AM_d * (double)this->ranf_core();
             return f1 + AM_d * f2;
         }
-        
+
     private:
         // this is the core of the generator--it returns an unscaled number.
         float ranf_core(){
             int32_t j;
             int32_t k;
-            
+
             k = m_idum/IQ1;          //  Start here when not initializing.
-            m_idum = IA1 * (m_idum - k*IQ1) - k * IR1;     
+            m_idum = IA1 * (m_idum - k*IQ1) - k * IR1;
             if(m_idum < 0)
             {                        // Compute idum=(IA1*idum) % IM1 without
                 m_idum += IM1;       // overflows by Schrage’s method.
             }
             k = m_idum2/IQ2;
             m_idum2 = IA2 * (m_idum2 - k*IQ2) - k*IR2;     // Compute idum2=(IA2*idum) % IM2 likewise.
-            if(m_idum2 < 0) 
+            if(m_idum2 < 0)
             {
                 m_idum2 += IM2;
             }
@@ -477,11 +478,11 @@ namespace nut
             }
             return m_iy;
         }
-        
+
 #undef NTAB  // Try to limit the scope of this monstrosity
 
     }; // LCG
-    
+
 
 
 }// nut::
