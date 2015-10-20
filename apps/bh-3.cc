@@ -45,7 +45,8 @@ typedef nut::Particle<nut::geom_t,nut::rng_t> p_t;
 typedef nut::Tally<nut::geom_t>          tally_t;
 typedef nut::Census<p_t>            census_t;
 
-typedef std::vector<nut::geom_t>   vg;
+typedef std::vector<nut::geom_t>   vec_geom;
+typedef tally_t::vv vec_vec;
 typedef std::vector<size_t>   vsz;
 typedef nut::Null_Log         log_t;
 // typedef nut::Std_Log         log_t;
@@ -81,6 +82,9 @@ void run_cycle(src_stat_t const & stats
     using nut::ChunkIdVec;
     using nut::PtclId;
     using nut::LessThan;
+    using nut::vec_t;
+
+    static const size_t dim = tally_t::dim;
 
     cell_t const n_cells = mesh.n_cells();
 
@@ -174,10 +178,14 @@ void run_cycle(src_stat_t const & stats
     // std::cout << "run_cycle: Transport complete\n";
 
     // fix up momenta
-    vg new_momenta(n_cells,0);
+    // vec_vec new_momenta(n_cells);
     std::transform(tally.momentum.begin(),tally.momentum.end(),
-                   new_momenta.begin(),nut::div_by<geom_t>(nut::c) );
-    tally.momentum = new_momenta;
+                   tally.momentum.begin(),
+                   [&](vec_t<dim> & v){return v.div_by(nut::c);});
+
+    // std::transform(tally.momentum.begin(),tally.momentum.end(),tally.momentum.begin(),
+    //                nut::div_by<geom_t>(nut::c) );
+    // std::copy(tally.momentum
     return;
 } // run_cycle
 
@@ -207,6 +215,9 @@ void run_cycle_buffer(
     using nut::ChunkIdVec;
     using nut::PtclId;
     using nut::LessThan;
+    using nut::vec_t;
+
+    static const size_t dim = tally_t::dim;
 
     cell_t const n_cells = mesh.n_cells();
 
@@ -311,10 +322,12 @@ void run_cycle_buffer(
     // std::cout << "run_cycle: Transport complete\n";
 
     // fix up momenta
-    vg new_momenta(n_cells,0);
+    // vec_geom new_momenta(n_cells,0);
     std::transform(tally.momentum.begin(),tally.momentum.end(),
-                   new_momenta.begin(),nut::div_by<geom_t>(nut::c) );
-    tally.momentum = new_momenta;
+                   tally.momentum.begin(),
+                   [&](vec_t<dim> & v){return v.div_by(nut::c);});
+                   // nut::div_by<geom_t>(nut::c) );
+    // tally.momentum = new_momenta;
     return;
 } // run_cycle_buffered
 
