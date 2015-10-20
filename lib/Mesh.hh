@@ -11,6 +11,7 @@
 #include "utilities_io.hh"
 #include "Assert.hh"
 #include "constants.hh"
+#include "types.hh"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -27,6 +28,8 @@ namespace nut
     struct Sphere_1D
     {
     public:
+        static const size_t dim = 1;
+
         typedef geometry_t geom_t;
         typedef bdy_descriptor_t bdy_desc_t;
         typedef std::vector<geom_t> vb;
@@ -35,8 +38,8 @@ namespace nut
 
         struct coord_t
         {
-            geom_t x;
-            geom_t omega;
+            vec_t<dim> x;
+            vec_t<dim> omega;
         };
         struct d_to_b_t
         {
@@ -115,6 +118,15 @@ namespace nut
             return r;
         }
 
+        template <typename RNG_T>
+        vec_t<dim>
+        static
+        sample_direction( RNG_T & rng)
+        {
+            geom_t const ctheta = geom_t(2)*rng.random()-geom_t(1);
+            return ctheta;
+        }
+
         /*!\brief type of cell boundary */
         bdy_desc_t
         bdy_type(cell_t const c, cell_t const face) const {
@@ -142,26 +154,26 @@ namespace nut
         /*!\brief calculate new coordinate and new direction cosine at a given
          *        distance along direction cosine omega.  */
         coord_t
-        new_coordinate(geom_t const x, geom_t const omega,
+        new_coordinate(vec_t<dim> const x, vec_t<dim> const omega,
                        geom_t const distance) const {
-            geom_t const theta = std::acos(omega);
+            geom_t const theta = std::acos(omega.v[0]);
             geom_t const s     = std::sin(theta);
-            geom_t const new_x = x + distance * omega;
+            geom_t const new_x = x.v[0] + distance * omega.v[0];
             geom_t const new_y = distance * s;
             geom_t const new_r = std::sqrt(new_x*new_x + new_y*new_y);
             coord_t coord;
-            coord.x = new_r;
-            coord.omega = std::cos(theta - std::asin(distance/new_r*s));
-            return coord;
+            coord.x.v[0] = new_r;
+            coord.omega.v[0] = std::cos(theta - std::asin(distance/new_r*s));
+            return std::move(coord);
         }
 
 
         d_to_b_t
-        distance_to_bdy(geom_t const x, geom_t const omega,
+        distance_to_bdy(vec_t<dim> const x, vec_t<dim> const omega,
                         cell_t const cell) const {
             cellOK(cell);
             extents_t extents = this->cell_extents(cell);
-            return dist_to_bdy_impl(x,omega,extents.first,extents.second);
+            return dist_to_bdy_impl(x.v[0],omega.v[0],extents.first,extents.second);
         } // distance_to_bdy
 
 
