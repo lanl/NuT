@@ -42,10 +42,11 @@ namespace nut
     struct Cartesian_3D
     {
     public:
+        static const size_t dim = 3;
 
         typedef geometry_t geom_t;
         typedef geom_t const & gcr;
-        typedef Vec_T<geom_t> vec_t;
+        // typedef Vec_T<geom_t,3> vec_t;
 
         typedef bdy_descriptor_t bdy_desc_t;
         typedef std::vector<geom_t> vb;
@@ -59,8 +60,8 @@ namespace nut
         /**\brief Position & direction */
         struct coord_t
         {
-            vec_t x;
-            vec_t omega;
+            vec_t<3> x;
+            vec_t<3> omega;
         }; // coord_t
 
         enum face_t
@@ -341,7 +342,7 @@ namespace nut
         template <typename RNG_T>
         static
         inline
-        vec_t
+        vec_t<3>
         sample_direction(RNG_T & rng)
         {
             geom_t const ctheta = geom_t(2)*rng.random()-geom_t(1);
@@ -349,7 +350,8 @@ namespace nut
             geom_t const stheta = std::sqrt(1-ctheta*ctheta);
             geom_t const cphi = std::cos(phi);
             geom_t const sphi = std::sin(phi);
-            vec_t v{stheta*cphi,stheta*sphi,ctheta};
+            vec_t<3> v;
+            v.v = {stheta*cphi,stheta*sphi,ctheta};
             return std::move(v);
         }
 
@@ -392,7 +394,7 @@ namespace nut
         }
 
         coord_t
-        new_coordinate(vec_t const & oldx, vec_t const & oldomega,
+        new_coordinate(vec_t<3> const & oldx, vec_t<3> const & oldomega,
                        geom_t const distance) const
         {
             coord_t newc;
@@ -415,8 +417,8 @@ namespace nut
         }
 
         d_to_b_t
-        distance_to_bdy(vec_t const & x,
-                        vec_t const & omega,
+        distance_to_bdy(vec_t<3> const & x,
+                        vec_t<3> const & omega,
                         cell_t const cell) const
         {
             extents_t const xs = cell_extents(cell,X);
@@ -458,13 +460,13 @@ namespace nut
 
         struct EAndOmega
         {
-            vec_t omega;
+            vec_t<3> omega;
             geom_t e;
         };
 
         static
         geom_t inline
-        dot(vec_t const & v1, vec_t const & v2)
+        dot(vec_t<3> const & v1, vec_t<3> const & v2)
         {
             return v1.v[0]*v2.v[0] + v1.v[1]*v2.v[1] + v1.v[2]*v2.v[2];
         }
@@ -472,7 +474,7 @@ namespace nut
         static
         geom_t
         inline
-        gamma(vec_t const v)
+        gamma(vec_t<3> const v)
         {
             return 1.0/std::sqrt(1 - dot(v,v)/(c*c));
         }
@@ -483,9 +485,9 @@ namespace nut
         static
         EAndOmega
         inline
-        LT_to_comoving(vec_t const & v_lab,
+        LT_to_comoving(vec_t<3> const & v_lab,
                        geom_t const & e_lab,
-                       vec_t const & omega_lab)
+                       vec_t<3> const & omega_lab)
         {
             EAndOmega res;
             geom_t const vdo = dot(v_lab,omega_lab);
@@ -508,9 +510,9 @@ namespace nut
         static
         EAndOmega
         inline
-        LT_to_lab(vec_t const & v_com,
+        LT_to_lab(vec_t<3> const & v_com,
                   geom_t const & e_com,
-                  vec_t const & omega_com)
+                  vec_t<3> const & omega_com)
         {
             EAndOmega res;
             geom_t const vdo = dot(v_com,omega_com);
