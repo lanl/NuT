@@ -16,7 +16,7 @@
 
 namespace nut
 {
-    /*!\brief for each cell, compute number of particles, energy weight of 
+    /*!\brief for each cell, compute number of particles, energy weight of
      * each, and the total energy per cell. */
     template <typename FP_T, typename SZ_T>
     struct src_stats_t
@@ -24,10 +24,10 @@ namespace nut
         typedef FP_T fp_t;
         typedef SZ_T sz_t;
         typedef std::vector<sz_t> vsz;
-        typedef std::vector<fp_t> vfp;        
+        typedef std::vector<fp_t> vfp;
         vsz ns,cidxs;
         vfp ews, es;
-        explicit src_stats_t(size_t const n) 
+        explicit src_stats_t(size_t const n)
             : ns(n, sz_t(0) ),
               cidxs(n, sz_t(0) ),
               ews(n,fp_t(0) ),
@@ -37,7 +37,7 @@ namespace nut
         size_t
         size() const
         {
-            Require(ns.size() == ews.size() 
+            Require(ns.size() == ews.size()
                     && ns.size() == es.size()
                     && ns.size() == cidxs.size(),
                     "src_stats_t.size: sizes disagree");
@@ -75,14 +75,14 @@ namespace nut
         }
 
         size_t
-        n_particles() const 
+        n_particles() const
         {
             return std::accumulate(ns.begin(),ns.end(),sz_t(0));
         } // n_particles
 
-        
+
     }; // src_stats_t
-    
+
 
     template <typename fp_t, typename sz_t>
     void calc_src_stats_lum(
@@ -129,10 +129,9 @@ namespace nut
 
     /*!\brief generate a single particle
      * */
-    template <typename mesh_t, typename geom_t, typename rng_t, 
-              typename part_t>
+    template <typename mesh_t, typename geom_t, typename rng_t, typename part_t>
     part_t
-    gen_init_particle(mesh_t const & mesh, 
+    gen_init_particle(mesh_t const & mesh,
                       cell_t const cell,
                       geom_t const dt,
                       geom_t const alpha,
@@ -143,6 +142,7 @@ namespace nut
                       rng_t & rng
         )
     {
+        uint32_t const dim = part_t::dim;
         // Mean energy of Fermionic Planckian is 7 pi^4/(180 zeta(3) * (k_B T).
         // Prefactor ~3.15137
         geom_t const ebar = 3.15137 * T;
@@ -153,9 +153,9 @@ namespace nut
 
         geom_t const oc   = 2.0 * osd - 1.0;
         geom_t const ec   = gen_power_law_energy(alpha, ebar, rng);
-        EandOmega enol    = LT_to_lab_sphere1D(v, ec, oc);
+        EandOmega<dim> enol    = LT_to_lab_sphere1D(v, ec, oc);
         geom_t const e    = enol.first;
-        geom_t const o    = enol.second;
+        vec_t<dim> const o    = enol.second;
 
         return part_t(r,o,e,dt,ew,cell,rng,s);
     } // gen_init_particle
