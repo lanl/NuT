@@ -182,6 +182,144 @@ void run_cycle(src_stat_t const & stats
 } // run_cycle
 
 
+void run_cycle_buffer(
+                 src_stat_t const & stats
+               , Mesh_t const & mesh
+               , op_t const & op
+               , Velocity_t const & vel
+               , nut::geom_t const alpha
+               , nut::Species const s
+               , uint32_t const seed
+               , tally_t & tally
+               , census_t & census
+               , nut::key_t const & key
+               , uint32_t const chkSz
+               , uint32_t rank
+               , uint32_t commSz
+    )
+{
+    using nut::cell_t;
+    using nut::geom_t;
+    using nut::Require;
+    using nut::cntr_t;
+    using nut::Chunk;
+    using nut::ChunkId;
+    using nut::ChunkIdVec;
+    using nut::PtclId;
+    using nut::LessThan;
+
+    cell_t const n_cells = mesh.n_cells();
+
+    Require(stats.ns.size()  == n_cells &&
+            stats.es.size()  == n_cells &&
+            stats.ews.size() == n_cells, "correct array lenghts");
+    // very large for particles in postprocess--there's really no time
+    // CAUTION: this can make sims take a very long time!
+    geom_t const particle_dt = 1e12;
+
+    nut::cntr_t ctr(0);  // for counting events
+    nut::cntr_t n_tot = std::accumulate(stats.ns.begin(),stats.ns.end(),0);
+    cntr_t const rep_frac = n_tot > 5 ? n_tot/5 : 1; // report frequency
+
+    log_t log;
+
+    Chnker::StatsVec schunks;
+    Chnker::ChunkVec chunks;
+    Chnker::chunks(chkSz,stats,chunks,schunks);
+    uint32_t const n_chks_tot(chunks.size());
+    nut::ChunkIdVec chkIds;
+    nut::getChunks(rank,commSz,n_chks_tot,chkIds);
+
+    std::cout << "We have " << n_chks_tot << " total chunks." << std::endl;
+
+    std::cout << "This PE has " << chkIds.size() << " chunks."
+        << std::endl;
+
+    /* This PE does the chunks scheduled by getChunks. Those chunks are listed
+     * in chkIds; chkIds are indices into chunks and schunks arrays. For each
+     * chunk, we look at the corresponding vector of source numbers in
+     * schunks[chkId]: for each entry (cell) we run the corresponding number of
+     * particles.
+     */
+
+
+    std::vector<p_t> p_buff_in(chkSz);
+    std::vector<p_t> p_buff_out(chkSz);
+
+    for(size_t ci = 0; ci < n_chks_tot; ++ci)
+    {
+        // for each chunk that this PE does
+        nut::ChunkId const chkId = chkIds[ci];
+        Chunk const & chunk = chunks[chkId];
+        src_stat_t const & ss = *schunks[chkId];
+        PtclId curr(chunk.pstart);
+
+        // std::cout << "Processing chunk " << chkId
+        //           << ", pstart: " << chunk.pstart
+        //           << ", pend: "  << chunk.pend
+        //           // << ", taken by thread " << tid
+        //           // << " of " << n_threads
+        //           << std::endl;
+
+        uint32_t p_buff_idx(0);
+
+        // for each cell in the chunk, process the particles that
+        // originate in that cell.
+        for(uint32_t celli = 0; celli < ss.size(); ++celli)
+        {
+            Chnker::sz_t const n_ps = ss.ns[celli];
+            cell_t const cidx(ss.cidxs[celli]);     // cell idx for this entry
+            geom_t const ew(ss.ews[celli]);
+            // std::cout << "*** Processing cell " << celli
+            //           << ", n = " << n_ps << ", cell = " << cidx
+            //           << ", ew = " << ew << std::endl;
+            for(uint32_t pi = 0; pi < n_ps; ++pi)
+            {
+                LessThan(curr,chunk.pend+1,"current ptcl id","last ptcl id");
+                // std::cout << "\nProcessing particle " << curr << std::endl;
+                id_t const ptcl_id(curr);
+                nut::ctr_t ptcl_ctr(nut::rng_t::make_ctr(ptcl_id,0u,0u,0u));
+                nut::rng_t ptcl_rng(ptcl_ctr,key); // for generating the particle
+                p_buff_in[p_buff_idx] = nut::gen_init_particle<Mesh_t,geom_t,nut::rng_t,p_t>(
+                    mesh,cidx,particle_dt,alpha,s,ew,
+                    op.temp(cidx),vel.v(cidx),
+                    ptcl_rng);
+                nut::ctr_t evt_ctr(nut::rng_t::make_ctr(0u,0u,ptcl_id,0u));
+                nut::rng_t evt_rng(evt_ctr,key);   // for generating events
+                p_buff_in[p_buff_idx].rng = evt_rng;
+                // nut::transport_particle(p_in,mesh,op,
+                //                         vel,tally,census,
+                //                         log,alpha);
+                // std::cout << "final state: " << p_out << std::endl;
+                p_buff_idx++;
+                ctr++;
+                curr++;
+                if(ctr % rep_frac == 0)
+                {
+                    std::cout << ctr << "/" << n_tot << " " << species_name(s)
+                              << "'s complete" << std::endl;
+                }
+            } // loop over particles
+        } // loop over cells
+        // transport particles
+        transport(p_buff_in,mesh,op,vel,tally,p_buff_out,census,log,alpha);
+
+        // dispose of particles, tally escape spectrum
+
+    } // chunk loop
+
+    // std::cout << "run_cycle: Transport complete\n";
+
+    // fix up momenta
+    vg new_momenta(n_cells,0);
+    std::transform(tally.momentum.begin(),tally.momentum.end(),
+                   new_momenta.begin(),nut::div_by<geom_t>(nut::c) );
+    tally.momentum = new_momenta;
+    return;
+} // run_cycle_buffered
+
+
+
 /*!\brief generate a mesh & material state info by reading a material
  * state file and parsing it into MatState and Mesh objects. */
 state_t get_mat_state(std::string const filename,
