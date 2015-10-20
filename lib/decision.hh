@@ -43,14 +43,13 @@ namespace nut
                   velocity_t const & velocity)
     {
         typedef typename particle_t::fp_t fp_t;
-        // typedef std::pair<events::Event,geom_t> event_n_dist;
+
         // Currently there are always  three top-level events considered.
         // Changing vector to std::array
         typedef std::array<event_n_dist,3> vend_t;
         typedef typename mesh_t::d_to_b_t d_to_b_t;
 
         vend_t e_n_ds;
-        // e_n_ds.reserve(3);
 
         cell_t const cell  = p.cell;
         fp_t const tleft   = p.t;
