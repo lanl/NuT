@@ -42,8 +42,9 @@ namespace nut
                   opacity_t const & opacity,
                   velocity_t const & velocity)
     {
-        typedef typename particle_t::fp_t fp_t;
+        static const size_t dim(particle_t::dim);
 
+        typedef typename particle_t::fp_t fp_t;
         // Currently there are always  three top-level events considered.
         // Changing vector to std::array
         typedef std::array<event_n_dist,3> vend_t;
@@ -53,7 +54,7 @@ namespace nut
 
         cell_t const cell  = p.cell;
         fp_t const tleft   = p.t;
-        fp_t const x       = p.x;
+        vec_t<dim> const x = p.x;
         Species const species = p.species;
 
         // compute distance to events, push onto vector
@@ -61,9 +62,9 @@ namespace nut
 
         geom_t v = velocity.v(cell);
         geom_t const eli  = p.e;
-        geom_t const oli  = p.omega;
+        vec_t<dim> const oli  = p.omega;
         // LT to comoving frame (compute interaction comoving).
-        EandOmega eno_cmi = LT_to_comoving_sphere1D(v,eli,oli);
+        EandOmega<dim> eno_cmi = LT_to_comoving_sphere1D(v,eli,oli);
         geom_t const eci  = eno_cmi.first;
 
         fp_t const sig_coll   = opacity.sigma_collide(cell,eci,species);
@@ -95,8 +96,8 @@ namespace nut
 
             typename mesh_t::coord_t const scat_site(
                 mesh.new_coordinate(x,oli,d_coll));
-            geom_t const o_sct = scat_site.omega;
-            EandOmega const eno_scat = LT_to_comoving_sphere1D(v,eli,o_sct);
+            vec_t<dim> const o_sct = scat_site.omega;
+            EandOmega<dim> const eno_scat = LT_to_comoving_sphere1D(v,eli,o_sct);
             fp_t const ecscat = eno_scat.first;
             closest.first =
                 decide_scatter_event(p.rng,ecscat,cell,opacity,species);
