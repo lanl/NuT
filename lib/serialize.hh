@@ -43,9 +43,11 @@ namespace nut
         typedef typename Tally_T::FP_T fp_t;
         typedef typename Tally_T::cntr_t cntr_t;
 
+        static const size_t dim = Tally_T::dim;
+
         std::string sname = species_name(s);
         fp_t const e_tot   = sum(tally.energy);
-        fp_t const mom_tot = sum(tally.momentum);
+        vec_t<dim> const mom_tot = sum(tally.momentum);
         cntr_t const n_nucl_el     = sum(tally.n_nucl_el_scat);
         cntr_t const n_cell_bdy    = sum(tally.n_cell_bdy);
         cntr_t const n_reflections = sum(tally.n_reflect);
