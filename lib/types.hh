@@ -15,6 +15,7 @@
 #include <string>
 #include <iterator>
 #include "RNG.hh"
+#include "Vec3D.hh"
 
 namespace nut
 {
@@ -54,6 +55,10 @@ namespace nut
     } // events::
 
     typedef double geom_t;   /*^ type for geometry calculations */
+
+    /** \brief Our type for geometric vectors */
+    template <size_t dim> using vec_t = Vec_T<geom_t,dim>;
+
 
     typedef std::vector<geom_t> vg;
 
