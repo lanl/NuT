@@ -11,6 +11,7 @@
 #include "types.hh"
 #include "utilities_io.hh"
 #include "utilities.hh"
+#include "Vec3D.hh"
 #include <vector>
 #include <sstream>
 #include <numeric>
@@ -22,19 +23,24 @@ namespace nut
     /*! \brief arrays to keep track of tally in each mesh cell
      * \tparam <fp_t> {floating point type}
      */
-    template <typename fp_t>
+    template <typename fp_t, size_t Dim = 1>
     struct Tally
     {
+        static const size_t dim = Dim;
+
         typedef uint32_t cntr_t; // counter type
         typedef fp_t FP_T;
+        // typedef vec_t<Dim> vec_t;
+        typedef vec_t<dim> const & vec_cr;
         typedef std::vector<cntr_t> vc;
         typedef std::vector<fp_t> vf;
+        typedef std::vector<vec_t<dim>> vv;
         typedef fp_t const & fp_cr;
         typedef std::pair<fp_t,fp_t> esc;
         typedef std::vector<esc> vesc;
 
         vf energy;
-        vf momentum;
+        vv momentum;
 
         // particle counters: number & energy weight of each
         // species created in each cell (can be negative)
@@ -270,14 +276,16 @@ namespace nut
 
         void
         deposit_inelastic_scat(cell_t const cell, fp_cr e_i, fp_cr e_f,
-                               fp_cr omega_i, fp_cr omega_f, fp_cr wt,
+                               vec_cr omega_i, vec_cr omega_f, fp_cr wt,
                                nut::Species const species){
             // We tally omega * ew, need to divide by c at end of time step
             // Do we need to track momentum and energy seperately by species?
             nrgOK(e_i, "initial energy");
             nrgOK(e_f, "final energy");
             cell_t index = make_idx(cell,m_n_cells);
-            fp_cr mom_dep = e_i * omega_i - e_f * omega_f;
+
+            vec_cr mom_dep = (e_i * omega_i) - (e_f * omega_f);
+
             momentum[index] += wt * mom_dep;
             energy[index] += wt * (e_i - e_f);
             return;
@@ -293,12 +301,12 @@ namespace nut
         } // deposit_energy
 
 
-        void deposit_momentum_elastic( cell_t const cell, fp_cr omega, fp_cr e,
+        void deposit_momentum_elastic( cell_t const cell, vec_cr omega, fp_cr e,
                                        fp_cr wt){
             // We tally omega * ew, need to divide by c at end of time step
             nrgOK(e, "energy");
             cell_t const index = make_idx(cell,m_n_cells);
-            fp_cr momm = wt * omega * e;
+            vec_t<dim> momm = wt * omega * e;
             momentum[index] += momm;
             return;
         } // deposit_momentum_elastic
