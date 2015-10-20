@@ -90,7 +90,7 @@ namespace test_aux
         if(!same)
         {
             std::cerr << "vector " << name << " does not agree with "
-                      << "expected value." << std::endl;
+                      << "expected value using strict equality." << std::endl;
         }
         return same;
     }
@@ -133,7 +133,7 @@ namespace test_aux
         return same;
     }
 
-    // a verbose comparator
+    // a verbose comparator for POD's
     template <typename fp_t>
     struct comp_verb
     {
@@ -158,6 +158,26 @@ namespace test_aux
 
         fp_t const m_tol;
     };
+
+    template <typename iter_t>
+    struct comp_verb_iter
+    {
+        typedef typename iter_t::value_type v_t;
+
+        bool operator()(iter_t const & val, iter_t const & ref){
+            return check_same_verb(&val,&ref,comp_verb<v_t>(name_,m_tol));
+        }
+
+        explicit comp_verb_iter(std::string const & name, v_t tol = 1e-7)
+            : name_(name),m_tol(tol){}
+
+        comp_verb_iter() : name_(""),m_tol(1e-7) {}
+
+        std::string name_;
+
+        v_t const m_tol;
+    }; // comp_verb_iter
+
 
     template <typename tally_t>
     bool tallies_same(tally_t const & t1, tally_t const & t2)

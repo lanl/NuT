@@ -265,7 +265,7 @@ namespace Nut_Test
             // reflect from innermost face
             mesh_t mesh(bounds, b_types);
 
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
 
@@ -313,7 +313,7 @@ namespace Nut_Test
             // reflect from innermost face
             mesh_t mesh(bounds, b_types);
 
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             for(size_t i = 0; i < 9; ++i)
             {
@@ -463,7 +463,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 100.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
@@ -532,7 +532,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 100.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
 
@@ -593,7 +593,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 1000.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
 
