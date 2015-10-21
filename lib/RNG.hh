@@ -33,6 +33,9 @@ namespace nut
             this -> advance();
         }
 
+        /** For compatibility with STL. */
+        Philox4x32_RNG() {}
+
         double random() {
             double ret = m_bank[m_idx];
             if(m_idx == 0) m_idx++;
@@ -89,7 +92,7 @@ namespace nut
             return u1 * m_inv_32 + (0.5 + m_inv_53) + (u2 & 0xFFFFF) * m_inv_52;
         }
 
-        // state
+      // state
         gen_t gen;
         ctr_t m_c;
         key_t m_k;
@@ -97,7 +100,20 @@ namespace nut
         uint32_t m_idx;
     };  // class Philox4x32_RNG
 
-    /* returns a user-defined sequence of "random numbers". For testing.*/
+
+
+
+
+
+    /* ---------------- Other RNG's -------------------*/
+
+
+
+    /** This fake RNG is used for testing in certain limited circumstances.
+        It encapsulates a buffer of "random" seeds and just feeds them out
+        in sequence. This is useful for testing certain situations with a
+        stacked deck, for example, allowing us to make sure that events
+        are correctly selected.*/
     template <typename fp_t>
     class Buffer_RNG
     {
@@ -189,7 +205,7 @@ namespace nut
     } // random
 
 
-    /* Uses L'Ecuyer's Multiplicative Linear Congruential Generator
+    /** Uses L'Ecuyer's Multiplicative Linear Congruential Generator
      * {Comm. ACM, v. 31, p. 742 (1988)}, as implemented in the Haskell
      * System.Random library, to permit direct comparison. Outdated after
      * Nov-Dec 2011. */
@@ -340,7 +356,7 @@ namespace nut
                       std::ostream_iterator<int32_t>(outstr,","));
         }
 
-        int32_t const * const get_state(){
+        int32_t const * get_state(){
             return &m_iv[0];
         }
 

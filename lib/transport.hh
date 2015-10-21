@@ -3,6 +3,9 @@
 // Jan 24, 2011
 // (c) Copyright 2011 LANSLLC, all rights reserved
 
+#ifndef TRANSPORT_HH
+#define TRANSPORT_HH
+
 #include "Tally.hh"
 #include "decision.hh"
 #include "apply_event.hh"
@@ -47,7 +50,7 @@ namespace nut
               typename CensusT, typename fp_t,
               typename LogT>
     void
-    transport(PContainer const & p_source,
+    transport(PContainer & p_source,
               MeshT const & mesh,
               OpacityT const & opacity,
               VelocityT const & vel,
@@ -72,22 +75,18 @@ namespace nut
         if( log.isNull() )
         {
             std::transform(p_source.begin(),p_source.end(),p_sink.begin(),
-                           bind(
-                               transport_particle_no_log<p_t,MeshT,OpacityT,VelocityT,
-                                                  CensusT,fp_t>,
-                               _1,mesh,opacity,vel,tally,census,alpha)
-                );
-
+              [&](p_t & p){return
+                transport_particle_no_log<p_t,MeshT,OpacityT,VelocityT,CensusT,fp_t>
+                               (p,mesh,opacity,vel,tally,census,alpha);
+              });
         }
         else
         {
-            // Haskell: map (runParticle msh) particles
             std::transform(p_source.begin(),p_source.end(),p_sink.begin(),
-                           bind(
-                               transport_particle<p_t,MeshT,OpacityT,VelocityT,
-                                                  CensusT,fp_t,LogT>,
-                               _1,mesh,opacity,vel,tally,census,log, alpha)
-                );
+              [&](p_t & p){return
+                transport_particle<p_t,MeshT,OpacityT,VelocityT,CensusT,fp_t,LogT>
+                               (p,mesh,opacity,vel,tally,census,log,alpha);
+              });
         }
         return;
     } // transport
@@ -165,8 +164,6 @@ namespace nut
 
 } // nut::
 
-
-// version
-// $Id$
+#endif // TRANSPORT_HH
 
 // End of file

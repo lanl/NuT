@@ -9,22 +9,28 @@
 
 #include <vector>
 #include "Assert.hh"
+#include "types.hh"
 
 namespace nut
 {
-    template <typename geo_t>
+    template <typename geo_t,size_t dim>
     struct Velocity
     {
-        typedef std::vector<geo_t> vg;
+        typedef std::vector<vec_t<dim>> vec_vec;
 
-        vg vs;
+        vec_vec vs;
 
-        explicit Velocity(vg const & vs_) : vs(vs_){}
+        explicit Velocity(vec_vec const & vs_) : vs(vs_){}
 
-        explicit Velocity(size_t const sz) 
-            : vs(sz,geo_t(0)) {}
+        explicit Velocity(size_t const sz)
+            : vs(sz) {}
 
-        geom_t v(cell_t const cidx) const {
+        vec_t<dim> const & v(cell_t const cidx) const {
+            cellOK(cidx);
+            return vs.at(cidx-1);
+        }
+
+        vec_t<dim> & v(cell_t const cidx) {
             cellOK(cidx);
             return vs.at(cidx-1);
         }
@@ -43,10 +49,10 @@ namespace nut
     }; // Velocity
 
 
-    template <typename fp_t>
+    template <size_t dim = 1>
     struct vel_t
     {
-        fp_t v;
+        vec_t<dim> v;
     };
 } // nut::
 

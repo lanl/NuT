@@ -361,6 +361,7 @@ namespace Nut_Test
 
         bool test_7()
         {
+            using nut::vec_t;
             bool passed(true);
             typedef nut::Buffer_RNG<double> rng_t;
             size_t const szRns(5);
@@ -378,8 +379,8 @@ namespace Nut_Test
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
             mesh_t::coord_t newcrd = mesh.sample_position(rng,0);
-            mesh_t::vec_t x = newcrd.x;
-            mesh_t::vec_t o = newcrd.omega;
+            vec_t<3> x = newcrd.x;
+            vec_t<3> o = newcrd.omega;
 
             passed = passed &&
                 expect(x.v[0],1.0,"cell 0, x") &&
@@ -393,6 +394,7 @@ namespace Nut_Test
 
         bool test_8()
         {
+            using nut::vec_t;
             bool passed(true);
             typedef nut::Buffer_RNG<double> rng_t;
             size_t const szRns(5);
@@ -409,7 +411,10 @@ namespace Nut_Test
             nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
-            mesh_t::coord_t crd = {{0.8,2.9,4.9},{1.0,0.0,0.0}};
+            vec_t<3> x,o;
+            x.v = {{0.8,2.9,4.9}};
+            o.v = {{1.0,0.0,0.0}};
+            mesh_t::coord_t crd = {x,o};
             mesh_t::d_to_b_t d2b = mesh.distance_to_bdy(crd,cell_t(0));
 
             passed = passed

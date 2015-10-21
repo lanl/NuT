@@ -7,6 +7,7 @@
 #ifndef FILEIO_HH
 #define FILEIO_HH
 
+#include "types.hh"
 #include <vector>
 #include <istream>
 #include <stdint.h>
@@ -15,14 +16,14 @@
 
 namespace nut
 {
-    template <typename fp_t>
+    template <typename fp_t,size_t dim = 1>
     struct MatStateRowP
     {
         uint32_t zone;
         fp_t m_encl;
         fp_t radius;
         fp_t density;
-        fp_t velocity;
+        vec_t<dim> velocity;
 
         fp_t ye;
         fp_t eta;
@@ -74,16 +75,16 @@ namespace nut
     /*!\brief read a material state file into a vector of structures,
     * one structure per line. Conversion from string to number is
     * performed, but that's it. */
-    template <typename fp_t>
-    std::vector< MatStateRowP<fp_t> >
+    template <typename fp_t, size_t dim = 1>
+    std::vector< MatStateRowP<fp_t,dim> >
     read_mat_state_file( std::istream & i);
 
     /*!\brief convert a line (string) to a MatStateRowP */
-    template <typename fp_t>
-    MatStateRowP<fp_t> line_to_struct(std::string const & l);
+    template <typename fp_t, size_t dim = 1>
+    MatStateRowP<fp_t,dim> line_to_struct(std::string const & l);
 
-    template <typename fp_t>
-    std::vector< MatStateRowP<fp_t> >
+    template <typename fp_t, size_t dim>
+    std::vector< MatStateRowP<fp_t,dim> >
     read_mat_state_file( std::istream & i)
     {
         std::vector<MatStateRowP<fp_t> > v;
@@ -102,14 +103,19 @@ namespace nut
     } // read_mat_state_file
 
 
-    template <typename fp_t>
-    MatStateRowP<fp_t>
+    template <typename fp_t, size_t dim>
+    MatStateRowP<fp_t,dim>
     line_to_struct(std::string const & l)
     {
-        MatStateRowP<fp_t> row;
+        MatStateRowP<fp_t,dim> row;
         std::stringstream sstr(l);
         sstr >> row.zone          >> row.m_encl        >> row.radius       >>
-                row.density       >> row.velocity      >> row.ye           >>
+                row.density;
+        for(uint32_t d = 0; d < dim; ++d)
+        {
+            sstr >> row.velocity.v[d];
+        }
+        sstr >> row.ye           >>
                 row.eta           >> row.temperature   >> row.entropy      >>
                 row.u             >> row.lnue_capture  >> row.enue_capture >>
                 row.lnueb_capture >> row.enueb_capture >> row.lnue_pair    >>

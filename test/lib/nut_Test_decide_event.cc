@@ -87,16 +87,18 @@ namespace Nut_Test
         using nut::cell_t;
         using nut::geom_t;
         using nut::bdy_types::descriptor;
+        using nut::vec_t;
 
         typedef double                    fp_t;
         typedef std::vector<fp_t>         vf;
+        typedef std::vector<vec_t<1>>         vec_vec;
         typedef nut::Density<fp_t>        rho_t;
         typedef nut::Temperature<fp_t>    T_t;
         typedef nut::Buffer_RNG<fp_t>     BRNG;
         typedef nut::Opacity<fp_t>  OpB;
         typedef nut::Particle<fp_t, BRNG> p_t;
         typedef nut::Sphere_1D<cell_t,geom_t,descriptor> mesh_t;
-        typedef nut::Velocity<fp_t>       v_t;
+        typedef nut::Velocity<fp_t,1>       v_t;
         size_t ncells(10);
         vf nullv(ncells,fp_t(0));
 
@@ -107,7 +109,7 @@ namespace Nut_Test
         rho_t const rho( nullv, nullv, nullv, nullv, nullv, nullv);
         T_t const T( nullv, nullv, nullv);
 
-        vf zerovs(ncells,fp_t(0));
+        vec_vec zerovs(ncells);
         v_t const vel0s(zerovs);
 
 
@@ -265,7 +267,7 @@ namespace Nut_Test
             // reflect from innermost face
             mesh_t mesh(bounds, b_types);
 
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
 
@@ -313,7 +315,7 @@ namespace Nut_Test
             // reflect from innermost face
             mesh_t mesh(bounds, b_types);
 
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             for(size_t i = 0; i < 9; ++i)
             {
@@ -463,7 +465,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 100.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
@@ -532,7 +534,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 100.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
 
@@ -593,7 +595,7 @@ namespace Nut_Test
             geom_t const omega = 1.0;
             fp_t const t = 1000.0;
             fp_t const wt = 1.0;
-            p_t p(x,omega,e,t,wt,cell,rng,s);
+            p_t p({x},{omega},e,t,wt,cell,rng,s);
 
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
 

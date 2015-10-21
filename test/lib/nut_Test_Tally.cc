@@ -135,8 +135,10 @@ namespace Nut_Test
         using test_aux::check_one_changed;
         using test_aux::check_two_changed;
         using test_aux::check_same;
+        using test_aux::check_same_v;
         using test_aux::check_same_verb;
         using test_aux::comp_verb;
+        using test_aux::comp_verb_iter;
         using test_aux::tallies_same;
 
 
@@ -144,7 +146,7 @@ namespace Nut_Test
         {
             bool passed(true);
 
-            typedef float fp_t;
+            typedef double fp_t;
 
             size_t n_cells(100);
 
@@ -157,7 +159,7 @@ namespace Nut_Test
         bool test_2()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             nut::Tally<fp_t> tally(n_cells), ref(n_cells);
@@ -167,6 +169,7 @@ namespace Nut_Test
             fp_t const wt(0.5);
             nut::Species const s(nut::nu_e);
             nut::cell_t const c(21);
+
             tally.deposit_inelastic_scat(c,ei,ef,omega_i,omega_f,wt,s);
 
             ref.momentum[c-1] = 0.5*(ei*omega_i - ef*omega_f);
@@ -182,7 +185,7 @@ namespace Nut_Test
         bool test_3()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
@@ -195,12 +198,18 @@ namespace Nut_Test
             fp_t const e  = 3.0;
             tally.deposit_energy(c,wt,e);
 
+            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
+
             passed = check_one_changed<t_t,vf>(tally,ref,&tally.energy)
                 and passed;
 
+            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
+
             ref.energy[20] = 0.6;
 
-            passed = check_same(&tally.energy,&ref.energy) and passed;
+            passed = check_same_verb(&tally.energy,&ref.energy,comp_verb<fp_t>()) and passed;
+
+            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
 
             return passed;
         } // test_3
@@ -209,11 +218,14 @@ namespace Nut_Test
         bool test_4()
         {
             bool passed(true);
-            typedef float fp_t;
-            typedef std::vector<fp_t> vf;
+            typedef double fp_t;
+            // typedef std::vector<fp_t> vf;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
+            typedef t_t::vv vv;
+
+            static const size_t dim = t_t::dim;
 
             t_t tally(n_cells), ref(n_cells);
 
@@ -223,13 +235,13 @@ namespace Nut_Test
             nut::cell_t const c(21);
             tally.deposit_momentum_elastic(c,o,e,wt);
 
-            passed = check_one_changed<t_t,vf>(tally,ref,&tally.momentum)
+            passed = check_one_changed<t_t,vv>(tally,ref,&tally.momentum)
                 and passed;
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
             ref.momentum[c - 1] = 0.2 * 0.3 * 4.0;
             passed = check_same_verb(&tally.momentum,&ref.momentum,
-                                     comp_verb<fp_t>()) and passed;
+                                     comp_verb_iter<nut::vec_t<dim>>()) and passed;
 
             if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
@@ -240,7 +252,7 @@ namespace Nut_Test
         bool test_5()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -270,7 +282,7 @@ namespace Nut_Test
         bool test_6()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -301,7 +313,7 @@ namespace Nut_Test
         bool test_7()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -331,7 +343,7 @@ namespace Nut_Test
         bool test_8()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -362,7 +374,7 @@ namespace Nut_Test
         bool test_9()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -392,7 +404,7 @@ namespace Nut_Test
         bool test_10()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -423,7 +435,7 @@ namespace Nut_Test
         bool test_11()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -453,7 +465,7 @@ namespace Nut_Test
         bool test_12()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -484,7 +496,7 @@ namespace Nut_Test
         bool test_13()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -513,7 +525,7 @@ namespace Nut_Test
         bool test_14()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -548,7 +560,7 @@ namespace Nut_Test
         bool test_15()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -576,7 +588,7 @@ namespace Nut_Test
         bool test_16()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -604,7 +616,7 @@ namespace Nut_Test
         bool test_17()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -632,7 +644,7 @@ namespace Nut_Test
         bool test_18()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -666,7 +678,7 @@ namespace Nut_Test
         bool test_19()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -700,7 +712,7 @@ namespace Nut_Test
         bool test_20()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -734,7 +746,7 @@ namespace Nut_Test
         bool test_21()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -768,7 +780,7 @@ namespace Nut_Test
         bool test_22()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;
@@ -802,7 +814,7 @@ namespace Nut_Test
         bool test_23()
         {
             bool passed(true);
-            typedef float fp_t;
+            typedef double fp_t;
             size_t n_cells(100);
 
             typedef nut::Tally<fp_t> t_t;

@@ -8,6 +8,7 @@
 
 #include "types.hh"
 #include <numeric>
+#include <algorithm>
 #include <cmath>
 #include "Assert.hh"
 
@@ -76,6 +77,14 @@ namespace nut
     void append_vector(std::vector<T> const & v1, std::vector<T> & v2)
     {
         v2.insert(v2.end(),v1.begin(),v1.end());
+    }
+
+
+    /** Compare arrays element-wise*/
+    template <size_t sz>
+    bool arrays_eq(vec_t<sz> const & a1, vec_t<sz> const & a2)
+    {
+        return std::equal(a1.begin(),a1.end(),a2.begin());
     }
 
 

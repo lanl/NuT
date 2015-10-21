@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iostream>
 #include <cmath>
+#include <array>
 #include <algorithm>
 #include "lorentz.hh"
 // #include <iomanip>
@@ -41,27 +42,31 @@ namespace nut
                   opacity_t const & opacity,
                   velocity_t const & velocity)
     {
+        static const size_t dim(particle_t::dim);
+
         typedef typename particle_t::fp_t fp_t;
-        // typedef std::pair<events::Event,geom_t> event_n_dist;
-        typedef std::vector<event_n_dist> vend_t;
+        // Currently there are always  three top-level events considered.
+        // Changing vector to std::array
+        typedef std::array<event_n_dist,3> vend_t;
         typedef typename mesh_t::d_to_b_t d_to_b_t;
 
-        vend_t e_n_ds(0);
-        e_n_ds.reserve(3);
+        vend_t e_n_ds;
 
         cell_t const cell  = p.cell;
         fp_t const tleft   = p.t;
-        fp_t const x       = p.x;
+        vec_t<dim> const x = p.x;
         Species const species = p.species;
 
         // compute distance to events, push onto vector
         // compute cross-section in comoving frame
 
-        geom_t v = velocity.v(cell);
+        vec_t<dim> v = velocity.v(cell);
+        // TO DO vector velocity
+        vec_t<dim> vtmp(v);
         geom_t const eli  = p.e;
-        geom_t const oli  = p.omega;
+        vec_t<dim> const oli  = p.omega;
         // LT to comoving frame (compute interaction comoving).
-        EandOmega eno_cmi = LT_to_comoving_sphere1D(v,eli,oli);
+        EandOmega<dim> eno_cmi = mesh_t::LT_to_comoving(vtmp,eli,oli);
         geom_t const eci  = eno_cmi.first;
 
         fp_t const sig_coll   = opacity.sigma_collide(cell,eci,species);
@@ -71,14 +76,15 @@ namespace nut
 
         geom_t const d_coll     = (sig_coll != fp_t(0)) ?
             -std::log(random_dev)/sig_coll : huge;
-        e_n_ds.push_back(event_n_dist(events::collision,d_coll));
+
+        e_n_ds[0] = event_n_dist(events::collision,d_coll);
 
         d_to_b_t dnf = mesh.distance_to_bdy(x,oli,cell);
         geom_t const d_bdy = dnf.d;
-        e_n_ds.push_back(event_n_dist(events::boundary,d_bdy));
+        e_n_ds[1] = event_n_dist(events::boundary,d_bdy);
 
         geom_t const d_step_end = c * tleft;
-        e_n_ds.push_back(event_n_dist(events::step_end,d_step_end));
+        e_n_ds[2] = event_n_dist(events::step_end,d_step_end);
 
         // pick (event,dist) pair with shortest distance
         event_n_dist closest = *(std::min_element(e_n_ds.begin(),e_n_ds.end(),
@@ -92,8 +98,8 @@ namespace nut
 
             typename mesh_t::coord_t const scat_site(
                 mesh.new_coordinate(x,oli,d_coll));
-            geom_t const o_sct = scat_site.omega;
-            EandOmega const eno_scat = LT_to_comoving_sphere1D(v,eli,o_sct);
+            vec_t<dim> const o_sct = scat_site.omega;
+            EandOmega<dim> const eno_scat = mesh_t::LT_to_comoving(vtmp,eli,o_sct);
             fp_t const ecscat = eno_scat.first;
             closest.first =
                 decide_scatter_event(p.rng,ecscat,cell,opacity,species);
