@@ -12,7 +12,7 @@
 #include "Assert.hh"
 #include "constants.hh"
 #include "types.hh"
-#include "Vec3D.hh"
+#include "lorentz.hh"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -465,13 +465,6 @@ namespace nut
         };
 
         static
-        geom_t inline
-        dot(vec_t<3> const & v1, vec_t<3> const & v2)
-        {
-            return v1.v[0]*v2.v[0] + v1.v[1]*v2.v[1] + v1.v[2]*v2.v[2];
-        }
-
-        static
         geom_t
         inline
         gamma(vec_t<3> const v)
@@ -483,7 +476,7 @@ namespace nut
          * velocity v in the lab frame. v is the velocity of the co-moving
          * frame in the lab frame. */
         static
-        EAndOmega
+        EandOmega<3>
         inline
         LT_to_comoving(vec_t<3> const & v_lab,
                        geom_t const & e_lab,
@@ -508,22 +501,22 @@ namespace nut
             This accomodates storing all the material velocities in the
             lab frame. */
         static
-        EAndOmega
+        EandOmega<3>
         inline
-        LT_to_lab(vec_t<3> const & v_com,
+        LT_to_lab(vec_t<3> const & v_lab,
                   geom_t const & e_com,
                   vec_t<3> const & omega_com)
         {
-            EAndOmega res;
-            geom_t const vdo = dot(v_com,omega_com);
-            geom_t const gam = gamma(v_com);
+            EandOmega<3> res;
+            geom_t const vdo = dot(v_lab,omega_com);
+            geom_t const gam = gamma(v_lab);
             geom_t const goc = gam / c;
             geom_t const fac = 1 + goc * vdo / (gam + 1);
-            res.e = gam * e_com * (1 + vdo / c);
-            geom_t const eoec = e_com / res.e; // E/E_com
-            res.omega.v[0] = eoec*(omega_com.v[0] + goc * v_com.v[0] * fac);
-            res.omega.v[1] = eoec*(omega_com.v[1] + goc * v_com.v[1] * fac);
-            res.omega.v[2] = eoec*(omega_com.v[2] + goc * v_com.v[2] * fac);
+            res.first = gam * e_com * (1 + vdo / c);
+            geom_t const eoec = e_com / res.first; // E/E_com
+            res.second.v[0] = eoec*(omega_com.v[0] + goc * v_lab.v[0] * fac);
+            res.second.v[1] = eoec*(omega_com.v[1] + goc * v_lab.v[1] * fac);
+            res.second.v[2] = eoec*(omega_com.v[2] + goc * v_lab.v[2] * fac);
             return std::move(res);
         } // LT_to_comoving
 
