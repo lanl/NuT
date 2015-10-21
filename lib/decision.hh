@@ -61,10 +61,12 @@ namespace nut
         // compute cross-section in comoving frame
 
         geom_t v = velocity.v(cell);
+        // TO DO vector velocity
+        vec_t<dim> vtmp(v);
         geom_t const eli  = p.e;
         vec_t<dim> const oli  = p.omega;
         // LT to comoving frame (compute interaction comoving).
-        EandOmega<dim> eno_cmi = LT_to_comoving_sphere1D(v,eli,oli);
+        EandOmega<dim> eno_cmi = mesh_t::LT_to_comoving(vtmp,eli,oli);
         geom_t const eci  = eno_cmi.first;
 
         fp_t const sig_coll   = opacity.sigma_collide(cell,eci,species);
@@ -97,7 +99,7 @@ namespace nut
             typename mesh_t::coord_t const scat_site(
                 mesh.new_coordinate(x,oli,d_coll));
             vec_t<dim> const o_sct = scat_site.omega;
-            EandOmega<dim> const eno_scat = LT_to_comoving_sphere1D(v,eli,o_sct);
+            EandOmega<dim> const eno_scat = mesh_t::LT_to_comoving(vtmp,eli,o_sct);
             fp_t const ecscat = eno_scat.first;
             closest.first =
                 decide_scatter_event(p.rng,ecscat,cell,opacity,species);
