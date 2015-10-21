@@ -97,10 +97,11 @@ namespace Nut_Test
         typedef nut::Census<p_t>          c_t;
         typedef nut::Velocity<fp_t>       v_t;
         typedef p_t::vec_t vec_t;
+
         typedef nut::Sphere_1D<cell_t,geom_t,nut::bdy_types::descriptor>  mesh_t;
-        mesh_t::vb bounds = {0.01,1.0};
-        mesh_t::vbd bdy_descs = {nut::bdy_types::descriptor::R,V};
-        mesh_t const msh(bounds,bdy_descs);
+        // mesh_t::vb bounds = {0.01,1.0};
+        // mesh_t::vbd bdy_descs = {nut::bdy_types::descriptor::R,V};
+        // mesh_t const msh(bounds,bdy_descs);
 
         // bits for std particle
         fp_t const rns[] = {0.30897681610609407,
@@ -156,7 +157,7 @@ namespace Nut_Test
 
             p_t p(make_std_particle());
             size_t const n_cells(100);
-            nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+            t_t tally(n_cells), ref(n_cells);
             std::vector<fp_t> vs(n_cells, 0.0);
             v_t vel(vs);
 
@@ -167,7 +168,7 @@ namespace Nut_Test
             ref.momentum[idx]        = wt * e * (omega - new_omega);
             ref.n_nucl_el_scat[idx]  = 1;
 
-            nut::apply_nucleon_elastic_scatter(p,tally,vel,msh);
+            nut::apply_nucleon_elastic_scatter<p_t,t_t,v_t,mesh_t>(p,tally,vel);
 
             // check tally energy deposition, momentum deposition, and counts.
             bool const t_passed =
@@ -216,7 +217,7 @@ namespace Nut_Test
             ref.energy[idx]          = wt * de;
             ref.n_nu_e_el_scat[idx]  = 1;
 
-            nut::apply_lepton_scatter<p_t,t_t,v_t,fp_t,mesh_t>(p,tally,e_e,vel,msh);
+            nut::apply_lepton_scatter<p_t,t_t,v_t,mesh_t>(p,tally,e_e,vel);
 
             // check tally energy deposition, momentum deposition, and counts.
             bool const t_passed =
@@ -259,7 +260,7 @@ namespace Nut_Test
             ref.energy[idx]          = wt * de;
             ref.n_nu_e_bar_pos_scat[idx]  = 1;
 
-            nut::apply_lepton_scatter<p_t,t_t,v_t,fp_t,mesh_t>(p,tally,e_e,vel,msh);
+            nut::apply_lepton_scatter<p_t,t_t,v_t,mesh_t>(p,tally,e_e,vel);
 
             // check tally energy deposition, momentum deposition, and counts.
             bool const t_passed =
