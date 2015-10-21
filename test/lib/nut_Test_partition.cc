@@ -105,8 +105,7 @@ namespace Nut_Test
         t choose(t min, t max, gen_t g)
         {
             double urd = std::generate_canonical<double,64,gen_t>(g);
-            // double urd = std::generate_canonical(g);
-            return min + t(urd*(max-min));
+            return min + t(urd*(double)(max-min));
         }
 
         template <typename t>
