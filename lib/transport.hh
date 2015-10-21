@@ -3,6 +3,9 @@
 // Jan 24, 2011
 // (c) Copyright 2011 LANSLLC, all rights reserved
 
+#ifndef TRANSPORT_HH
+#define TRANSPORT_HH
+
 #include "Tally.hh"
 #include "decision.hh"
 #include "apply_event.hh"
@@ -161,8 +164,6 @@ namespace nut
 
 } // nut::
 
-
-// version
-// $Id$
+#endif // TRANSPORT_HH
 
 // End of file

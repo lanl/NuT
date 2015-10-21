@@ -138,13 +138,11 @@ namespace nut
                       Species const s,
                       geom_t const ew, // e wt
                       geom_t const T,  // temp/cell
-                      geom_t const v,
+                      vec_t<part_t::dim> const v,
                       rng_t & rng
         )
     {
         uint32_t const dim = part_t::dim;
-        // TO DO fix velocity
-        vec_t<dim> vtmp(v);
 
         // Mean energy of Fermionic Planckian is 7 pi^4/(180 zeta(3) * (k_B T).
         // Prefactor ~3.15137
@@ -156,7 +154,7 @@ namespace nut
 
         geom_t const oc   = 2.0 * osd - 1.0;
         geom_t const ec   = gen_power_law_energy(alpha, ebar, rng);
-        EandOmega<dim> enol    = mesh_t::LT_to_lab(vtmp, ec, oc);
+        EandOmega<dim> enol    = mesh_t::LT_to_lab(v, ec, oc);
         geom_t const e    = enol.first;
         vec_t<dim> const o    = enol.second;
 

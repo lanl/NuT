@@ -351,8 +351,8 @@ namespace nut
             geom_t const cphi = std::cos(phi);
             geom_t const sphi = std::sin(phi);
             vec_t<3> v;
-            v.v = {stheta*cphi,stheta*sphi,ctheta};
-            return std::move(v);
+            v.v = {{stheta*cphi,stheta*sphi,ctheta}};
+            return v;
         }
 
         /** Get the grid spacing in the specified direction*/
@@ -517,7 +517,7 @@ namespace nut
             res.second.v[0] = eoec*(omega_com.v[0] + goc * v_lab.v[0] * fac);
             res.second.v[1] = eoec*(omega_com.v[1] + goc * v_lab.v[1] * fac);
             res.second.v[2] = eoec*(omega_com.v[2] + goc * v_lab.v[2] * fac);
-            return std::move(res);
+            return res;
         } // LT_to_comoving
 
     }; // Cartesian_3D

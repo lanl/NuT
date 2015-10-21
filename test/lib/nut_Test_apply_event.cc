@@ -95,7 +95,7 @@ namespace Nut_Test
         typedef nut::Particle<fp_t,rng_t,1> p_t;
         typedef nut::Tally<fp_t>          t_t;
         typedef nut::Census<p_t>          c_t;
-        typedef nut::Velocity<fp_t>       v_t;
+        typedef nut::Velocity<fp_t,1>     v_t;
         typedef p_t::vec_t vec_t;
 
         typedef nut::Sphere_1D<cell_t,geom_t,nut::bdy_types::descriptor>  mesh_t;
@@ -108,7 +108,7 @@ namespace Nut_Test
                             0.92436920169905545,
                             0.21932404923057958};
         rng_t rng(rns,3);
-        vec_t const x = {0.5}, omega = {{1.0}};
+        vec_t const x = {0.5}, omega = {1.0};
         fp_t e = 5.0, t = 1.0, wt = 1.0;
         cell_t const cell = 1;
         Species const s(nut::nu_e);
@@ -158,7 +158,7 @@ namespace Nut_Test
             p_t p(make_std_particle());
             size_t const n_cells(100);
             t_t tally(n_cells), ref(n_cells);
-            std::vector<fp_t> vs(n_cells, 0.0);
+            std::vector<nut::vec_t<1>> vs(n_cells);
             v_t vel(vs);
 
             cell_t const idx = cell - 1;
@@ -204,7 +204,7 @@ namespace Nut_Test
 
             size_t const n_cells(100);
             nut::Tally<fp_t> tally(n_cells), ref(n_cells);
-            std::vector<fp_t> vs(n_cells, 0.0);
+            std::vector<nut::vec_t<1>> vs(n_cells);
             v_t vel(vs);
 
             cell_t const idx = cell - 1;
@@ -247,7 +247,7 @@ namespace Nut_Test
 
             size_t const n_cells(100);
             nut::Tally<fp_t> tally(n_cells), ref(n_cells);
-            std::vector<fp_t> vs(n_cells, 0.0);
+            std::vector<nut::vec_t<1>> vs(n_cells);
             v_t vel(vs);
 
             cell_t const idx = cell - 1;

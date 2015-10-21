@@ -146,22 +146,20 @@ namespace nut
     {
         // typedef typename tally_t::FP_T fp_t;
         size_t const dim(tally_t::dim);
-        cell_t const cell = p.cell;
-        geom_t const v    = vel.v(cell);
-        geom_t const eli  = p.e;
+        cell_t const cell     = p.cell;
+        vec_t<dim> const v    = vel.v(cell);
+        geom_t const eli      = p.e;
         vec_t<dim> const oli  = p.omega;
         // LT to comoving frame (need init comoving e to compute
         // final lab e).
 
-        // TO DO vector velocity
-        vec_t<dim> vtmp(v);
-        EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(vtmp,eli,oli);
+        EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(v,eli,oli);
         geom_t const eci  = eno_cmi.first;
         // scatter: sample a new direction
         vec_t<dim> ocf = Mesh_T::sample_direction(p.rng);
 
         // LT comoving -> lab
-        EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(vtmp,eci,ocf);
+        EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(v,eci,ocf);
         geom_t const elf = eno_lf.first;
         vec_t<dim> const olf = eno_lf.second;
         // tally
@@ -182,23 +180,21 @@ namespace nut
     {
         typedef typename tally_t::FP_T fp_t;
         uint32_t const dim(p_t::dim);
-        cell_t const cell = p.cell;
-        geom_t const v    = vel.v(cell);
-        // TO DO vector velocity
-        vec_t<dim> vtmp(v);
-        geom_t const eli  = p.e;
+        cell_t const cell     = p.cell;
+        vec_t<dim> const v    = vel.v(cell);
+        geom_t const eli      = p.e;
         vec_t<dim> const oli  = p.omega;
 
         // LT to comoving frame (need init comoving e to compute
         // final lab e).
-        EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(vtmp,eli,oli);
+        EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(v,eli,oli);
         geom_t const eci  = eno_cmi.first;
         // scatter
         vec_t<dim> ocf = Mesh_T::sample_direction(p.rng);
         fp_t const de = (eci - e_lep)/4.;
         fp_t const ecf = eci - de;
         // LT comoving -> lab
-        EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(vtmp,ecf,ocf);
+        EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(v,ecf,ocf);
         geom_t const elf = eno_lf.first;
         vec_t<dim> const olf = eno_lf.second;
         // tally

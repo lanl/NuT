@@ -62,7 +62,7 @@ namespace Nut_Test
             // check mat state
             // sizes of everything:
             size_t const exp_sz(1u);
-            passed = passed 
+            passed = passed
                 and expect(state.density.size(), exp_sz, "density size")
                 and expect(state.luminosity.size(), exp_sz, "luminosity size")
                 and expect(state.temperature.size(), exp_sz, "temperature size")
@@ -88,14 +88,14 @@ namespace Nut_Test
                 ;
 
             // temperature
-            passed = passed 
+            passed = passed
                 and expect(state.temperature.T_p[0],43.974286020000001,"T_p")
                 and expect(state.temperature.T_e_minus[0],43.974286020000001,"T_e_minus")
                 and expect(state.temperature.T_e_plus[0],43.974286020000001,"T_e_plus")
                 ;
             // velocity
-            passed = passed 
-                and expect(state.velocity.vs[0],3.565e+08,"v");
+            passed = passed
+                and expect(state.velocity.vs[0],{3.565e+08},"v");
             return passed;
         }
 

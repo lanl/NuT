@@ -11,6 +11,7 @@
 #include <array>
 #include <stdint.h>
 #include <iostream> // for operator >>, <<, istream, ostream.
+#include <numeric>
 
 namespace nut
 {

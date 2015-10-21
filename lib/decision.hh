@@ -60,7 +60,7 @@ namespace nut
         // compute distance to events, push onto vector
         // compute cross-section in comoving frame
 
-        geom_t v = velocity.v(cell);
+        vec_t<dim> v = velocity.v(cell);
         // TO DO vector velocity
         vec_t<dim> vtmp(v);
         geom_t const eli  = p.e;

@@ -39,7 +39,7 @@
 // #include <omp.h>
 
 typedef nut::Opacity<nut::geom_t>        op_t;
-typedef nut::Velocity<nut::geom_t>       Velocity_t;
+typedef nut::Velocity<nut::geom_t,1>     Velocity_t;
 
 typedef nut::Particle<nut::geom_t,nut::rng_t> p_t;
 typedef nut::Tally<nut::geom_t>          tally_t;
