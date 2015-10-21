@@ -7,7 +7,8 @@
 #define LORENTZ_HH
 
 #include "constants.hh"
-#include "Vec3D.hh"
+// #include "Vec3D.hh"
+#include "types.hh"
 #include <cmath>
 
 namespace nut
@@ -21,34 +22,47 @@ namespace nut
         return 1.0/std::sqrt(1 - v*v/(c*c));
     }
 
-    EandOmega<1>
+    template <size_t dim>
+    geom_t
     inline
-    LT_to_comoving_sphere1D(geom_t const v_lab,
-                            geom_t const e_lab,
-                            vec_t<1> const omega_lab)
+    gamma(vec_t<dim> const v)
     {
-        geom_t const voc       = v_lab/c;
-        geom_t const onemovoc  = (1.0 - omega_lab.v[0] * voc);
-        geom_t const e_com     = e_lab * gamma(v_lab) * onemovoc;
-        vec_t<1> omega_com;
-        omega_com.v[0] = (omega_lab.v[0] - voc) / onemovoc;
-        return EandOmega<1>(e_com,omega_com);
+        return 1.0/std::sqrt(1 - dot(v,v)/(c*c));
     }
 
-    // Yes, you should pass v_lab here--it's the material speed in the lab frame!
-    EandOmega<1>
-    inline
-    LT_to_lab_sphere1D(geom_t const v_lab,
-                       geom_t const e_com,
-                       vec_t<1> const omega_com)
+    namespace spec_1D
     {
-        geom_t const voc       = v_lab/c;
-        geom_t const onepovoc  = 1.0 + omega_com.v[0] * voc;
-        geom_t const e_lab     = e_com * gamma(v_lab) * onepovoc;
-        vec_t<1> omega_lab;
-        omega_lab.v[0] = (voc + omega_com.v[0]) / onepovoc;
-        return EandOmega<1>(e_lab,omega_lab);
-    }
+
+        EandOmega<1>
+        inline
+        LT_to_comoving_sphere1D(geom_t const v_lab,
+                                geom_t const e_lab,
+                                vec_t<1> const omega_lab)
+        {
+            geom_t const voc       = v_lab/c;
+            geom_t const onemovoc  = (1.0 - omega_lab.v[0] * voc);
+            geom_t const e_com     = e_lab * gamma(v_lab) * onemovoc;
+            vec_t<1> omega_com;
+            omega_com.v[0] = (omega_lab.v[0] - voc) / onemovoc;
+            return EandOmega<1>(e_com,omega_com);
+        } // LT_to_comoving_sphere1D
+
+        // Yes, you should pass v_lab here--it's the material speed in the lab frame!
+        EandOmega<1>
+        inline
+        LT_to_lab_sphere1D(geom_t const v_lab,
+                           geom_t const e_com,
+                           vec_t<1> const omega_com)
+        {
+            geom_t const voc       = v_lab/c;
+            geom_t const onepovoc  = 1.0 + omega_com.v[0] * voc;
+            geom_t const e_lab     = e_com * gamma(v_lab) * onepovoc;
+            vec_t<1> omega_lab;
+            omega_lab.v[0] = (voc + omega_com.v[0]) / onepovoc;
+            return EandOmega<1>(e_lab,omega_lab);
+        } // LT_to_lab_sphere1D
+
+    } // spec_1D::
 
 } // nut::
 
