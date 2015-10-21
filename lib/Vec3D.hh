@@ -191,6 +191,14 @@ namespace nut
         return std::move(vout);
     }
 
+    template <typename fp_t,size_t dim>
+    fp_t inline
+    dot(Vec_T<fp_t,dim> const & v1, Vec_T<fp_t,dim> const & v2)
+    {
+        fp_t init(0.0);
+        return std::inner_product(v1.begin(),v1.end(),v2.begin(),init);
+    }
+
 
 
 } // nut::
