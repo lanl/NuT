@@ -448,12 +448,12 @@ namespace Nut_Test
             // These values generated via the function randoms in the
             // Philo2 module of McPhD/basic, using same counter & key
             // as this test.
-            std::vector<double> exp_vals = {
+            std::vector<double> exp_vals = {{
                 0.9848038759115404,0.8800535828289092,0.8015360604392531,
                 0.2025851484105382,0.27783947633403117,0.634825162264666,
                 0.49563039019191557,0.769547123123007,0.7025144994130103,
                 0.6585216467165459,0.677582395892678,0.8577909275075531
-            };
+            }};
 
             passed = passed and std::equal(out_vals.begin(),out_vals.end(),
                                            exp_vals.begin());
