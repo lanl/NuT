@@ -356,7 +356,7 @@ namespace nut
                       std::ostream_iterator<int32_t>(outstr,","));
         }
 
-        int32_t const * const get_state(){
+        int32_t const * get_state(){
             return &m_iv[0];
         }
 
