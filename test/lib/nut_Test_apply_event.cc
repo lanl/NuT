@@ -78,8 +78,6 @@ namespace Nut_Test
         using nut::cell_t;
         using nut::geom_t;
         using nut::Species;
-        using nut::bdy_types::descriptor::R;
-        using nut::bdy_types::descriptor::V;
         using test_aux::check_same;
         using test_aux::check_same_v;
         using test_aux::check_same_verb;
