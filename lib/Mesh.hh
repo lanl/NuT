@@ -7,6 +7,7 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include "lorentz.hh"
 #include "soft_equiv.hh"
 #include "utilities_io.hh"
 #include "Assert.hh"
@@ -273,6 +274,26 @@ namespace nut
             return d2b;
         } // dist_to_bdy_impl
 
+
+        static
+        inline
+        EandOmega<1>
+        LT_to_comoving(vec_t<1> const v_lab,
+            geom_t const & e_lab,
+            vec_t<1> const & omega_lab)
+        {
+            return spec_1D::LT_to_comoving_sphere1D(v_lab.v[0],e_lab,omega_lab);
+        } // LT_to_comoving
+
+        static
+        EandOmega<1>
+        inline
+        LT_to_lab(vec_t<1> const v_lab,
+            geom_t const & e_com,
+            vec_t<1> const & omega_com)
+        {
+            return spec_1D::LT_to_lab_sphere1D(v_lab.v[0],e_com,omega_com);
+        }
 
         vb const m_bdys;
 
