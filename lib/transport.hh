@@ -84,7 +84,7 @@ namespace nut
         {
             std::transform(p_source.begin(),p_source.end(),p_sink.begin(),
               [&](p_t & p){return
-                transport_particle<p_t,MeshT,OpacityT,VelocityT,CensusT,fp_t>
+                transport_particle<p_t,MeshT,OpacityT,VelocityT,CensusT,fp_t,LogT>
                                (p,mesh,opacity,vel,tally,census,log,alpha);
               });
         }
