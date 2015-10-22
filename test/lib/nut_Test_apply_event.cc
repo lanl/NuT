@@ -39,7 +39,7 @@ namespace Nut_Test
         bool test_8();
         char aspect8[] = "apply reflect";
         bool test_9();
-        char aspect9[] = "apply census";
+        char aspect9[] = "apply step end";
 
     }
 
@@ -425,31 +425,23 @@ namespace Nut_Test
             size_t const n_cells(100);
             t_t tally(n_cells), ref(n_cells);
 
-            c_t c,c_ref;
-
             p_ref.alive = false;
-            c_ref.append(p_ref);
 
             cell_t const idx = cell - 1;
             ref.n_census_nu_e[idx]  = 1;
             ref.ew_census_nu_e[idx] = wt;
 
-            nut::apply_step_end<p_t,t_t, c_t>(p,tally,c);
+            nut::apply_step_end<p_t,t_t>(p,tally);
 
             // check tally energy deposition, momentum deposition, and counts.
             bool const t_passed =
                 check_same_verb(&tally.n_census_nu_e,&ref.n_census_nu_e,comp_verb<fp_t>()) &&
                 check_two_changed(tally,ref,&tally.n_census_nu_e,
                                   &tally.ew_census_nu_e);
+
             if(!t_passed)
             {
                 cerr << "did not tally correctly, line " << __LINE__ << endl;
-            }
-
-            bool const c_passed = check_same(&c.nu_es,&c_ref.nu_es);
-            if(!c_passed)
-            {
-                cerr << "census incorrect, line " << __LINE__ << endl;
             }
 
             // check particle status
@@ -459,7 +451,14 @@ namespace Nut_Test
                 cerr << "particle still alive: " << p.alive
                      << __LINE__ << endl;
             }
-            passed = t_passed && c_passed && p_passed;
+
+            bool const f_passed = p.fate == nut::Fates::STEP_END;
+            if(!f_passed)
+            {
+                cerr << "particle fate incorrect: " << p.fate << __LINE__ << endl;
+            }
+
+            passed = t_passed && p_passed && f_passed;
             return passed;
         } // test_9
 

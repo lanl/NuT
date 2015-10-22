@@ -59,10 +59,10 @@ namespace Nut_Test
         typedef nut::Sphere_1D<cell_t,nut::geom_t,nut::bdy_types::descriptor> mesh_t;
 
         // bits for std particle
-        fp_t const rns[] = {0.30897681610609407, 
-                            0.92436920169905545, 
+        fp_t const rns[] = {0.30897681610609407,
+                            0.92436920169905545,
                             0.21932404923057958};
-        rng_t rng(rns,3); 
+        rng_t rng(rns,3);
         fp_t const x = 0.5, omega = 1.0, e = 5.0, t = 1.0, wt = 1.0;
         cell_t const cell = 1;
         Species const s(nut::nu_e);
@@ -78,10 +78,10 @@ namespace Nut_Test
         struct gen_bdy_types
         {
             nut::bdy_types::descriptor operator()(){
-                if(ctr++ == 0) return nut::bdy_types::R;
-                if(ctr == nbdy) return nut::bdy_types::V;
-                nut::Insist(ctr <= nbdy,"called gen_bdy_types too often"); 
-                return nut::bdy_types::T;
+                if(ctr++ == 0) return nut::bdy_types::descriptor::R;
+                if(ctr == nbdy) return nut::bdy_types::descriptor::V;
+                nut::Insist(ctr <= nbdy,"called gen_bdy_types too often");
+                return nut::bdy_types::descriptor::T;
             }
             explicit gen_bdy_types(cell_t const nbdy_) : ctr(0),nbdy(nbdy_) {}
             cell_t ctr;
@@ -104,7 +104,7 @@ namespace Nut_Test
             bool passed(true);
 
             p_t p(make_std_particle());
-            
+
             // mesh
             using nut::events::Event;
 
@@ -122,7 +122,7 @@ namespace Nut_Test
             mesh_t mesh(bounds, b_types);
 
             // opacity
-            
+
             // tally
             nut::Tally<fp_t> tally(n_cells), ref(n_cells);
 

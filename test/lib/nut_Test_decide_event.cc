@@ -157,9 +157,9 @@ namespace Nut_Test
         struct gen_bdy_types
         {
             nut::bdy_types::descriptor operator()(){
-                if(ctr++ == 0) return nut::bdy_types::R;
-                if(ctr == nbdy) return nut::bdy_types::V;
-                return nut::bdy_types::T;
+                if(ctr++ == 0) return nut::bdy_types::descriptor::R;
+                if(ctr == nbdy) return nut::bdy_types::descriptor::V;
+                return nut::bdy_types::descriptor::T;
             }
             explicit gen_bdy_types(cell_t const nbdy_) : ctr(0),nbdy(nbdy_) {}
             cell_t ctr;

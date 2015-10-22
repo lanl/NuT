@@ -84,6 +84,7 @@ namespace Nut_Test
         using test_aux::soft_expect;
         using test_aux::expect;
         using nut::soft_equiv;
+        using namespace nut::bdy_types;
 
         bool test_1()
         {
@@ -98,8 +99,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -123,8 +124,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -151,8 +152,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -196,8 +197,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -243,8 +244,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -273,8 +274,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -303,8 +304,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -333,8 +334,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,35.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
@@ -456,8 +457,8 @@ namespace Nut_Test
 
             geom_t const bdys_in[n_bdys] = {0.0,1.0,2.0,3.0};
             nut::bdy_types::descriptor const bdy_ts[n_bdys] =
-                {nut::bdy_types::R, nut::bdy_types::T,
-                 nut::bdy_types::T, nut::bdy_types::V};
+                {descriptor::R, descriptor::T,
+                 descriptor::T, descriptor::V};
 
             Sp1D::vb bdys(&bdys_in[0],&bdys_in[n_bdys]);
             Sp1D::vbd bdy_types(&bdy_ts[0],&bdy_ts[n_bdys]);
