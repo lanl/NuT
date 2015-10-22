@@ -8,14 +8,11 @@
 #define TYPES_H
 
 
-#include <stdint.h>
-#include <stdexcept>
+#include "RNG.hh"
+#include "Vec3D.hh"
 #include <utility>  // std::pair
 #include <vector>
 #include <string>
-#include <iterator>
-#include "RNG.hh"
-#include "Vec3D.hh"
 
 namespace nut
 {
@@ -73,12 +70,6 @@ namespace nut
     typedef uint32_t group_t;
 
     typedef uint32_t cntr_t;
-
-    typedef std::invalid_argument arg_error;
-
-    typedef std::ostream_iterator<size_t> sz_o_it;
-
-    typedef std::ostream_iterator<geom_t> ge_o_it;
 
     typedef nut::Philox4x32_RNG         rng_t;
 
