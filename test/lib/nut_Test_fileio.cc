@@ -1,6 +1,7 @@
 //T. M. Kelley (c) 2011 LANS LLC
 
 #include "fileio.hh"
+#include "utilities_io.hh"
 
 #include "nut_Test_fileio.hh"
 #include "test_aux.hh"
@@ -69,48 +70,48 @@ namespace Nut_Test
             exp.density = 2.7438e+11;
             exp.velocity = 3.565e+08;
             exp.ye = 8.1058;
-            
+
             exp.eta = 0.0;
             exp.temperature = 5.1030e+02 ;
             exp.entropy = 1.7185e+02;
-            
+
             exp.u = 5.2054e+21;
             exp.lnue_capture = 3.1954e+07;
             exp.enue_capture = 2.2382e+02;
-            
+
             exp.lnueb_capture = 3.1954e+7;
             exp.enueb_capture = 2.2248e+02;
             exp.lnue_pair = 1.1083e+08;
-            
+
             exp.enue_pair = 4.7589e+02;
             exp.lnueb_pair = 1.1083e+08;
             exp.enueb_pair  = 4.7589e+02;
-            
+
             exp.lnux_pair = 9.5198e+07;
             exp.enux_pair = 4.7589e+02;
-            
+
             passed = row == exp;
             if(!passed)
             {
                 std::cout << "row: ";
-                std::cout << row.zone <<","<< row.m_encl <<","<< row.radius <<","<< 
-                    row.density       <<","<< row.velocity <<","<< row.ye <<","<< 
-                    row.eta <<","<< row.temperature   <<","<< row.entropy      <<","<< 
-                    row.u   <<","<< row.lnue_capture  <<","<< row.enue_capture <<","<< 
+                std::cout << row.zone <<","<< row.m_encl <<","<< row.radius <<","<<
+                    row.density       <<","<< row.velocity <<","<< row.ye <<","<<
+                    row.eta <<","<< row.temperature   <<","<< row.entropy      <<","<<
+                    row.u   <<","<< row.lnue_capture  <<","<< row.enue_capture <<","<<
                     row.lnueb_capture <<","<< row.enueb_capture <<","<< row.lnue_pair    <<","<<
-                    row.enue_pair <<","<< row.lnueb_pair <<","<< row.enueb_pair <<","<< 
+                    row.enue_pair <<","<< row.lnueb_pair <<","<< row.enueb_pair <<","<<
                     row.lnux_pair <<","<< row.enux_pair;
                 std::cout << "\nexp: ";
-                std::cout << exp.zone <<","<< exp.m_encl <<","<< exp.radius <<","<< 
-                    exp.density       <<","<< exp.velocity <<","<< exp.ye <<","<< 
-                    exp.eta <<","<< exp.temperature   <<","<< exp.entropy      <<","<< 
-                    exp.u   <<","<< exp.lnue_capture  <<","<< exp.enue_capture <<","<< 
+                std::cout << exp.zone <<","<< exp.m_encl <<","<< exp.radius <<","<<
+                    exp.density       <<","<< exp.velocity <<","<< exp.ye <<","<<
+                    exp.eta <<","<< exp.temperature   <<","<< exp.entropy      <<","<<
+                    exp.u   <<","<< exp.lnue_capture  <<","<< exp.enue_capture <<","<<
                     exp.lnueb_capture <<","<< exp.enueb_capture <<","<< exp.lnue_pair    <<","<<
-                    exp.enue_pair <<","<< exp.lnueb_pair <<","<< exp.enueb_pair <<","<< 
+                    exp.enue_pair <<","<< exp.lnueb_pair <<","<< exp.enueb_pair <<","<<
                     exp.lnux_pair <<","<< exp.enux_pair;
                 std::cout << std::endl;
             }
-            
+
             return passed;
         } // test_1
 
@@ -129,48 +130,48 @@ namespace Nut_Test
             exp.density = 2.7438e+11;
             exp.velocity = 3.565e+08;
             exp.ye = 8.1058;
-            
+
             exp.eta = 0.0;
             exp.temperature = 5.1030e+02 ;
             exp.entropy = 1.7185e+02;
-            
+
             exp.u = 5.2054e+21;
             exp.lnue_capture = 3.1954e+07;
             exp.enue_capture = 2.2382e+02;
-            
+
             exp.lnueb_capture = 3.1954e+7;
             exp.enueb_capture = 2.2248e+02;
             exp.lnue_pair = 1.1083e+08;
-            
+
             exp.enue_pair = 4.7589e+02;
             exp.lnueb_pair = 1.1083e+08;
             exp.enueb_pair  = 4.7589e+02;
-            
+
             exp.lnux_pair = 9.5198e+07;
             exp.enux_pair = 4.7589e+02;
-            
+
             passed = row == exp;
             if(!passed)
             {
                 std::cout << "row: ";
-                std::cout << row.zone <<","<< row.m_encl <<","<< row.radius <<","<< 
-                    row.density       <<","<< row.velocity <<","<< row.ye <<","<< 
-                    row.eta <<","<< row.temperature   <<","<< row.entropy      <<","<< 
-                    row.u   <<","<< row.lnue_capture  <<","<< row.enue_capture <<","<< 
+                std::cout << row.zone <<","<< row.m_encl <<","<< row.radius <<","<<
+                    row.density       <<","<< row.velocity <<","<< row.ye <<","<<
+                    row.eta <<","<< row.temperature   <<","<< row.entropy      <<","<<
+                    row.u   <<","<< row.lnue_capture  <<","<< row.enue_capture <<","<<
                     row.lnueb_capture <<","<< row.enueb_capture <<","<< row.lnue_pair    <<","<<
-                    row.enue_pair <<","<< row.lnueb_pair <<","<< row.enueb_pair <<","<< 
+                    row.enue_pair <<","<< row.lnueb_pair <<","<< row.enueb_pair <<","<<
                     row.lnux_pair <<","<< row.enux_pair;
                 std::cout << "\nexp: ";
-                std::cout << exp.zone <<","<< exp.m_encl <<","<< exp.radius <<","<< 
-                    exp.density       <<","<< exp.velocity <<","<< exp.ye <<","<< 
-                    exp.eta <<","<< exp.temperature   <<","<< exp.entropy      <<","<< 
-                    exp.u   <<","<< exp.lnue_capture  <<","<< exp.enue_capture <<","<< 
+                std::cout << exp.zone <<","<< exp.m_encl <<","<< exp.radius <<","<<
+                    exp.density       <<","<< exp.velocity <<","<< exp.ye <<","<<
+                    exp.eta <<","<< exp.temperature   <<","<< exp.entropy      <<","<<
+                    exp.u   <<","<< exp.lnue_capture  <<","<< exp.enue_capture <<","<<
                     exp.lnueb_capture <<","<< exp.enueb_capture <<","<< exp.lnue_pair    <<","<<
-                    exp.enue_pair <<","<< exp.lnueb_pair <<","<< exp.enueb_pair <<","<< 
+                    exp.enue_pair <<","<< exp.lnueb_pair <<","<< exp.enueb_pair <<","<<
                     exp.lnux_pair <<","<< exp.enux_pair;
                 std::cout << std::endl;
             }
-            
+
             return passed;
         } // test_2
 
@@ -185,7 +186,7 @@ namespace Nut_Test
 
             size_t const exp_sz(1u);
 
-            passed = passed and expect(rows.size(),exp_sz,"vector size"); 
+            passed = passed and expect(rows.size(),exp_sz,"vector size");
             row_t const & row(rows[0]);
 
             {
@@ -196,27 +197,27 @@ namespace Nut_Test
                 exp.density = 2.7438e+11;
                 exp.velocity = 3.565e+08;
                 exp.ye = 8.1058;
-                
+
                 exp.eta = 0.0;
                 exp.temperature = 5.1030e+02 ;
                 exp.entropy = 1.7185e+02;
-                
+
                 exp.u = 5.2054e+21;
                 exp.lnue_capture = 3.1954e+07;
                 exp.enue_capture = 2.2382e+02;
-                
+
                 exp.lnueb_capture = 3.1954e+7;
                 exp.enueb_capture = 2.2248e+02;
 
-                exp.lnue_pair = 1.1083e+08;                
+                exp.lnue_pair = 1.1083e+08;
                 exp.enue_pair = 4.7589e+02;
 
                 exp.lnueb_pair = 1.1083e+08;
                 exp.enueb_pair  = 4.7589e+02;
-                
+
                 exp.lnux_pair = 9.5198e+07;
                 exp.enux_pair = 4.7589e+02;
-                
+
                 passed = passed and exp == row;
             }
 
