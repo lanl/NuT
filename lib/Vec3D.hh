@@ -9,9 +9,7 @@
 
 
 #include <array>
-#include <stdint.h>
-#include <iostream> // for operator >>, <<, istream, ostream.
-#include <numeric>
+
 
 namespace nut
 {
@@ -88,45 +86,6 @@ namespace nut
             return *this;
         }
 
-
-        friend std::ostream &
-        operator<<(std::ostream & s,Vec_T const &v)
-        {
-            s << "{";
-            for(uint32_t d = 0; d < (dim-1); ++d)
-            {
-                s << v.v[d] << ",";
-            }
-            s << v.v[dim-1] << "}";
-            return s;
-        }
-
-        friend std::istream &
-        operator>>(std::istream & s,Vec_T & v)
-        {
-            // read two possible formats
-            // <w>vx<w>vy<w>vz
-            //       or
-            // {vx,vy,vz}
-            char c;
-            s >> c;
-            if(c == '{')
-            {
-                for(uint32_t d = 0; d < dim; ++d)
-                {
-                    s >> v.v[d] >> c;
-                }
-            }
-            else
-            {
-                s.putback(c);
-                for(uint32_t d = 0; d < dim; ++d)
-                {
-                    s >> v.v[d];
-                }
-            }
-            return s;
-        }
     }; // Vec_T
 
 

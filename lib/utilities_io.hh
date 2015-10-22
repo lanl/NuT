@@ -7,18 +7,21 @@
 #ifndef UTILITIES_IO_HH
 #define UTILITIES_IO_HH
 
-#include <string>
-#include <ostream>
+/**!\file commonly used assertions, checks, exceptions, etc. */
+
 #include "Assert.hh"
 #include "Fates.hh"
 #include "types.hh"
-
-
-/**!\file commonly used assertions, checks, exceptions, etc. */
+#include "Vec3D.hh"
+#include <string>
+#include <ostream>
+#include <stdexcept>
 
 
 namespace nut
 {
+    typedef std::invalid_argument arg_error;
+
     /** \brief Print arrays in Python style. */
     template <typename T, typename ItT>
     void print_per_cell_field(std::string const & name,
@@ -115,6 +118,49 @@ namespace std
             case nut::bdy_types::descriptor::T: s << "transmit"; break;
             default: s << "unknown boundary";
         };
+        return s;
+    }
+
+    template <typename fp_t,size_t dim>
+    inline
+    ostream &
+    operator<<(ostream & s,nut::Vec_T<fp_t,dim> const &v)
+    {
+        s << "{";
+        for(uint32_t d = 0; d < (dim-1); ++d)
+        {
+            s << v.v[d] << ",";
+        }
+        s << v.v[dim-1] << "}";
+        return s;
+    }
+
+
+    template <typename fp_t,size_t dim>
+    istream &
+    operator>>(istream & s,nut::Vec_T<fp_t,dim> & v)
+    {
+        // read two possible formats
+        // <w>vx<w>vy<w>vz
+        //       or
+        // {vx,vy,vz}
+        char c;
+        s >> c;
+        if(c == '{')
+        {
+            for(uint32_t d = 0; d < dim; ++d)
+            {
+                s >> v.v[d] >> c;
+            }
+        }
+        else
+        {
+            s.putback(c);
+            for(uint32_t d = 0; d < dim; ++d)
+            {
+                s >> v.v[d];
+            }
+        }
         return s;
     }
 
