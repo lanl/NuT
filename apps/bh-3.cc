@@ -321,13 +321,10 @@ void run_cycle_buffer(
 
     // std::cout << "run_cycle: Transport complete\n";
 
-    // fix up momenta
-    // vec_geom new_momenta(n_cells,0);
+    // fix up momenta--divide all by c to derive momentum.
     std::transform(tally.momentum.begin(),tally.momentum.end(),
                    tally.momentum.begin(),
                    [&](vec_t<dim> & v){return v.div_by(nut::c);});
-                   // nut::div_by<geom_t>(nut::c) );
-    // tally.momentum = new_momenta;
     return;
 } // run_cycle_buffered
 
