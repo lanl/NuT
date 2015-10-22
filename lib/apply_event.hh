@@ -7,16 +7,18 @@
 #define APPLY_EVENT_HH
 
 /**\file apply events to particles */
-#include "Planck.hh"
 
-#include "types.hh"
+#include "Fates.hh"
+#include "Planck.hh"
 #include "Tally.hh"
 #include "Velocity.hh"
-#include "lorentz.hh"
 #include "constants.hh"
+#include "lorentz.hh"
+#include "types.hh"
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>
+
 
 namespace nut
 {
@@ -48,7 +50,7 @@ namespace nut
     } // stream_particle
 
     template <typename ParticleT, typename MeshT, typename OpacityT,
-              typename VelocityT, typename CensusT, typename fp_t>
+              typename VelocityT, typename fp_t>
     void
     apply_event(ParticleT & p,
                 events::Event const & event,
@@ -57,7 +59,6 @@ namespace nut
                 OpacityT const & opacity,
                 VelocityT const & velocity,
                 Tally<fp_t> & tally,
-                CensusT & census,
                 fp_t const alpha = fp_t(2.0)
         )
     {
@@ -110,7 +111,7 @@ namespace nut
             apply_reflect(p,tally);
             break;
         case step_end:
-            apply_step_end(p,tally,census);
+            apply_step_end(p,tally);
             break;
         // error if we get to an unresolved collision or boundary
         case boundary:   // fall through to next
@@ -135,7 +136,7 @@ namespace nut
         t.deposit_energy(p.cell,p.weight,p.e);
         t.deposit_momentum_elastic(p.cell,p.omega,p.e,p.weight);
         t.count_nucleon_abs(p.cell,p.species,p.weight);
-        p.kill();
+        p.kill(Fates::NUCLEON_ABS);
         return;
     } // apply_nucleon_abs
 
@@ -228,7 +229,7 @@ namespace nut
     void apply_escape(p_t & p, tally_t & t)
     {
         t.count_escape(p.cell,p.weight,p.e);
-        p.kill();
+        p.kill(Fates::ESCAPE);
         return;
     }
 
@@ -240,12 +241,11 @@ namespace nut
         return;
     }
 
-    template <typename p_t, typename tally_t, typename census_t>
-    void apply_step_end(p_t & p, tally_t & t, census_t & c)
+    template <typename p_t, typename tally_t>
+    void apply_step_end(p_t & p, tally_t & t)
     {
         t.count_census(p.cell,p.weight,p.species);
-        p.alive = false;
-        c.append(p);
+        p.kill(Fates::STEP_END);
         return;
     }
 
