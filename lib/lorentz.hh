@@ -7,7 +7,6 @@
 #define LORENTZ_HH
 
 #include "constants.hh"
-// #include "Vec3D.hh"
 #include "types.hh"
 #include <cmath>
 
