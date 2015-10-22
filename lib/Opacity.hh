@@ -18,16 +18,16 @@
 
 namespace nut{
 
-    template <typename fp_t,
-              // typename rng_t,
-              typename den_t = Density<fp_t>,
-              typename temp_t = Temperature<fp_t> >
+    template <typename FP_T,
+              typename den_t = Density<FP_T>,
+              typename temp_t = Temperature<FP_T> >
     class Opacity
     {
     public:
         // types
         typedef den_t density_t;
         typedef temp_t temperature_t;
+        typedef FP_T fp_t;
         typedef fp_t const & fp_cr;
 
         // ctor
