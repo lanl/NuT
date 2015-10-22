@@ -7,15 +7,18 @@
 #ifndef FATES_HH
 #define FATES_HH
 
+#include <ostream>
+
 namespace nut
 {
-    enum Fates
+    enum struct Fates
     {
         NUCLEON_ABS = 0,
         ESCAPE = 1,
         STEP_END = 2,
         NOT_DEAD_YET = 99
     };
+
 } // nut
 
 #endif // include guard
