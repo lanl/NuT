@@ -6,17 +6,13 @@
 #ifndef DECISION_HH
 #define DECISION_HH
 
-#include "types.hh"
 #include "constants.hh"
+#include "lorentz.hh"
+#include "types.hh"
 #include <utility> // pair
-// #include <stdexcept>
-// #include <sstream>
-// #include <iostream>
 #include <cmath>
 #include <array>
-#include <algorithm>
-#include "lorentz.hh"
-// #include <iomanip>
+#include <algorithm> // min_element
 
 namespace nut
 {
