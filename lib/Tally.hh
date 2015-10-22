@@ -380,6 +380,13 @@ namespace nut
         }
 
 
+        void count_escape_spectrum( fp_cr e, fp_cr ew)
+        {
+            escape_spectrum.push_back( esc(e,ew));
+            return;
+        }
+
+
         void count_escape( cell_t const cell,
                            fp_cr ew,
                            fp_cr e,
@@ -389,7 +396,6 @@ namespace nut
             cell_t const index = make_idx(cell,m_n_cells);
             n_escape[index] += n;
             ew_escaped[index] += ew;
-            escape_spectrum.push_back( esc(e,ew));
             return;
         }
 
