@@ -9,9 +9,9 @@
 #include "types.hh"
 #include "constants.hh"
 #include <utility> // pair
-#include <stdexcept>
-#include <sstream>
-#include <iostream>
+// #include <stdexcept>
+// #include <sstream>
+// #include <iostream>
 #include <cmath>
 #include <array>
 #include <algorithm>
@@ -125,16 +125,16 @@ namespace nut
         using namespace bdy_types;
         using namespace events;
         Event event(null);
-        bdy_types::descriptor b_type( mesh.bdy_type(cell,face));
+        descriptor b_type( mesh.bdy_type(cell,face));
         switch(b_type)
         {
-        case V:
+        case descriptor::V:
             event = escape;
             break;
-        case R:
+        case descriptor::R:
             event = reflect;
             break;
-        case T:
+        case descriptor::T:
             // 1D specific
             event = face == 0 ? cell_low_x_boundary : cell_high_x_boundary;
             break;

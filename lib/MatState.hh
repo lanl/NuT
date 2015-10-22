@@ -154,9 +154,9 @@ namespace nut
         std::vector<typename mesh_t::bdy_desc_t> descs(ncells + 1);
 
         std::copy(&bndsTmp[lIdx],&bndsTmp[uIdx+1],bounds.begin());
-        descs[0] = bdy_types::R;
-        descs[ncells] = bdy_types::V;
-        for(size_t i = 1; i < ncells; ++i){descs[i] = bdy_types::T;}
+        descs[0] = bdy_types::descriptor::R;
+        descs[ncells] = bdy_types::descriptor::V;
+        for(size_t i = 1; i < ncells; ++i){descs[i] = bdy_types::descriptor::T;}
         return mesh_t(bounds,descs);
     } // rows_to_mesh
 

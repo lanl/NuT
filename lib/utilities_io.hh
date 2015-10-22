@@ -9,11 +9,13 @@
 
 #include <string>
 #include <ostream>
-#include "types.hh"
 #include "Assert.hh"
+#include "Fates.hh"
+#include "types.hh"
 
 
 /**!\file commonly used assertions, checks, exceptions, etc. */
+
 
 namespace nut
 {
@@ -85,6 +87,39 @@ namespace nut
     }
 
 } // nut::
+
+
+namespace std
+{
+    inline
+    ostream & operator<<(ostream & s, nut::Fates const & f)
+    {
+        switch(f)
+        {
+            case nut::Fates::NUCLEON_ABS: s << "NUCLEON_ABS"; break;
+            case nut::Fates::ESCAPE: s << "ESCAPE"; break;
+            case nut::Fates::STEP_END: s << "STEP_END"; break;
+            case nut::Fates::NOT_DEAD_YET: s << "NOT_DEAD_YET"; break;
+            default: s << "Unknown fate";
+        };
+        return s;
+    }
+
+    inline
+    ostream & operator<<(ostream & s, nut::bdy_types::descriptor const & d)
+    {
+        switch(d)
+        {
+            case nut::bdy_types::descriptor::V: s << "vacuum"; break;
+            case nut::bdy_types::descriptor::R: s << "reflective"; break;
+            case nut::bdy_types::descriptor::T: s << "transmit"; break;
+            default: s << "unknown boundary";
+        };
+        return s;
+    }
+
+} // std::
+
 
 #endif // include guard
 

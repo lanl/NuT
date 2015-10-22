@@ -7,12 +7,13 @@
 #ifndef MESH3DCar_H
 #define MESH3DCar_H
 
-#include "soft_equiv.hh"
-#include "utilities.hh"
 #include "Assert.hh"
 #include "constants.hh"
-#include "types.hh"
 #include "lorentz.hh"
+#include "types.hh"
+#include "types.hh"
+#include "utilities.hh"
+#include "utilities_io.hh"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -309,8 +310,8 @@ namespace nut
                 bdy_desc_t const bd = this->getBC(face,cell);
                 switch(bd)
                 {
-                case nut::bdy_types::R: result = cell; break;
-                case nut::bdy_types::V: result = vac_cell; break;
+                case nut::bdy_types::descriptor::R: result = cell; break;
+                case nut::bdy_types::descriptor::V: result = vac_cell; break;
                 default:
                     std::stringstream errstr;
                     errstr << "Mesh3DCar::cell_across_face: "
@@ -554,7 +555,7 @@ namespace nut
                       cell_t const ny,
                       cell_t const nz)
     {
-        bdy_descriptor_t const ref(nut::bdy_types::R);
+        bdy_descriptor_t const ref(nut::bdy_types::descriptor::R);
         cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
         if(n_bs != bds.size())
         {
@@ -595,9 +596,9 @@ namespace nut
                                cell_t const nz)
     {
         cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
-        nut::bdy_types::descriptor ref(nut::bdy_types::R);
-        nut::bdy_types::descriptor vac(nut::bdy_types::V);
-        nut::bdy_types::descriptor trn(nut::bdy_types::T);
+        nut::bdy_types::descriptor ref(nut::bdy_types::descriptor::R);
+        nut::bdy_types::descriptor vac(nut::bdy_types::descriptor::V);
+        nut::bdy_types::descriptor trn(nut::bdy_types::descriptor::T);
 
         if(n_bs != bds.size())
         {

@@ -80,7 +80,9 @@ namespace nut
          * \param face: 0 (left) or 1 (right)
          */
         cell_t
-        cell_across_face(cell_t const cell,cell_t face) const {
+        cell_across_face(cell_t const cell,cell_t face) const
+        {
+            using namespace bdy_types;
             cellOK(cell);
             LessThan(face,cell_t(2),"face");
             // compute index into descriptors
@@ -90,13 +92,13 @@ namespace nut
             cell_t result(-1);
             switch(btype)
             {
-            case bdy_types::T:
+            case descriptor::T:
                 result = cell - 1 + 2*face;
                 break;
-            case bdy_types::R:
+            case descriptor::R:
                 result = cell;
                 break;
-            case bdy_types::V:
+            case descriptor::V:
                 result = cell_t(0);
                 break;
             default:

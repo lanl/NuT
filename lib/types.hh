@@ -21,11 +21,11 @@ namespace nut
 {
     namespace bdy_types
     {
-        enum descriptor
+        enum struct descriptor
         {
-            V, /** Vacuum */
-            R, /** Reflective */
-            T  /** Transmissive */
+            V, /**< Vacuum */
+            R, /**< Reflective */
+            T  /**< Transmissive */
         };
     }
 
