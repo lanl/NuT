@@ -38,7 +38,7 @@ namespace nut
         Fates fate;
 
 
-        // ctor
+        // ctors
         Particle( vec_t x_,
                   vec_t omega_,
                   fp_t e_,
@@ -55,17 +55,18 @@ namespace nut
             rng    (rng_),
             species(s_),
             alive  (true),
-            fate(NOT_DEAD_YET)
+            fate(Fates::NOT_DEAD_YET)
             {
                 std::copy(x_.begin(),x_.end(),x.begin() );
                 std::copy(omega_.begin(),omega_.end(), omega.begin() );
             }
 
-        Particle(){}
+        Particle() : alive(false),fate(Fates::NOT_DEAD_YET) {}
 
 
-        void kill(){
+        void kill(Fates f){
             alive = false;
+            fate = f;
         }
 
         bool operator==(Particle const & p) const {
