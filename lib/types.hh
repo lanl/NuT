@@ -26,30 +26,27 @@ namespace nut
         };
     }
 
-    namespace events
+    enum struct Event
     {
-        enum Event
-        {
-            // physics events
-            collision               = 0,
-            nucleon_abs             = 1,
-            nucleon_elastic_scatter = 2,
-            electron_scatter        = 3,
-            positron_scatter        = 4,
-            nu_e_annhilation        = 5,
-            nu_x_annhilation        = 6,
-            // # compute events
-            boundary             = 100,
-            cell_low_x_boundary  = 101,
-            cell_high_x_boundary = 102,
-            escape        = 110,
-            reflect       = 111,
-            step_end      = 115,
-            weight_cutoff = 120,
-            // testing only
-            null          = 9999
-        };
-    } // events::
+        // physics events
+        collision               = 0,
+        nucleon_abs             = 1,
+        nucleon_elastic_scatter = 2,
+        electron_scatter        = 3,
+        positron_scatter        = 4,
+        nu_e_annhilation        = 5,
+        nu_x_annhilation        = 6,
+        // # compute events
+        boundary             = 100,
+        cell_low_x_boundary  = 101,
+        cell_high_x_boundary = 102,
+        escape        = 110,
+        reflect       = 111,
+        step_end      = 115,
+        weight_cutoff = 120,
+        // testing only
+        null          = 9999
+    }; // events::
 
     typedef double geom_t;   /*^ type for geometry calculations */
 
@@ -59,7 +56,7 @@ namespace nut
 
     typedef std::vector<geom_t> vg;
 
-    typedef std::pair<events::Event, geom_t> event_n_dist;
+    typedef std::pair<Event, geom_t> event_n_dist;
 
     typedef uint32_t cell_t; /*^ cell index. Use cell_t(-1) for null cell. */
 
@@ -97,10 +94,10 @@ namespace nut
 
     seed_t species_seed(Species const s);
 
-    namespace events
-    {
+    // namespace events
+    // {
         std::string event_name(Event const & e);
-    } // events::
+    // } // events::
 
 } // nut::
 

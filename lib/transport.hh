@@ -69,7 +69,7 @@ namespace nut
         while(particle.t >= 0.0 && particle.alive == true)
         {
             event_n_dist e_n_d = decide_event(particle,mesh,opacity,vel);
-            events::Event const event = e_n_d.first;
+            Event const event = e_n_d.first;
             geom_t const dist         = e_n_d.second;
             apply_event(particle, event, dist, mesh, opacity, vel, tally, alpha);
         }

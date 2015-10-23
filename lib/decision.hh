@@ -73,21 +73,21 @@ namespace nut
         geom_t const d_coll     = (sig_coll != fp_t(0)) ?
             -std::log(random_dev)/sig_coll : huge;
 
-        e_n_ds[0] = event_n_dist(events::collision,d_coll);
+        e_n_ds[0] = event_n_dist(Event::collision,d_coll);
 
         d_to_b_t dnf = mesh.distance_to_bdy(x,oli,cell);
         geom_t const d_bdy = dnf.d;
-        e_n_ds[1] = event_n_dist(events::boundary,d_bdy);
+        e_n_ds[1] = event_n_dist(Event::boundary,d_bdy);
 
         geom_t const d_step_end = c * tleft;
-        e_n_ds[2] = event_n_dist(events::step_end,d_step_end);
+        e_n_ds[2] = event_n_dist(Event::step_end,d_step_end);
 
         // pick (event,dist) pair with shortest distance
         event_n_dist closest = *(std::min_element(e_n_ds.begin(),e_n_ds.end(),
                                                   pair_min_2nd<event_n_dist>));
 
         // if needed, further resolve events
-        if(closest.first == events::collision)
+        if(closest.first == Event::collision)
         {
             // need to compute the comoving energy at the scattering site,
             // in order to compute the different cross sections there.
@@ -102,7 +102,7 @@ namespace nut
         }
         else
         {
-            if(closest.first == events::boundary)
+            if(closest.first == Event::boundary)
             {
                 closest.first = decide_boundary_event(mesh,cell,dnf.face);
             }
@@ -114,25 +114,24 @@ namespace nut
 
 
     template <typename MeshT>
-    events::Event
+    Event
     decide_boundary_event( MeshT const & mesh, cell_t const cell,
                            cell_t const face)
     {
         using namespace bdy_types;
-        using namespace events;
-        Event event(null);
+        Event event(Event::null);
         descriptor b_type( mesh.bdy_type(cell,face));
         switch(b_type)
         {
         case descriptor::V:
-            event = escape;
+            event = Event::escape;
             break;
         case descriptor::R:
-            event = reflect;
+            event = Event::reflect;
             break;
         case descriptor::T:
             // 1D specific
-            event = face == 0 ? cell_low_x_boundary : cell_high_x_boundary;
+            event = face == 0 ? Event::cell_low_x_boundary : Event::cell_high_x_boundary;
             break;
         default:
             unresolved_event(__LINE__,"decide_boundary_event");
@@ -142,7 +141,7 @@ namespace nut
 
 
     template <typename rng_t, typename fp_t, typename opacity_t>
-    events::Event
+    Event
     decide_scatter_event(rng_t & rng, fp_t const nu_nrg, cell_t const cell,
                          opacity_t const & op, Species const s)
     {
@@ -152,7 +151,7 @@ namespace nut
 
         // selectors
         fp_c p_type_sel = rng.random();  // particle interactor
-        events::Event event(events::null);
+        Event event(Event::null);
 
         fp_c N_total = op.sigma_N_total(cell,nu_nrg);    // nucleon
         fp_c prob_nucleon = N_total/sig_collide;
@@ -166,19 +165,19 @@ namespace nut
 
         if(p_type_sel < prob_abs)
         {
-            event = events::nucleon_abs;
+            event = Event::nucleon_abs;
         }
         else if(p_type_sel < prob_abs + prob_elastic)
         {
-            event = events::nucleon_elastic_scatter;
+            event = Event::nucleon_elastic_scatter;
         }
         else if(p_type_sel < prob_nucleon + prob_electron)
         {
-            event = events::electron_scatter;
+            event = Event::electron_scatter;
         }
         else if(p_type_sel < prob_nucleon + prob_electron + prob_positron)
         {
-            event = events::positron_scatter;
+            event = Event::positron_scatter;
         }
         else
         {

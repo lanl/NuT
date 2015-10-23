@@ -17,15 +17,15 @@
 #include "types.hh"
 #include <stdexcept>
 #include <sstream>
-#include <iomanip>
+// #include <iomanip>
 
 
 namespace nut
 {
     namespace
     {
-        void underresolved_event(nut::events::Event const & event);
-        void unknown_event(nut::events::Event const & event);
+        void underresolved_event(nut::Event const & event);
+        void unknown_event(nut::Event const & event);
     } // anonymous::
 
 
@@ -53,7 +53,7 @@ namespace nut
               typename VelocityT, typename fp_t>
     void
     apply_event(ParticleT & p,
-                events::Event const & event,
+                Event const & event,
                 geom_t const distance,
                 MeshT const & mesh,
                 OpacityT const & opacity,
@@ -62,8 +62,6 @@ namespace nut
                 fp_t const alpha = fp_t(2.0)
         )
     {
-        using namespace events;
-
         cell_t const index = make_idx(p.cell,opacity.m_n_cells);
 
         stream_particle(p,distance,mesh);
@@ -72,13 +70,13 @@ namespace nut
 
         switch(event)
         {
-        case nucleon_abs:
+        case Event::nucleon_abs:
             apply_nucleon_abs(p,tally);
             break;
-        case nucleon_elastic_scatter:
+        case Event::nucleon_elastic_scatter:
             apply_nucleon_elastic_scatter<ParticleT,Tally<fp_t>,VelocityT,MeshT>( p,tally,velocity);
             break;
-        case electron_scatter:
+        case Event::electron_scatter:
             {
                 fp_t const ebar = opacity.m_T.T_e_minus[index];
                 fp_t const e_e  = ebar;
@@ -86,7 +84,7 @@ namespace nut
                 apply_lepton_scatter<ParticleT,Tally<fp_t>,VelocityT,MeshT>(p,tally,e_e,velocity);
             }
             break;
-        case positron_scatter:
+        case Event::positron_scatter:
             {
                 fp_t const ebar = opacity.m_T.T_e_plus[index];
                 fp_t const e_e  = ebar;
@@ -94,36 +92,36 @@ namespace nut
                 apply_lepton_scatter<ParticleT,Tally<fp_t>,VelocityT,MeshT>(p,tally,e_e,velocity);
             }
             break;
-        // case nu_e_annhilation:
+        // case Event::nu_e_annhilation:
         //     break;
-        // case nu_x_annhilation:
+        // case Event::nu_x_annhilation:
         //     break;
-        case cell_low_x_boundary:
+        case Event::cell_low_x_boundary:
             apply_low_x_boundary(p,tally);
             break;
-        case cell_high_x_boundary:
+        case Event::cell_high_x_boundary:
             apply_hi_x_boundary(p,tally);
             break;
-        case escape:
+        case Event::escape:
             apply_escape(p,tally);
             break;
-        case reflect:
+        case Event::reflect:
             apply_reflect(p,tally);
             break;
-        case step_end:
+        case Event::step_end:
             apply_step_end(p,tally);
             break;
         // error if we get to an unresolved collision or boundary
-        case boundary:   // fall through to next
-        case collision:
+        case Event::boundary:   // fall through to next
+        case Event::collision:
             underresolved_event(event);
             break;
         default:
             unknown_event(event);
         } // switch
-        if(event != nucleon_elastic_scatter
-           && event != electron_scatter
-           && event != positron_scatter)
+        if(event != Event::nucleon_elastic_scatter
+           && event != Event::electron_scatter
+           && event != Event::positron_scatter)
         {
             p.rng.random(); // compensate to maintain constant RNs/MC step
         }
@@ -251,18 +249,18 @@ namespace nut
 
     namespace
     {
-        void underresolved_event(nut::events::Event const & event)
+        void underresolved_event(nut::Event const & event)
         {
             std::stringstream errstr;
             errstr << "Event not fully resolved: event type "
-                   << nut::events::event_name(event);
+                   << nut::event_name(event);
             throw std::runtime_error(errstr.str());
         }
 
-        void unknown_event(nut::events::Event const & event)
+        void unknown_event(nut::Event const & event)
         {
             std::stringstream errstr;
-            errstr << "Unknown event: " << event;
+            errstr << "Unknown event: " << nut::event_name(event);
             throw std::runtime_error(errstr.str());
         }
     } // anonymous::

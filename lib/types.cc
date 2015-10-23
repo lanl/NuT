@@ -9,64 +9,59 @@
 namespace nut
 {
 
-    namespace events
+    std::string event_name(Event const & e)
     {
-
-        std::string event_name(Event const & e)
+        std::string name;
+        switch(e)
         {
-            std::string name;
-            switch(e)
-            {
-            case collision:
-                name = "Collision";
-                break;
-            case nucleon_abs:
-                name = "Nucleon_abs";
-                break;
-            case nucleon_elastic_scatter:
-                name = "Nucleon_elastic_scatter";
-                break;
-            case electron_scatter:
-                name = "Electron_scatter";
-                break;
-            case positron_scatter:
-                name = "Positron_scatter";
-                break;
-            case nu_e_annhilation:
-                name = "Nu_e_annhilation";
-                break;
-            case nu_x_annhilation:
-                name = "Nu_x_annhilation";
-                break;;            // # compute events
-            case boundary:
-                name = "boundary";
-                break;
-            case cell_low_x_boundary:
-                name = "Cell_low_x_boundary";
-                break;
-            case cell_high_x_boundary:
-                name = "Cell_high_x_boundary";
-                break;
-            case escape:
-                name = "Escape";
-                break;
-            case reflect:
-                name = "Reflect";
-                break;
-            case step_end:
-                name = "Step_end";
-                break;
-            case weight_cutoff:
-                name = "Weight_cutoff";
-                break;;            // testing only
-            case null:
-                name = "Null";
-                break;
-            };
-            return name;
-        } // event_name
-
-    } // events::
+        case Event::collision:
+            name = "Collision";
+            break;
+        case Event::nucleon_abs:
+            name = "Nucleon_abs";
+            break;
+        case Event::nucleon_elastic_scatter:
+            name = "Nucleon_elastic_scatter";
+            break;
+        case Event::electron_scatter:
+            name = "Electron_scatter";
+            break;
+        case Event::positron_scatter:
+            name = "Positron_scatter";
+            break;
+        case Event::nu_e_annhilation:
+            name = "Nu_e_annhilation";
+            break;
+        case Event::nu_x_annhilation:
+            name = "Nu_x_annhilation";
+            break;;            // # compute events
+        case Event::boundary:
+            name = "boundary";
+            break;
+        case Event::cell_low_x_boundary:
+            name = "Cell_low_x_boundary";
+            break;
+        case Event::cell_high_x_boundary:
+            name = "Cell_high_x_boundary";
+            break;
+        case Event::escape:
+            name = "Escape";
+            break;
+        case Event::reflect:
+            name = "Reflect";
+            break;
+        case Event::step_end:
+            name = "Step_end";
+            break;
+        case Event::weight_cutoff:
+            name = "Weight_cutoff";
+            break;;            // testing only
+        case Event::null:
+            name = "Null";
+            break;
+        };
+        return name;
+    } // event_name
 
 
     seed_t species_seed( Species const s)
