@@ -106,7 +106,7 @@ namespace Nut_Test
             p_t p(make_std_particle());
 
             // mesh
-            using nut::events::Event;
+            using nut::Event;
 
             using nut::decide_boundary_event;
             typedef mesh_t::vb vb;

@@ -80,14 +80,13 @@ namespace Nut_Test
 
     namespace decide_event_tests
     {
-        using namespace nut::events;
-
         using nut::Species;
         using nut::cell_t;
         using nut::cell_t;
         using nut::geom_t;
         using nut::bdy_types::descriptor;
         using nut::vec_t;
+        using nut::Event;
 
         typedef double                    fp_t;
         typedef std::vector<fp_t>         vf;
@@ -140,13 +139,13 @@ namespace Nut_Test
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
 
-            Event event_exp = nucleon_abs;
+            Event event_exp = Event::nucleon_abs;
 
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << event << ", should have been "
-                          << nut::events::nucleon_abs << std::endl;
+                std::cout << "event was " << nut::event_name(event) << ", should have been "
+                          << nut::event_name(Event::nucleon_abs) << std::endl;
             }
             return passed;
         } // test_1
@@ -180,9 +179,10 @@ namespace Nut_Test
         bool test_2()
         {
             bool passed(true);
-            using nut::events::Event;
+            using nut::Event;
 
             using nut::decide_boundary_event;
+            using nut::event_name;
             typedef mesh_t::vb vb;
             typedef mesh_t::vbd vbd;
             // generate uniform mesh
@@ -196,37 +196,37 @@ namespace Nut_Test
             mesh_t mesh(bounds, b_types);
             cell_t const c1(1);
             cell_t const f1(0);
-            Event const exp_ev1(reflect);
+            Event const exp_ev1(Event::reflect);
             Event ev1 = decide_boundary_event(mesh,c1,f1);
             passed = exp_ev1 == ev1 and passed;
             // transmit: high face of cell 1
             cell_t const c2(1);
             cell_t const f2(1);
-            Event const exp_ev2(cell_high_x_boundary);
+            Event const exp_ev2(Event::cell_high_x_boundary);
             Event ev2 = decide_boundary_event(mesh,c2,f2);
             passed = exp_ev2 == ev2 and passed;
             if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
             // transmit: low face of cell 2
             cell_t const c3(2);
             cell_t const f3(0);
-            Event const exp_ev3(cell_low_x_boundary);
+            Event const exp_ev3(Event::cell_low_x_boundary);
             Event ev3 = decide_boundary_event(mesh,c3,f3);
             passed = exp_ev3 == ev3 and passed;
             if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
             // transmit: low face of cell 10
             cell_t const c4(10);
             cell_t const f4(0);
-            Event const exp_ev4(cell_low_x_boundary);
+            Event const exp_ev4(Event::cell_low_x_boundary);
             Event ev4 = decide_boundary_event(mesh,c4,f4);
             passed = exp_ev4 == ev4 and passed;
             if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
             // escape: high face of cell 10
             cell_t const c5(10);
             cell_t const f5(1);
-            Event const exp_ev5(escape);
+            Event const exp_ev5(Event::escape);
             Event ev5 = decide_boundary_event(mesh,c5,f5);
             passed = exp_ev5 == ev5 and passed;
-            if(!passed) std::cout << "FAILED: " << ev5 << ":"
+            if(!passed) std::cout << "FAILED: " << event_name(ev5) << ":"
                                   << __LINE__ << std::endl;
 
             return passed;
@@ -242,7 +242,8 @@ namespace Nut_Test
             typedef mesh_t::vbd vbd;
 
             using nut::decide_scatter_event;
-            using nut::events::Event;
+            using nut::Event;
+            using nut::event_name;
 
             rho_t rho1(rho);
             T_t   T1(T);
@@ -271,13 +272,13 @@ namespace Nut_Test
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
 
-            Event const event_exp = cell_high_x_boundary;
+            Event const event_exp = Event::cell_high_x_boundary;
             Event const event = e_n_d.first;
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << event << ", should have been "
-                          << nut::events::nucleon_abs << std::endl;
+                std::cout << "event was " << event_name(event) << ", should have been "
+                          << event_name(nut::Event::nucleon_abs) << std::endl;
             }
             return passed;
         } // test_3
@@ -292,7 +293,8 @@ namespace Nut_Test
             typedef mesh_t::vbd vbd;
 
             using nut::decide_scatter_event;
-            using nut::events::Event;
+            using nut::Event;
+            using nut::event_name;
 
             rho_t rho1(rho);
             T_t   T1(T);
@@ -320,7 +322,7 @@ namespace Nut_Test
             for(size_t i = 0; i < 9; ++i)
             {
                 nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
-                std::cout << nut::events::event_name(e_n_d.first)
+                std::cout << event_name(e_n_d.first)
                           << ", d = " << e_n_d.second << std::endl;
                 p.x += e_n_d.second;
                 p.cell += 1;
@@ -328,15 +330,15 @@ namespace Nut_Test
 
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
 
-            Event const event_exp = escape;
+            Event const event_exp = Event::escape;
             Event const event = e_n_d.first;
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << event << ", AKA "
-                          << nut::events::event_name(event)
+                std::cout << "event was " << event_name(event) << ", AKA "
+                          << event_name(event)
                           << ", should have been "
-                          << event_exp << std::endl;
+                          << event_name( event_exp) << std::endl;
             }
             geom_t const d_exp = 1.0;
             passed = e_n_d.second == d_exp and passed;
@@ -372,14 +374,14 @@ namespace Nut_Test
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
 
-            Event event_exp = nucleon_elastic_scatter;
+            Event event_exp = Event::nucleon_elastic_scatter;
 
             passed = event == event_exp;
             if(!passed)
             {
-                std::cout << "event was " << nut::events::event_name(event)
+                std::cout << "event was " << event_name(event)
                           << ", should have been "
-                          << nut::events::nucleon_elastic_scatter << std::endl;
+                          << nut::event_name(Event::nucleon_elastic_scatter) << std::endl;
             }
             return passed;
         } // test_5
@@ -390,7 +392,7 @@ namespace Nut_Test
         {
             bool passed(true);
 
-            using namespace nut::events;
+            using nut::Event;
 
             using nut::decide_scatter_event;
 
@@ -410,7 +412,7 @@ namespace Nut_Test
 
             Event event = decide_scatter_event(rng,e,cell,op,s);
 
-            Event event_exp = electron_scatter;
+            Event event_exp = Event::electron_scatter;
 
             passed = event == event_exp;
             if(!passed)
@@ -433,7 +435,7 @@ namespace Nut_Test
         {
             bool passed(true);
 
-            using namespace nut::events;
+            using nut::Event;
 
             typedef mesh_t::vb vb;
             typedef mesh_t::vbd vbd;
@@ -471,14 +473,14 @@ namespace Nut_Test
             nut::event_n_dist e_n_d = decide_event(p,mesh,op,vel0s);
 
             Event const & event = e_n_d.first;
-            Event event_exp = nucleon_abs;
+            Event event_exp = Event::nucleon_abs;
 
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
                           << ", should have been "
-                          << event_name(nut::events::nucleon_abs) << std::endl;
+                          << event_name(nut::Event::nucleon_abs) << std::endl;
             }
             geom_t const d_exp = 7343.827;
             geom_t const epsilon =  0.001;
@@ -505,7 +507,7 @@ namespace Nut_Test
         {
             bool passed(true);
 
-            using namespace nut::events;
+            using nut::Event;
 
             typedef mesh_t::vb vb;
             typedef mesh_t::vbd vbd;
@@ -539,14 +541,14 @@ namespace Nut_Test
             nut::event_n_dist e_n_d  = nut::decide_event(p,mesh,op,vel0s);
 
             Event const event = e_n_d.first;
-            Event const event_exp = nucleon_elastic_scatter;
+            Event const event_exp = Event::nucleon_elastic_scatter;
 
             passed = event == event_exp;
             if(!passed)
             {
                 std::cout << "event was " << event_name(event)
                           << ", should have been "
-                          << event_name(nucleon_elastic_scatter) << std::endl;
+                          << event_name(Event::nucleon_elastic_scatter) << std::endl;
             }
             geom_t const d_exp = 9486.756;
             geom_t const epsilon =  0.001;
@@ -566,7 +568,7 @@ namespace Nut_Test
         {
             bool passed(true);
 
-            using namespace nut::events;
+            using nut::Event;
 
             typedef mesh_t::vb vb;
             typedef mesh_t::vbd vbd;
@@ -601,7 +603,7 @@ namespace Nut_Test
 
             Event const event = e_n_d.first;
 
-            Event const event_exp = electron_scatter;
+            Event const event_exp = Event::electron_scatter;
 
             passed = event == event_exp;
             if(!passed)
