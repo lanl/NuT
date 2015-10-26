@@ -74,7 +74,7 @@ uint32_t gen_particle_buffer(p_buff_t & ps
         nut::geom_t const ew(ss.ews[celli]);
         for(uint32_t pi = 0; pi < n_ps; ++pi)
         {
-            nut::LessThan(curr,chunk.pend+1,"current ptcl id","last ptcl id");
+            dbc::LessThan(curr,chunk.pend+1,"current ptcl id","last ptcl id");
             id_t const ptcl_id(curr);
             nut::ctr_t ptcl_ctr(nut::rng_t::make_ctr(ptcl_id,0u,0u,0u));
             nut::rng_t ptcl_rng(ptcl_ctr,key); // for generating the particle
@@ -103,7 +103,7 @@ void dispose_particle_buffer(p_buff_t const & p_buff_out, uint32_t const n_ps,
     for(uint32_t ip = 0; ip < n_ps; ++ip)
     {
         p_t const & p(p_buff_out[ip]);
-        nut::Require(p.fate != Fates::NOT_DEAD_YET,"Output particle did not meet fate");
+        dbc::Require(p.fate != Fates::NOT_DEAD_YET,"Output particle did not meet fate");
         switch(p.fate)
         {
         case Fates::STEP_END:
@@ -115,7 +115,7 @@ void dispose_particle_buffer(p_buff_t const & p_buff_out, uint32_t const n_ps,
         case Fates::NUCLEON_ABS:
             break; // no action required
         default:
-            nut::Require(false,"Unknown particle fate!");
+            dbc::Require(false,"Unknown particle fate!");
         }
     } // loop over particles
     return;
@@ -140,13 +140,12 @@ void run_cycle_buffered(src_stat_t const & stats
     using nut::cell_t;
     using nut::geom_t;
     using nut::vec_t;
-    using nut::Require;
 
     static size_t const dim(p_t::dim);
 
     cell_t const n_cells = mesh.n_cells();
 
-    Require(stats.ns.size()  == n_cells &&
+    dbc::Require(stats.ns.size()  == n_cells &&
             stats.es.size()  == n_cells &&
             stats.ews.size() == n_cells, "correct array lenghts");
     // very large for particles in postprocess--there's really no time
@@ -234,7 +233,6 @@ state_t get_mat_state(std::string const filename,
                       nut::geom_t const llimit,
                       nut::geom_t const ulimit)
 {
-    using nut::Require;
     typedef std::vector<nut::MatStateRowP<nut::geom_t> > vecrows;
     std::ifstream infile(filename.c_str());
     if(!infile)
@@ -252,9 +250,9 @@ state_t get_mat_state(std::string const filename,
     size_t llimitIdx(0),ulimitIdx(0);
     Mesh_t mesh = nut::rows_to_mesh<Mesh_t,nut::geom_t>(
         rows, llimit, ulimit, llimitIdx, ulimitIdx);
-    Require( ulimitIdx >= llimitIdx,"invalid limits");
+    dbc::Require( ulimitIdx >= llimitIdx,"invalid limits");
     size_t const nrows(ulimitIdx - llimitIdx);
-    Require(mesh.n_cells() == nrows,
+    dbc::Require(mesh.n_cells() == nrows,
             "get_mat_state: mesh size and nrows disagree");
     // get the subset of rows within the limits
     vecrows limitedRows(nrows);
@@ -268,7 +266,6 @@ void run_one_species(nut::Species const spec,
                      args_t const & args,
                      state_t const & state)
 {
-    using nut::Check;
     MatState_t const & mat = state.first;
     Mesh_t const & mesh    = state.second;
 
@@ -283,7 +280,7 @@ void run_one_species(nut::Species const spec,
 
     std::vector<nut::cell_t> cidxs(mesh.n_cells());
     for(size_t i = 0; i < cidxs.size(); ++i){ cidxs[i] = i+1; }
-    Check(cidxs.size() == v.size(),"Cell indexes size != velocity size");
+    dbc::Check(cidxs.size() == v.size(),"Cell indexes size != velocity size");
 
     src_stat_t stats(ncells);
     tally_t    tally(ncells);
