@@ -8,6 +8,7 @@
 
 /**\file apply events to particles */
 
+#include "Event.hh"
 #include "Fates.hh"
 #include "Planck.hh"
 #include "Tally.hh"
@@ -22,13 +23,6 @@
 
 namespace nut
 {
-    namespace
-    {
-        void underresolved_event(nut::Event const & event);
-        void unknown_event(nut::Event const & event);
-    } // anonymous::
-
-
     template <typename p_t, typename tally_t,
               typename vel_t, typename Mesh_T>
     void apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel);
@@ -112,12 +106,15 @@ namespace nut
             apply_step_end(p,tally);
             break;
         // error if we get to an unresolved collision or boundary
-        case Event::boundary:   // fall through to next
-        case Event::collision:
-            underresolved_event(event);
+        case Event::undetermined:
+            p.kill(Fates::UNDETERMINED_EVENT);
             break;
+        case Event::boundary:   // fall through to next
+        case Event::collision:  //
+            // underresolved_event(event);
+            // break;
         default:
-            unknown_event(event);
+            p.kill(Fates::UNHANDLED_EVENT);
         } // switch
         if(event != Event::nucleon_elastic_scatter
            && event != Event::electron_scatter
@@ -246,24 +243,6 @@ namespace nut
         p.kill(Fates::STEP_END);
         return;
     }
-
-    namespace
-    {
-        void underresolved_event(nut::Event const & event)
-        {
-            std::stringstream errstr;
-            errstr << "Event not fully resolved: event type "
-                   << nut::event_name(event);
-            throw std::runtime_error(errstr.str());
-        }
-
-        void unknown_event(nut::Event const & event)
-        {
-            std::stringstream errstr;
-            errstr << "Unknown event: " << nut::event_name(event);
-            throw std::runtime_error(errstr.str());
-        }
-    } // anonymous::
 
 } // nut::
 
