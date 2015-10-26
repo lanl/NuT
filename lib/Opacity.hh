@@ -3,6 +3,9 @@
 // Jan 12, 2011
 // (c) Copyright 2011 LANSLLC, all rights reserved
 
+#ifndef OPACITY_HH
+#define OPACITY_HH
+
 #ifdef USING_HFBC_SIGMAS
 #include "sigmas_HBFC.hh"
 #else
@@ -327,5 +330,8 @@ namespace nut{
 
 
 } // nut::
+
+
+#endif // #define "OPACITY_HH"
 
 // End of file

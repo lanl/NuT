@@ -11,9 +11,9 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace nut
+namespace dbc
 {
-    /** call resize in a way that, if the alloc fails, makes some noise on 
+    /** call resize in a way that, if the alloc fails, makes some noise on
      * the way out. */
     template <typename vec_t>
     static inline
@@ -44,12 +44,12 @@ namespace nut
 
 
 #ifdef REQUIRE_ON
-    
-    
+
+
     /** Require: a condition that, if not true, is irrecoverable.
-     * Uses char * in the interface to maintain performance when 
-     * assertions are turned off. (If we used std::string, the caller 
-     * would still construct that string, even if the body of the 
+     * Uses char * in the interface to maintain performance when
+     * assertions are turned off. (If we used std::string, the caller
+     * would still construct that string, even if the body of the
      * function is empty.) */
     static inline
     void Require(bool const cond, char const * const msg)
@@ -58,7 +58,7 @@ namespace nut
         {
             throw std::runtime_error(msg);
         }
-    } 
+    }
 
     /** Check that something is true. */
     static inline
@@ -68,8 +68,8 @@ namespace nut
         {
             throw std::runtime_error(msg);
         }
-    } 
-    
+    }
+
     /** Two named things are equal. */
     template <typename eq_t>
     inline
@@ -80,7 +80,7 @@ namespace nut
         std::string const b_name(b_name_cstr);
         std::string const errstr(a_name + " != " + b_name);
         Require(a==b,errstr.c_str());
-    } 
+    }
 
     /** min < x < max */
     template <typename comp_t>
@@ -102,7 +102,7 @@ namespace nut
     /** x > min */
     template <typename gt_t>
     inline
-    void GreaterThan(gt_t const & x, gt_t const & min, 
+    void GreaterThan(gt_t const & x, gt_t const & min,
                           char const * const name)
     {
         bool cond = x > min;
@@ -118,7 +118,7 @@ namespace nut
     /** x >= min */
     template <typename gt_t>
     inline
-    void GreaterEqual(gt_t const & x, gt_t const & min, 
+    void GreaterEqual(gt_t const & x, gt_t const & min,
                       char const * const name)
     {
         bool cond = x >= min;
@@ -134,7 +134,7 @@ namespace nut
     /** x < max */
     template <typename gt_t>
     inline
-    void LessThan(gt_t const & x, gt_t const & max, 
+    void LessThan(gt_t const & x, gt_t const & max,
                   char const * const name)
     {
         bool cond = x < max;
@@ -150,7 +150,7 @@ namespace nut
     /** x < max */
     template <typename gt_t>
     inline
-    void LessThan(gt_t const & x, gt_t const & max, 
+    void LessThan(gt_t const & x, gt_t const & max,
                   char const * const name,
                   char const * const max_name
         )
@@ -159,7 +159,7 @@ namespace nut
         if(!cond)
         {
             std::stringstream errstr;
-            errstr << name << " (" << x << ") >= " 
+            errstr << name << " (" << x << ") >= "
                    << max_name <<  " (" << max << ").";
             Require(false,errstr.str().c_str());
         }
@@ -184,13 +184,13 @@ namespace nut
     void Check(bool const , char const * const ){}
 
     template <typename eq_t>
-    void Equal(eq_t const &, eq_t const &, 
+    void Equal(eq_t const &, eq_t const &,
                char const * const, char const * const){}
 
     template <typename comp_t>
     void InOpenRange(comp_t const &, comp_t const &, comp_t const &,
                      char const * const){}
-   
+
     template <typename gt_t>
     void GreaterThan(gt_t const & , gt_t const &, char const * const ){}
 

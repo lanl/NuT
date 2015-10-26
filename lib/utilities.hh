@@ -42,7 +42,7 @@ namespace nut
         fp_t const d;
         explicit div_by(fp_t const d_) : d(d_)
         {
-            Require(d != fp_t(0),"div_by::ctor: divisor may not equal 0");
+            dbc::Require(d != fp_t(0),"div_by::ctor: divisor may not equal 0");
         }
     }; // div_by
 

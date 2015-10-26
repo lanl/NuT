@@ -14,7 +14,7 @@
 #include "constants.hh"
 #include "types.hh"
 #include <vector>
-#include <string>
+// #include <string>
 #include <cmath>
 
 
@@ -52,8 +52,8 @@ namespace nut
         //ctor
         Sphere_1D(vb const & bdys_, vbd const & descs_)
             : m_bdys(bdys_), m_descs(descs_), m_ncells(m_bdys.size() - 1){
-            nut::Require(m_bdys.size() >= 2,"must have at least two boundaries");
-            nut::Equal(m_bdys.size(),m_descs.size(),"bdys size","descs size");
+            dbc::Require(m_bdys.size() >= 2,"must have at least two boundaries");
+            dbc::Equal(m_bdys.size(),m_descs.size(),"bdys size","descs size");
         }
 
 
@@ -69,7 +69,7 @@ namespace nut
             geom_t const lo  = m_bdys.at(index);
             geom_t const hi  = m_bdys.at(index+1);
             geom_t const vol = 4./3.*pi*(hi*hi*hi - lo*lo*lo);
-            nut::GreaterThan(vol,geom_t(0),"volume");
+            dbc::GreaterThan(vol,geom_t(0),"volume");
             return vol;
         } // volume
 
@@ -78,13 +78,15 @@ namespace nut
          *
          * \param cell: 0 < cell <= n_cells
          * \param face: 0 (left) or 1 (right)
+            \todo: Need to make sure that the mesh always has a valid type
+             for each descriptor.
          */
         cell_t
         cell_across_face(cell_t const cell,cell_t face) const
         {
             using namespace bdy_types;
             cellOK(cell);
-            LessThan(face,cell_t(2),"face");
+            dbc::LessThan(face,cell_t(2),"face");
             // compute index into descriptors
             cell_t idx = cell - 1;
             idx += face;
@@ -101,11 +103,6 @@ namespace nut
             case descriptor::V:
                 result = cell_t(0);
                 break;
-            default:
-                std::stringstream errstr;
-                errstr << "Sphere_1D::cell_across_face" << __LINE__
-                       << " unknown boundary type: "<< btype;
-                Require(false,errstr.str().c_str());
             }
             return result;
         } // cell_across_face
@@ -149,7 +146,7 @@ namespace nut
 
         /*!\brief compute the face part of the index into m_descs. */
         cell_t face_to_index(cell_t const f) const {
-            LessThan(f,2u,"Mesh1D::face_to_index: face");
+            dbc::LessThan(f,2u,"Mesh1D::face_to_index: face");
             return f;
         }
 
@@ -304,7 +301,7 @@ namespace nut
         cell_t const m_ncells;
 
         void cellOK(cell_t const cell_idx) const {
-            nut::InOpenRange(cell_idx,cell_t(0),m_ncells+1,"cell id");
+            dbc::InOpenRange(cell_idx,cell_t(0),m_ncells+1,"cell id");
         }
 
     }; // Sphere_1D

@@ -8,8 +8,8 @@
 #define PARTITION_HH
 
 #include "Assert.hh"
-#include "sourcery.hh"  // for src_stats_t
 #include "mpi_helpers.hh"
+#include "sourcery.hh"  // for src_stats_t
 #include "types.hh"     // for id_t
 #include <iterator>     // for distance
 #include <memory>
@@ -77,7 +77,7 @@ namespace nut
         {
             take_n_particles(chkSz, statsIn,statsVOut);
             size_t const n_chks(statsVOut.size());
-            Check(n_chks > 0,"Chunker::chunks() Got 0 chunks??");
+            dbc::Check(n_chks > 0,"Chunker::chunks() Got 0 chunks??");
             vsz ns(n_chks);
             std::transform(statsVOut.begin(),statsVOut.end(),ns.begin(),
                            &get_n_ps);
@@ -121,7 +121,7 @@ namespace nut
                          src_stats const & statsIn,
                          StatsVec & statsVOut)
         {
-            GreaterThan(chkSz,0u,"take_n_particles:chunk size");
+            dbc::GreaterThan(chkSz,0u,"take_n_particles:chunk size");
             sz_t const n_ps_tot(statsIn.n_particles());
             uint32_t const nchks(n_ps_tot / chkSz +
                                  ((n_ps_tot % chkSz != 0) ? 1 : 0));
@@ -153,7 +153,7 @@ namespace nut
                     {
                         // finalize this chunk, start new one
                         chk -> push_back(n_take,c,e,ew);
-                        Check(chk->size() <= chkSz,"chunk took too many");
+                        dbc::Check(chk->size() <= chkSz,"chunk took too many");
                         n_used += n_take;
                         n_rem -= n_take;
                         statsVOut.push_back(chk);
@@ -163,7 +163,7 @@ namespace nut
                         curr_chunk++;
                     }
                 } // while(n_rem)
-                Check(n_used == n,"Failed loop inv n_used == n");
+                dbc::Check(n_used == n,"Failed loop inv n_used == n");
             } // loop over statistics / cells
             if(n_curr != 0) // particles in last chunk...
             {

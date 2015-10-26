@@ -110,7 +110,7 @@ namespace nut
 
         /*!\brief check sizes of arrays for consistency at construction */
         void check_sizes(){
-            using nut::Equal;
+            using dbc::Equal;
             size_t n_cells = rho_p.size();
             Equal(rho_e_minus.size(), n_cells,"rho_e_minus","n_cells");
             Equal(rho_e_plus.size(),  n_cells,"rho_e_plus","n_cells");

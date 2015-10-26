@@ -6,8 +6,8 @@
 #ifndef SOURCERY_HH
 #define SOURCERY_HH
 
-#include "lorentz.hh"
 #include "Assert.hh"
+#include "lorentz.hh"
 #include "Planck.hh"
 #include "utilities.hh"
 #include <algorithm>
@@ -37,7 +37,7 @@ namespace nut
         size_t
         size() const
         {
-            Require(ns.size() == ews.size()
+            dbc::Require(ns.size() == ews.size()
                     && ns.size() == es.size()
                     && ns.size() == cidxs.size(),
                     "src_stats_t.size: sizes disagree");
@@ -94,10 +94,10 @@ namespace nut
         size_t const ncen
         )
     {
-        Require(ntot >= ncen,
+        dbc::Require(ntot >= ncen,
                 "calc_src_stats_lum: ntot must be >= ncen");
-        Equal(stats.size(), lums.size(),"stats.size()", "lums.size()");
-        Equal(stats.size(),cidxs.size(),"stats.size()","idxs.size()");
+        dbc::Equal(stats.size(), lums.size(),"stats.size()", "lums.size()");
+        dbc::Equal(stats.size(),cidxs.size(),"stats.size()","idxs.size()");
         // populate energies
         std::transform(lums.begin(),lums.end(),
                        stats.es.begin(),
@@ -105,7 +105,7 @@ namespace nut
         std::copy(cidxs.begin(),cidxs.end(),stats.cidxs.begin());
         // compute # per cell
         fp_t const ev_tot = sum(stats.es);
-        GreaterThan(ev_tot,fp_t(0),"total energy must be > 0");
+        dbc::GreaterThan(ev_tot,fp_t(0),"total energy must be > 0");
 
         std::vector<fp_t> fracs(lums.size(),fp_t(0));
         std::transform(stats.es.begin(),stats.es.end(),
@@ -113,7 +113,7 @@ namespace nut
                        div_by<fp_t>(ev_tot));
 
         size_t const nv_tot(ntot - ncen);
-        GreaterThan(nv_tot,size_t(0),
+        dbc::GreaterThan(nv_tot,size_t(0),
                     "total # particles must be >= # census particles");
         std::transform(fracs.begin(),fracs.end(),
                        stats.ns.begin(),

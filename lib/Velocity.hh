@@ -41,7 +41,7 @@ namespace nut
 
     private:
         void cellOK(cell_t const cell_idx) const {
-            nut::InOpenRange(cell_idx,cell_t(0),
+            dbc::InOpenRange(cell_idx,cell_t(0),
                              cell_t(this->n_cell()+1),"cell id");
         }
 

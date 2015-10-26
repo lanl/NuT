@@ -53,7 +53,7 @@ namespace nut
     inline void
     cellOK(cell_t const c, cell_t const n_cells)
     {
-        InOpenRange(c,cell_t(0),n_cells+1,"cell");
+        dbc::InOpenRange(c,cell_t(0),n_cells+1,"cell");
     }
 
     /**! Assert that cell c is ok (above) and return index into arrays */
@@ -78,7 +78,7 @@ namespace nut
     inline
     void nrgOK(fp_t const e,char const * const s)
     {
-        GreaterThan(e,fp_t(0),s);
+        dbc::GreaterThan(e,fp_t(0),s);
     }
 
     template <typename fp_t>
@@ -86,7 +86,7 @@ namespace nut
     void nrgOK(fp_t const e)
     {
         char const * const s = "neutrino energy";
-        GreaterThan(e,fp_t(0),s);
+        dbc::GreaterThan(e,fp_t(0),s);
     }
 
 } // nut::
