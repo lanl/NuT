@@ -26,12 +26,12 @@ namespace nut
             : vs(sz) {}
 
         vec_t<dim> const & v(cell_t const cidx) const {
-            cellOK(cidx);
+            // cellOK(cidx);
             return vs.at(cidx-1);
         }
 
         vec_t<dim> & v(cell_t const cidx) {
-            cellOK(cidx);
+            // cellOK(cidx);
             return vs.at(cidx-1);
         }
 
@@ -39,12 +39,11 @@ namespace nut
 
         size_t size() const {return vs.size();}
 
-    private:
-        void cellOK(cell_t const cell_idx) const {
-            dbc::InOpenRange(cell_idx,cell_t(0),
-                             cell_t(this->n_cell()+1),"cell id");
-        }
-
+    // private:
+        // void cellOK(cell_t const cell_idx) const {
+        //     dbc::InOpenRange(cell_idx,cell_t(0),
+        //                      cell_t(this->n_cell()+1),"cell id");
+        // }
 
     }; // Velocity
 
