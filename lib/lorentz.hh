@@ -16,7 +16,7 @@ namespace nut
 
     geom_t
     inline
-    gamma(geom_t const v)
+    gamma(geom_t const v) noexcept
     {
         return 1.0/std::sqrt(1 - v*v/(c*c));
     }
@@ -24,7 +24,7 @@ namespace nut
     template <size_t dim>
     geom_t
     inline
-    gamma(vec_t<dim> const v)
+    gamma(vec_t<dim> const v) noexcept
     {
         return 1.0/std::sqrt(1 - dot(v,v)/(c*c));
     }
@@ -36,7 +36,7 @@ namespace nut
         inline
         LT_to_comoving_sphere1D(geom_t const v_lab,
                                 geom_t const e_lab,
-                                vec_t<1> const omega_lab)
+                                vec_t<1> const omega_lab) noexcept
         {
             geom_t const voc       = v_lab/c;
             geom_t const onemovoc  = (1.0 - omega_lab.v[0] * voc);
@@ -51,7 +51,7 @@ namespace nut
         inline
         LT_to_lab_sphere1D(geom_t const v_lab,
                            geom_t const e_com,
-                           vec_t<1> const omega_com)
+                           vec_t<1> const omega_com) noexcept
         {
             geom_t const voc       = v_lab/c;
             geom_t const onepovoc  = 1.0 + omega_com.v[0] * voc;
