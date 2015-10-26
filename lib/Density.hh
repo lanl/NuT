@@ -110,15 +110,14 @@ namespace nut
 
         /*!\brief check sizes of arrays for consistency at construction */
         void check_sizes(){
-            using dbc::Equal;
             size_t n_cells = rho_p.size();
-            Equal(rho_e_minus.size(), n_cells,"rho_e_minus","n_cells");
-            Equal(rho_e_plus.size(),  n_cells,"rho_e_plus","n_cells");
-            Equal(rho_A.size(),       n_cells,"rho_A","n_cells");
+            dbc::Equal(rho_e_minus.size(), n_cells,"rho_e_minus","n_cells");
+            dbc::Equal(rho_e_plus.size(),  n_cells,"rho_e_plus","n_cells");
+            dbc::Equal(rho_A.size(),       n_cells,"rho_A","n_cells");
             if(this->have_composition)
             {
-                Equal(y_e.size(), n_cells,"y_e","n_cells");
-                Equal(abar.size(),n_cells,"abar","n_cells");
+                dbc::Equal(y_e.size(), n_cells,"y_e","n_cells");
+                dbc::Equal(abar.size(),n_cells,"abar","n_cells");
             }
             return;
         } // check_sizes

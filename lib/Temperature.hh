@@ -58,11 +58,11 @@ namespace nut
             {}
 
         /*!\brief check sizes of arrays for consistency at construction */
-        void check_sizes(){
-            using dbc::Equal;
+        void check_sizes()
+        {
             size_t n_cells = T_p.size();
-            Equal(T_e_minus.size(), n_cells,"T_e_minus","n_cells");
-            Equal(T_e_plus.size(),  n_cells,"T_e_plus","n_cells");
+            dbc::Equal(T_e_minus.size(), n_cells,"T_e_minus","n_cells");
+            dbc::Equal(T_e_plus.size(),  n_cells,"T_e_plus","n_cells");
             return;
         } // check_sizes
 
