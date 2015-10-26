@@ -88,9 +88,12 @@ namespace nut
         vf ew_census_nu_x;
         vf ew_census_nu_x_bar;
 
+        // escape spectrum
         vesc escape_spectrum;
 
         fp_t path_length;
+
+        cntr_t unhandled_events;
 
 
     // interface
@@ -133,6 +136,7 @@ namespace nut
               ew_census_nu_x    (ncells,fp_t(0)),
               ew_census_nu_x_bar(ncells,fp_t(0)),
               path_length( fp_t(0) ),
+              unhandled_events(0),
               m_n_cells(ncells),
               m_initialized( 0 == ncells ? false : true)
             {}
@@ -140,7 +144,7 @@ namespace nut
         /** \brief Resize tally: only callable once. */
         void resize(size_t const ncells)
         {
-            Require(!m_initialized, "Tally already initialized");
+            dbc::Require(!m_initialized, "Tally already initialized");
             m_initialized = true;
 
             energy.resize(ncells);
@@ -190,7 +194,7 @@ namespace nut
 
         void merge(Tally<fp_t> const & other)
         {
-            Require(other.n_cells() == this -> n_cells(),
+            dbc::Require(other.n_cells() == this -> n_cells(),
                 "Cannot merge tallies with different sizes");
 
             merge_vectors(other.energy,energy);
@@ -229,6 +233,8 @@ namespace nut
             merge_vectors(other.ew_census_nu_x_bar,ew_census_nu_x_bar);
 
             path_length += other.path_length;
+
+            unhandled_events += other.unhandled_events;
             return;
         } // merge
 
@@ -237,7 +243,7 @@ namespace nut
 
 
         void accum_pl(fp_t const pl){
-            Require(pl >= fp_t(0),"path length < 0!");
+            dbc::Require(pl >= fp_t(0),"path length < 0!");
             path_length += pl;
         }
 
@@ -259,6 +265,7 @@ namespace nut
                 + std::accumulate(n_census_nu_e_bar.begin(),n_census_nu_e_bar.end(),0)
                 + std::accumulate(n_census_nu_x.begin(),n_census_nu_x.end(),0)
                 + std::accumulate(n_census_nu_x_bar.begin(),n_census_nu_x_bar.end(),0)
+                + unhandled_events
                 ;
         } // total_mc_steps
 
@@ -314,7 +321,7 @@ namespace nut
 
         void count_lepton_scatter(cell_t const cell,Species const species,
                                     size_t const n=1){
-            // GreaterThan(n,0,"# nucleon absorptions");
+            // dbc::GreaterThan(n,0,"# nucleon absorptions");
             cell_t const index = make_idx(cell,m_n_cells);
             switch(species)
             {
@@ -334,7 +341,7 @@ namespace nut
                 this->n_nu_x_bar_pos_scat[index] += 1;
                 break;
             default:
-                unhandled_species_exc(species,"count_electron_scatter");
+                unhandled_events++;
             }
             return;
         }
@@ -342,7 +349,7 @@ namespace nut
 
         void count_nucleon_abs( cell_t const cell, Species const species,
                                 fp_cr ew, cntr_t n=1){
-            GreaterThan(n,0u,"# nucleon absorptions");
+            dbc::GreaterThan(n,0u,"# nucleon absorptions");
             cell_t const index = make_idx(cell,m_n_cells);
             // tally ew absorbed by species
             if(species == nu_e)
@@ -362,10 +369,7 @@ namespace nut
             }
             else
             {
-                std::stringstream errstr;
-                errstr << "Tally::count_nucleon_abs: unknown/unhandled species "
-                       << species << ".";
-                throw(std::runtime_error(errstr.str()));
+                unhandled_events++;
             }
             return;
         }
@@ -373,7 +377,7 @@ namespace nut
 
         void count_nucleon_elastic_scatter( cell_t const cell,
                                             cntr_t const n=1){
-            GreaterThan(n,0u,"# nucleon elastic scatter");
+            dbc::GreaterThan(n,0u,"# nucleon elastic scatter");
             cell_t const index = make_idx(cell,m_n_cells);
             n_nucl_el_scat[index] += n;
             return;
@@ -392,7 +396,7 @@ namespace nut
                            fp_cr e,
                            cntr_t const n=1)
         {
-            GreaterThan(n,0u,"# escapes");
+            dbc::GreaterThan(n,0u,"# escapes");
             cell_t const index = make_idx(cell,m_n_cells);
             n_escape[index] += n;
             ew_escaped[index] += ew;
@@ -401,7 +405,7 @@ namespace nut
 
 
         void count_reflect( cell_t const cell, cntr_t const n=1){
-            GreaterThan(n,0u,"# reflects");
+            dbc::GreaterThan(n,0u,"# reflects");
             cell_t const index = make_idx(cell,m_n_cells);
             n_reflect[index] += n;
             return;
@@ -409,14 +413,14 @@ namespace nut
 
 
         void count_cell_bdy(cell_t const cell, cntr_t const n=1){
-            GreaterThan(n,0u,"# cell bdys");
+            dbc::GreaterThan(n,0u,"# cell bdys");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cell_bdy[index] += n;
         return;
         }
 
         void count_cutoff(cell_t const cell, cntr_t const n=1){
-            GreaterThan(n,0u,"# cutoffs");
+            dbc::GreaterThan(n,0u,"# cutoffs");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cutoff[index] += n;
             return;
@@ -424,7 +428,7 @@ namespace nut
 
         void count_census(cell_t const cell, fp_cr energy_weight,
                           Species const & species, cntr_t const n=1){
-            GreaterThan(energy_weight,fp_t(0.0),"energy weight");
+            dbc::GreaterThan(energy_weight,fp_t(0.0),"energy weight");
             cell_t const index = make_idx(cell,m_n_cells);
             switch( species){
             case nu_e:
@@ -440,14 +444,14 @@ namespace nut
                 n_census_nu_x[index] += n;
                 ew_census_nu_x[index] += energy_weight;
                 break;
-            case nu_mu_bar:
+            case nu_mu_bar: // fall through
             case nu_tau_bar:
                 n_census_nu_x_bar[index] += n;
                 ew_census_nu_x_bar[index] += energy_weight;
-            break;
+                break;
             default:
-                unhandled_species_exc(species,"Tally::count_census");
-            }
+                unhandled_events++;
+                }
             return;
         }
 
@@ -465,8 +469,5 @@ namespace nut
 // handy list of all vectors for code generation:
 // ["energy","momentum","n_n","n_p","n_e_minus","n_e_plus","ew_n","ew_p","ew_e_minus","ew_e_plus","n_escape","n_reflect","n_cell_bdy","n_cutoff","n_nucl_el_scat","n_nu_e_el_scat","n_nu_e_bar_pos_scat","n_nu_x_el_scat","n_nu_x_bar_pos_scat","ew_escaped","n_nu_e_nucl_abs","n_nu_e_bar_nucl_abs","n_nu_x_nucl_abs","ew_nu_e_nucl_abs","ew_nu_e_bar_nucl_abs","ew_nu_x_nucl_abs","n_census_nu_e","n_census_nu_e_bar","n_census_nu_x","n_census_nu_x_bar","ew_census_nu_e","ew_census_nu_e_bar","ew_census_nu_x","ew_census_nu_x_bar"]
 
-
-// version
-// $Id$
 
 // End of file
