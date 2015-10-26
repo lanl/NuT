@@ -6,6 +6,7 @@
 #ifndef DECISION_HH
 #define DECISION_HH
 
+#include "Event.hh"
 #include "constants.hh"
 #include "lorentz.hh"
 #include "types.hh"
@@ -19,15 +20,10 @@ namespace nut
 
     namespace
     {
-        /** throw an exception when code fails to decide an event */
-        void
-        unresolved_event(size_t lineno, std::string const & eventstr);
-
         /** Compare std::pairs on the second element. */
         template <typename pair> bool
         pair_min_2nd(pair const & p1, pair const & p2){
             return p1.second < p2.second;}
-
     }
 
     template <typename particle_t, typename mesh_t, typename opacity_t,
@@ -134,7 +130,7 @@ namespace nut
             event = face == 0 ? Event::cell_low_x_boundary : Event::cell_high_x_boundary;
             break;
         default:
-            unresolved_event(__LINE__,"decide_boundary_event");
+            event = Event::undetermined;
         };
         return event;
     } // decide_boundary_event
@@ -181,24 +177,10 @@ namespace nut
         }
         else
         {
-            unresolved_event(__LINE__,"scatter");
+            event = Event::undetermined;
         }
         return event;
     } // decide_scatter_event
-
-
-    namespace
-    {
-        void
-        unresolved_event(size_t lineno, std::string const & eventstr)
-        {
-            std::stringstream msg;
-            msg << "decision.hh:" << lineno << ": unresolved event: "
-                << eventstr;
-            throw std::domain_error(msg.str());
-        } // unresolved_event
-    } // anonymous::
-
 
 } // nut::
 
