@@ -16,7 +16,10 @@ namespace nut
         NUCLEON_ABS = 0,
         ESCAPE = 1,
         STEP_END = 2,
-        NOT_DEAD_YET = 99
+        NUM_VALID_FATES,
+        NOT_DEAD_YET = 99,
+        UNHANDLED_EVENT = 998,    // Couldn't apply apply event
+        UNDETERMINED_EVENT = 999  // Couldn't decide event
     };
 
 } // nut
