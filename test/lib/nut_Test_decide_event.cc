@@ -1,21 +1,24 @@
 //T. M. Kelley (c) 2011 LANS LLC
 
-#define USING_HFBC_SIGMAS
 
-#include "nut_Test_decide_event.hh"
-#include "test_aux.hh"
 #include "Density.hh"
-#include "Temperature.hh"
-#include "Opacity.hh"
-#include "decision.hh"
-#include "RNG.hh"
-#include "types.hh"
-#include "Particle.hh"
+#include "Event.hh"
 #include "Mesh.hh"
+#define USING_HFBC_SIGMAS
+#include "Opacity.hh"
+#include "Particle.hh"
+#include "RNG.hh"
+#include "Temperature.hh"
 #include "Velocity.hh"
+#include "decision.hh"
+#include "nut_Test_decide_event.hh"
 #include "soft_equiv.hh"
+#include "test_aux.hh"
+#include "types.hh"
+
 #include <algorithm>
 #include <iterator>
+
 
 namespace Nut_Test
 {

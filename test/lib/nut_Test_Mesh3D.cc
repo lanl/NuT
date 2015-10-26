@@ -1,10 +1,11 @@
 //T. M. Kelley (c) 2011 LANS LLC
 
+#include "Assert.hh"
+#include "expect.hh"
 #include "Mesh3DCar.hh"
 #include "nut_Test_Mesh3D.hh"
 #include "test_aux.hh"
 #include "types.hh"
-#include "expect.hh"
 
 namespace Nut_Test
 {
@@ -60,10 +61,125 @@ namespace Nut_Test
             and passed6 and passed7 and passed8;
     }
 
+    namespace nutter
+    {
+
+        /** \brief Make a plane's worth of reflecting b.c.'s; helper for mkReflectBCs. */
+        template <typename cell_t,
+                  typename bdy_descriptor_t = nut::bdy_types::descriptor>
+        cell_t
+        mkPlaneBC(std::vector<bdy_descriptor_t> & bds,
+                  cell_t const n1,
+                  cell_t const n2,
+                  cell_t const offset,
+                  bdy_descriptor_t const bdy)
+        {
+            for(cell_t i2 = 0; i2 < n2; ++i2)
+            {
+                for(cell_t i1 = 0; i1 < n1; ++i1)
+                {
+                    cell_t const idx = i1 + n1*i2 + offset;
+                    bds[idx] = bdy;
+                }
+            }
+            return n1*n2;
+        }
+
+
+        /** \brief Make a set of boundary conditions that are reflecting on every face. */
+        template <typename mesh_t,
+                  typename cell_t,
+                  typename bdy_descriptor_t = nut::bdy_types::descriptor>
+        void mkReflectBCs(std::vector<bdy_descriptor_t> & bds,
+                          cell_t const nx,
+                          cell_t const ny,
+                          cell_t const nz)
+        {
+            bdy_descriptor_t const ref(nut::bdy_types::descriptor::R);
+            cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
+            if(n_bs != bds.size())
+            {
+                bds.resize(n_bs);
+            }
+            cell_t offset(0);
+            // low z bounds
+            offset += mkPlaneBC(bds,nx,ny,offset,ref);
+            // high z bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_z,nx,ny,nz),
+                    "offset not correct");
+            offset += mkPlaneBC(bds,nx,ny,offset,ref);
+            // low y bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::low_y,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += mkPlaneBC(bds,nx,nz,offset,ref);
+            // high y bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_y,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += mkPlaneBC(bds,nx,nz,offset,ref);
+            // low x bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::low_x,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += mkPlaneBC(bds,ny,nz,offset,ref);
+            // high x bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_x,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += mkPlaneBC(bds,ny,nz,offset,ref);
+            return;
+        }
+
+        template <typename mesh_t,
+                  typename cell_t,
+                  typename bdy_descriptor_t = nut::bdy_types::descriptor>
+        void mkLowRefHighVacBounds(std::vector<nut::bdy_types::descriptor> & bds,
+                                   cell_t const nx,
+                                   cell_t const ny,
+                                   cell_t const nz)
+        {
+            cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
+            nut::bdy_types::descriptor ref(nut::bdy_types::descriptor::R);
+            nut::bdy_types::descriptor vac(nut::bdy_types::descriptor::V);
+            nut::bdy_types::descriptor trn(nut::bdy_types::descriptor::T);
+
+            if(n_bs != bds.size())
+            {
+                bds.resize(n_bs);
+            }
+            bds.assign(bds.size(),trn);
+            cell_t offset(0);
+
+            // low z bounds
+            offset += nutter::mkPlaneBC(bds,nx,ny,offset,ref);
+            // high z bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_z,nx,ny,nz),
+                    "offset not correct");
+            offset += nutter::mkPlaneBC(bds,nx,ny,offset,vac);
+            // low y bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::low_y,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += nutter::mkPlaneBC(bds,nx,nz,offset,ref);
+            // high y bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_y,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += nutter::mkPlaneBC(bds,nx,nz,offset,vac);
+            // low x bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::low_x,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += nutter::mkPlaneBC(bds,ny,nz,offset,ref);
+            // high x bounds
+            dbc::Require(offset == mesh_t::getBCOffset(mesh_t::high_x,nx,ny,nz),
+                    "mkReflectBCs: offset not correct");
+            offset += nutter::mkPlaneBC(bds,ny,nz,offset,vac);
+            return;
+        } // mkLowRefHighVacBounds
+
+
+    } // nutter
+
+
     namespace Mesh3D_tests
     {
         using nut::geom_t;
-        using nut::Equal;
+        using dbc::Equal;
         typedef uint64_t cell_t;
         typedef nut::Cartesian_3D<cell_t,double> mesh_t;
         typedef mesh_t::vbd vbd;
@@ -76,7 +192,7 @@ namespace Nut_Test
             cell_t const ny = 1;
             cell_t const nz = 1;
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(1.0,nx,1.0,ny,1.0,nz,bds);
             return true;
         }
@@ -86,7 +202,7 @@ namespace Nut_Test
         {
             bool passed(true);
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(1.0,nx,1.0,ny,1.0,nz,bds);
             cell_t const n_cs(nx*ny*nz);
             passed = passed && n_cs == mesh.n_cells();
@@ -112,7 +228,7 @@ namespace Nut_Test
         {
             bool passed(true);
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
             geom_t const exp_vol(dx*dy*dz);
             for(cell_t c = 0; c < mesh.n_cells(); ++c)
@@ -153,7 +269,7 @@ namespace Nut_Test
             cell_t const nz = 1;
 
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
             {
@@ -203,7 +319,7 @@ namespace Nut_Test
             cell_t const nz = 2;
 
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
             {
@@ -282,7 +398,7 @@ namespace Nut_Test
             cell_t const nz = 2;
 
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
             {
                 cell_t c(0); // (0,0,0)
@@ -375,7 +491,7 @@ namespace Nut_Test
             cell_t const ny = 3;
             cell_t const nz = 2;
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
             mesh_t::coord_t newcrd = mesh.sample_position(rng,0);
@@ -408,7 +524,7 @@ namespace Nut_Test
             cell_t const ny = 3;
             cell_t const nz = 2;
             vbd bds;
-            nut::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
+            nutter::mkReflectBCs<mesh_t,cell_t>(bds,nx,ny,nz);
             mesh_t mesh(dx,nx,dy,ny,dz,nz,bds);
 
             vec_t<3> x,o;

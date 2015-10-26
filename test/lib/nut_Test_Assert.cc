@@ -48,7 +48,7 @@ namespace Nut_Test
 
         // call additional tests here.
 
-        return passed1 and passed2 and passed3 and passed4 and passed5 
+        return passed1 and passed2 and passed3 and passed4 and passed5
             and passed6;
     }
 
@@ -73,7 +73,7 @@ namespace Nut_Test
             std::string err("test 1");
             try
             {
-                nut::Require(false,err.c_str());
+                dbc::Require(false,err.c_str());
                 passed = false;
             }
             catch(std::exception & exc)
@@ -87,7 +87,7 @@ namespace Nut_Test
             }
             try
             {
-                nut::Require(true,err.c_str());
+                dbc::Require(true,err.c_str());
                 passed = passed and true;
             }
             catch(std::exception & exc)
@@ -96,7 +96,7 @@ namespace Nut_Test
                 std::cerr << "test_1: Threw assertion--not expected"
                           << std::endl;
             }
-            
+
             return passed;
         } // test_1
 
@@ -108,7 +108,7 @@ namespace Nut_Test
             try
             {
                 double a = 1.0, b = 2.0;
-                nut::Equal(a,b,"a","b");
+                dbc::Equal(a,b,"a","b");
                 passed = false;
             }
             catch(std::exception & exc)
@@ -123,13 +123,13 @@ namespace Nut_Test
             try
             {
                 double a = 1.0, b = 1.0;
-                nut::Equal(a,b,"a","b");
+                dbc::Equal(a,b,"a","b");
                 passed = passed and true;
             }
             catch(std::exception & exc)
             {
                 passed = false;
-                std::cerr << "test_2:" << __LINE__ 
+                std::cerr << "test_2:" << __LINE__
                           << " Caught assertion--not expected" << std::endl;
             }
 
@@ -144,16 +144,16 @@ namespace Nut_Test
             try
             {
                 double a = 2.0, min=1.0, max=2.0;
-                nut::InOpenRange(a,min,max,"a");
+                dbc::InOpenRange(a,min,max,"a");
                 passed = false;
-                std::cerr << "test_3:" << __LINE__ 
+                std::cerr << "test_3:" << __LINE__
                           << " Didn't throw assertion as expected" << std::endl;
             }
             catch(std::exception & exc)
             {
                 if(exc.what() != err)
                 {
-                    std::cerr << "test_3:" << __LINE__ 
+                    std::cerr << "test_3:" << __LINE__
                               << " Caught assertion as expected"
                               << " wrong what: " << exc.what() << std::endl;
                     passed = false;
@@ -162,13 +162,13 @@ namespace Nut_Test
             try
             {
                 double a = 2.0, min=1.0, max=2.000000000001;
-                nut::InOpenRange(a,min,max,"a");
+                dbc::InOpenRange(a,min,max,"a");
                 passed = passed and true;
             }
             catch(std::exception & exc)
             {
                 passed = false;
-                std::cerr << "test_3:" << __LINE__ 
+                std::cerr << "test_3:" << __LINE__
                           << " Caught assertion--not expected" << std::endl;
             }
 
@@ -183,16 +183,16 @@ namespace Nut_Test
             try
             {
                 double a = 2.0, min=3.0;
-                nut::GreaterThan(a,min,"a");
+                dbc::GreaterThan(a,min,"a");
                 passed = false;
-                std::cerr << "test_4:" << __LINE__ 
+                std::cerr << "test_4:" << __LINE__
                           << " Didn't throw assertion as expected" << std::endl;
             }
             catch(std::exception & exc)
             {
                 if(exc.what() != err)
                 {
-                    std::cerr << "test_4:" << __LINE__ 
+                    std::cerr << "test_4:" << __LINE__
                               << " Caught assertion as expected wrong what: "
                               << exc.what() << std::endl;
                     passed = false;
@@ -201,13 +201,13 @@ namespace Nut_Test
             try
             {
                 double a = 2.0, min=1.0;
-                nut::GreaterThan(a,min,"a");
+                dbc::GreaterThan(a,min,"a");
                 passed = passed and true;
             }
             catch(std::exception & exc)
             {
                 passed = false;
-                std::cerr << "test_4:" << __LINE__ 
+                std::cerr << "test_4:" << __LINE__
                           << " Caught assertion--not expected" << std::endl;
             }
 
@@ -222,17 +222,17 @@ namespace Nut_Test
             try
             {
                 uint32_t a = 2, min=1, max=2;
-                nut::InOpenRange(a,min,max,"a");
+                dbc::InOpenRange(a,min,max,"a");
                 passed = false;
-                std::cerr << "test_5:" << __LINE__ 
+                std::cerr << "test_5:" << __LINE__
                           << " Didn't throw assertion as expected" << std::endl;
             }
             catch(std::exception & exc)
             {
                 if(exc.what() != err)
                 {
-                    std::cerr << "test_5:" << __LINE__ 
-                              << " Caught assertion as expected wrong what: " 
+                    std::cerr << "test_5:" << __LINE__
+                              << " Caught assertion as expected wrong what: "
                               << exc.what() << std::endl;
                     passed = false;
                 }
@@ -240,13 +240,13 @@ namespace Nut_Test
             try
             {
                 uint32_t a = 2, min=1, max=3;
-                nut::InOpenRange(a,min,max,"a");
+                dbc::InOpenRange(a,min,max,"a");
                 passed = passed and true;
             }
             catch(std::exception & exc)
             {
                 passed = false;
-                std::cerr << "test_5:" << __LINE__ 
+                std::cerr << "test_5:" << __LINE__
                           << " Caught assertion--not expected" << std::endl;
             }
 
@@ -261,16 +261,16 @@ namespace Nut_Test
             try
             {
                 int64_t a = -2, min=3;
-                nut::GreaterThan(a,min,"a");
+                dbc::GreaterThan(a,min,"a");
                 passed = false;
-                std::cerr << "test_6:" << __LINE__ 
+                std::cerr << "test_6:" << __LINE__
                           << " Didn't throw assertion as expected" << std::endl;
             }
             catch(std::exception & exc)
             {
                 if(exc.what() != err)
                 {
-                    std::cerr << "test_6:" << __LINE__ 
+                    std::cerr << "test_6:" << __LINE__
                               << " Caught assertion as expected wrong what: "
                               << exc.what() << std::endl;
                     passed = false;
@@ -279,13 +279,13 @@ namespace Nut_Test
             try
             {
                 int64_t a = 2, min=-1;
-                nut::GreaterThan(a,min,"a");
+                dbc::GreaterThan(a,min,"a");
                 passed = passed and true;
             }
             catch(std::exception & exc)
             {
                 passed = false;
-                std::cerr << "test_6:" << __LINE__ 
+                std::cerr << "test_6:" << __LINE__
                           << " Caught assertion--not expected" << std::endl;
             }
 
