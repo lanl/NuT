@@ -75,7 +75,7 @@ namespace nut
             high_z     /* x-y plane */
         };
 
-        enum dir_t
+        enum struct dir_t
         {
             X = 0,
             Y,
@@ -185,13 +185,13 @@ namespace nut
               m_ncells(nx * ny * nz),
               m_bds(bds)
         {
-            nut::Require(m_bds.size() == 2*nx*ny + 2*nx*nz + 2* ny*nz,
+            dbc::Require(m_bds.size() == 2*nx*ny + 2*nx*nz + 2* ny*nz,
                          "Cartesian_3D: Must have correct number of"
                          " boundary descriptors");
             auto gtg = [](geom_t const x,geom_t const e, const char * s)
-                {return nut::GreaterThan(x,e,s);};
+                {return dbc::GreaterThan(x,e,s);};
             auto gtc = [](cell_t const x,cell_t const e, const char * s)
-                {return nut::GreaterThan(x,e,s);};
+                {return dbc::GreaterThan(x,e,s);};
             gtg(dx,0.0,"Cartesian_3D: x cell spacing must be > 0");
             gtg(dy,0.0,"Cartesian_3D: y cell spacing must be > 0");
             gtg(dz,0.0,"Cartesian_3D: z cell spacing must be > 0");
@@ -233,10 +233,9 @@ namespace nut
             cell_t result(0);
             switch(d)
             {
-            case X: result = ijk.i; break;
-            case Y: result = ijk.j; break;
-            case Z: result = ijk.k; break;
-            default: Require(false,"getIJKComp: direction out of range???");
+            case dir_t::X: result = ijk.i; break;
+            case dir_t::Y: result = ijk.j; break;
+            case dir_t::Z: result = ijk.k; break;
             }
             return result;
         }
@@ -282,7 +281,6 @@ namespace nut
             case 0: out.i = newIdx; break;
             case 1: out.j = newIdx; break;
             case 2: out.k = newIdx; break;
-            default: Require(false,"Mesh3DCar::updateIJK: face out of range!");
             }
             return std::move(out);
         }
@@ -312,11 +310,6 @@ namespace nut
                 {
                 case nut::bdy_types::descriptor::R: result = cell; break;
                 case nut::bdy_types::descriptor::V: result = vac_cell; break;
-                default:
-                    std::stringstream errstr;
-                    errstr << "Mesh3DCar::cell_across_face: "
-                           << "unexpected boundary descriptor "
-                           << bd;
                 }
             }
             return result;
@@ -329,11 +322,11 @@ namespace nut
         sample_position( RNG_T & rng,cell_t const cell) const
         {
             coord_t coord;
-            extents_t xs = cell_extents(cell,X);
+            extents_t xs = cell_extents(cell,dir_t::X);
             coord.x.v[0] = xs.first + rng.random() * (xs.second - xs.first);
-            extents_t ys = cell_extents(cell,Y);
+            extents_t ys = cell_extents(cell,dir_t::Y);
             coord.x.v[1] = ys.first + rng.random() * (ys.second - ys.first);
-            extents_t zs = cell_extents(cell,Z);
+            extents_t zs = cell_extents(cell,dir_t::Z);
             coord.x.v[2] = zs.first + rng.random() * (zs.second - zs.first);
             coord.omega = sample_direction(rng);
             return std::move(coord);
@@ -364,9 +357,9 @@ namespace nut
             geom_t res(0);
             switch(d)
             {
-            case X: res = m_dx; break;
-            case Y: res = m_dy; break;
-            case Z: res = m_dz; break;
+            case dir_t::X: res = m_dx; break;
+            case dir_t::Y: res = m_dy; break;
+            case dir_t::Z: res = m_dz; break;
             }
             return res;
         }
@@ -422,20 +415,20 @@ namespace nut
                         vec_t<3> const & omega,
                         cell_t const cell) const
         {
-            extents_t const xs = cell_extents(cell,X);
+            extents_t const xs = cell_extents(cell,dir_t::X);
             d_to_b_t const dx = omega.v[0] > 0 ?
                 d_to_b_t((xs.second - x.v[0])/ omega.v[0],high_x) :
                 omega.v[0] < 0 ?
                 d_to_b_t((xs.first - x.v[0]) / omega.v[0],low_x) :
                 d_to_b_t(huge,high_x);
-            extents_t const ys = cell_extents(cell,Y);
+            extents_t const ys = cell_extents(cell,dir_t::Y);
             d_to_b_t const dy = omega.v[1] > 0 ?
                 d_to_b_t((ys.second - x.v[1])/ omega.v[1],high_y) :
                 omega.v[1] < 0 ?
                 d_to_b_t((ys.first - x.v[1]) / omega.v[1],low_y) :
                 d_to_b_t(huge,high_y);
 
-            extents_t const zs = cell_extents(cell,Z);
+            extents_t const zs = cell_extents(cell,dir_t::Z);
             d_to_b_t const dz = omega.v[2] > 0 ?
                 d_to_b_t((zs.second - x.v[2])/ omega.v[2],high_z) :
                 omega.v[2] < 0 ?
@@ -522,115 +515,6 @@ namespace nut
         } // LT_to_comoving
 
     }; // Cartesian_3D
-
-
-    /** \brief Make a plane's worth of reflecting b.c.'s; helper for mkReflectBCs. */
-    template <typename cell_t,
-              typename bdy_descriptor_t = nut::bdy_types::descriptor>
-    cell_t
-    mkPlaneBC(std::vector<bdy_descriptor_t> & bds,
-              cell_t const n1,
-              cell_t const n2,
-              cell_t const offset,
-              bdy_descriptor_t const bdy)
-    {
-        for(cell_t i2 = 0; i2 < n2; ++i2)
-        {
-            for(cell_t i1 = 0; i1 < n1; ++i1)
-            {
-                cell_t const idx = i1 + n1*i2 + offset;
-                bds[idx] = bdy;
-            }
-        }
-        return n1*n2;
-    }
-
-
-    /** \brief Make a set of boundary conditions that are reflecting on every face. */
-    template <typename mesh_t,
-              typename cell_t,
-              typename bdy_descriptor_t = nut::bdy_types::descriptor>
-    void mkReflectBCs(std::vector<bdy_descriptor_t> & bds,
-                      cell_t const nx,
-                      cell_t const ny,
-                      cell_t const nz)
-    {
-        bdy_descriptor_t const ref(nut::bdy_types::descriptor::R);
-        cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
-        if(n_bs != bds.size())
-        {
-            bds.resize(n_bs);
-        }
-        cell_t offset(0);
-        // low z bounds
-        offset += mkPlaneBC(bds,nx,ny,offset,ref);
-        // high z bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_z,nx,ny,nz),
-                "offset not correct");
-        offset += mkPlaneBC(bds,nx,ny,offset,ref);
-        // low y bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::low_y,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += mkPlaneBC(bds,nx,nz,offset,ref);
-        // high y bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_y,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += mkPlaneBC(bds,nx,nz,offset,ref);
-        // low x bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::low_x,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += mkPlaneBC(bds,ny,nz,offset,ref);
-        // high x bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_x,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += mkPlaneBC(bds,ny,nz,offset,ref);
-        return;
-    }
-
-    template <typename mesh_t,
-              typename cell_t,
-              typename bdy_descriptor_t = nut::bdy_types::descriptor>
-    void mkLowRefHighVacBounds(std::vector<nut::bdy_types::descriptor> & bds,
-                               cell_t const nx,
-                               cell_t const ny,
-                               cell_t const nz)
-    {
-        cell_t const n_bs = 2*nx*ny + 2*nx*nz + 2* ny*nz;
-        nut::bdy_types::descriptor ref(nut::bdy_types::descriptor::R);
-        nut::bdy_types::descriptor vac(nut::bdy_types::descriptor::V);
-        nut::bdy_types::descriptor trn(nut::bdy_types::descriptor::T);
-
-        if(n_bs != bds.size())
-        {
-            bds.resize(n_bs);
-        }
-        bds.assign(bds.size(),trn);
-        cell_t offset(0);
-
-        // low z bounds
-        offset += nut::mkPlaneBC(bds,nx,ny,offset,ref);
-        // high z bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_z,nx,ny,nz),
-                "offset not correct");
-        offset += nut::mkPlaneBC(bds,nx,ny,offset,vac);
-        // low y bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::low_y,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += nut::mkPlaneBC(bds,nx,nz,offset,ref);
-        // high y bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_y,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += nut::mkPlaneBC(bds,nx,nz,offset,vac);
-        // low x bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::low_x,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += nut::mkPlaneBC(bds,ny,nz,offset,ref);
-        // high x bounds
-        Require(offset == mesh_t::getBCOffset(mesh_t::high_x,nx,ny,nz),
-                "mkReflectBCs: offset not correct");
-        offset += nut::mkPlaneBC(bds,ny,nz,offset,vac);
-        return;
-    } // mkLowRefHighVacBounds
 
 
 } // nut::
