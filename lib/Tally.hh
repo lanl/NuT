@@ -243,7 +243,7 @@ namespace nut
 
 
         void accum_pl(fp_t const pl){
-            dbc::Require(pl >= fp_t(0),"path length < 0!");
+            // dbc::Require(pl >= fp_t(0),"path length < 0!");
             path_length += pl;
         }
 
@@ -321,7 +321,6 @@ namespace nut
 
         void count_lepton_scatter(cell_t const cell,Species const species,
                                     size_t const n=1){
-            // dbc::GreaterThan(n,0,"# nucleon absorptions");
             cell_t const index = make_idx(cell,m_n_cells);
             switch(species)
             {
@@ -349,7 +348,7 @@ namespace nut
 
         void count_nucleon_abs( cell_t const cell, Species const species,
                                 fp_cr ew, cntr_t n=1){
-            dbc::GreaterThan(n,0u,"# nucleon absorptions");
+            // dbc::GreaterThan(n,0u,"# nucleon absorptions");
             cell_t const index = make_idx(cell,m_n_cells);
             // tally ew absorbed by species
             if(species == nu_e)
@@ -377,7 +376,7 @@ namespace nut
 
         void count_nucleon_elastic_scatter( cell_t const cell,
                                             cntr_t const n=1){
-            dbc::GreaterThan(n,0u,"# nucleon elastic scatter");
+            // dbc::GreaterThan(n,0u,"# nucleon elastic scatter");
             cell_t const index = make_idx(cell,m_n_cells);
             n_nucl_el_scat[index] += n;
             return;
@@ -396,7 +395,7 @@ namespace nut
                            fp_cr e,
                            cntr_t const n=1)
         {
-            dbc::GreaterThan(n,0u,"# escapes");
+            // dbc::GreaterThan(n,0u,"# escapes");
             cell_t const index = make_idx(cell,m_n_cells);
             n_escape[index] += n;
             ew_escaped[index] += ew;
@@ -405,7 +404,7 @@ namespace nut
 
 
         void count_reflect( cell_t const cell, cntr_t const n=1){
-            dbc::GreaterThan(n,0u,"# reflects");
+            // dbc::GreaterThan(n,0u,"# reflects");
             cell_t const index = make_idx(cell,m_n_cells);
             n_reflect[index] += n;
             return;
@@ -413,14 +412,14 @@ namespace nut
 
 
         void count_cell_bdy(cell_t const cell, cntr_t const n=1){
-            dbc::GreaterThan(n,0u,"# cell bdys");
+            // dbc::GreaterThan(n,0u,"# cell bdys");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cell_bdy[index] += n;
         return;
         }
 
         void count_cutoff(cell_t const cell, cntr_t const n=1){
-            dbc::GreaterThan(n,0u,"# cutoffs");
+            // dbc::GreaterThan(n,0u,"# cutoffs");
             cell_t const index = make_idx(cell,m_n_cells);
             n_cutoff[index] += n;
             return;
@@ -428,7 +427,7 @@ namespace nut
 
         void count_census(cell_t const cell, fp_cr energy_weight,
                           Species const & species, cntr_t const n=1){
-            dbc::GreaterThan(energy_weight,fp_t(0.0),"energy weight");
+            // dbc::GreaterThan(energy_weight,fp_t(0.0),"energy weight");
             cell_t const index = make_idx(cell,m_n_cells);
             switch( species){
             case nu_e:
