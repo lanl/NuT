@@ -52,24 +52,25 @@ namespace nut
         //ctor
         Sphere_1D(vb const & bdys_, vbd const & descs_)
             : m_bdys(bdys_), m_descs(descs_), m_ncells(m_bdys.size() - 1){
-            dbc::Require(m_bdys.size() >= 2,"must have at least two boundaries");
-            dbc::Equal(m_bdys.size(),m_descs.size(),"bdys size","descs size");
+            dbc::Require(m_bdys.size() >= 2,"Sphere1D ctor: must have at least two boundaries");
+            dbc::Equal(m_bdys.size(),m_descs.size(),"Sphere1D ctor: bdys size","descs size");
         }
 
 
         cell_t
-        n_cells() const {return m_ncells;}
+        n_cells() const noexcept {return m_ncells;}
 
 
         /*!\brief volume of spherical shell 'cell'. 0 < cell <= n_cells. */
         geom_t
-        volume(cell_t const cell) const {
-            cellOK(cell);
+        volume(cell_t const cell) const noexcept
+        {
+            // cellOK(cell);
             cell_t const index(cell-1);
             geom_t const lo  = m_bdys.at(index);
             geom_t const hi  = m_bdys.at(index+1);
             geom_t const vol = 4./3.*pi*(hi*hi*hi - lo*lo*lo);
-            dbc::GreaterThan(vol,geom_t(0),"volume");
+            // dbc::GreaterThan(vol,geom_t(0),"volume");
             return vol;
         } // volume
 
@@ -82,11 +83,11 @@ namespace nut
              for each descriptor.
          */
         cell_t
-        cell_across_face(cell_t const cell,cell_t face) const
+        cell_across_face(cell_t const cell,cell_t face) const noexcept
         {
             using namespace bdy_types;
-            cellOK(cell);
-            dbc::LessThan(face,cell_t(2),"face");
+            // cellOK(cell);
+            // dbc::LessThan(face,cell_t(2),"face");
             // compute index into descriptors
             cell_t idx = cell - 1;
             idx += face;
@@ -108,7 +109,8 @@ namespace nut
         } // cell_across_face
 
         geom_t
-        sample_position( geom_t const urd,cell_t const cell) const {
+        sample_position( geom_t const urd,cell_t const cell) const noexcept
+        {
             extents_t extents = this->cell_extents(cell);
             geom_t const lo = extents.first;
             geom_t const hi = extents.second;
@@ -121,7 +123,7 @@ namespace nut
         template <typename RNG_T>
         vec_t<dim>
         static
-        sample_direction( RNG_T & rng)
+        sample_direction( RNG_T & rng) noexcept
         {
             geom_t const ctheta = geom_t(2)*rng.random()-geom_t(1);
             return ctheta;
@@ -129,7 +131,8 @@ namespace nut
 
         /*!\brief type of cell boundary */
         bdy_desc_t
-        bdy_type(cell_t const c, cell_t const face) const {
+        bdy_type(cell_t const c, cell_t const face) const
+        {
             cell_t const idx = make_idx(c,m_ncells);
             cell_t const fidx = face_to_index(face);
             return m_descs[idx + fidx];
@@ -139,7 +142,7 @@ namespace nut
          * 0 < cell <= n_cells                              */
         extents_t
         cell_extents(cell_t const cell) const {
-            cellOK(cell);
+            // cellOK(cell);
             return extents_t(m_bdys[cell-1],m_bdys[cell]);
         }
 
@@ -155,7 +158,8 @@ namespace nut
          *        distance along direction cosine omega.  */
         coord_t
         new_coordinate(vec_t<dim> const x, vec_t<dim> const omega,
-                       geom_t const distance) const {
+                       geom_t const distance) const noexcept
+        {
             geom_t const theta = std::acos(omega.v[0]);
             geom_t const s     = std::sin(theta);
             geom_t const new_x = x.v[0] + distance * omega.v[0];
@@ -170,8 +174,9 @@ namespace nut
 
         d_to_b_t
         distance_to_bdy(vec_t<dim> const x, vec_t<dim> const omega,
-                        cell_t const cell) const {
-            cellOK(cell);
+                        cell_t const cell) const noexcept
+        {
+            // cellOK(cell);
             extents_t extents = this->cell_extents(cell);
             return dist_to_bdy_impl(x.v[0],omega.v[0],extents.first,extents.second);
         } // distance_to_bdy
@@ -180,7 +185,8 @@ namespace nut
         static
         d_to_b_t
         dist_to_bdy_impl(geom_t const x, geom_t const omega,
-                         geom_t const rlo, geom_t const rhi) {
+                         geom_t const rlo, geom_t const rhi) noexcept
+        {
             geom_t const rhisq = rhi * rhi;
             geom_t const rlosq = rlo * rlo;
             geom_t const xsq   = x * x;
@@ -279,7 +285,7 @@ namespace nut
         EandOmega<1>
         LT_to_comoving(vec_t<1> const v_lab,
             geom_t const & e_lab,
-            vec_t<1> const & omega_lab)
+            vec_t<1> const & omega_lab) noexcept
         {
             return spec_1D::LT_to_comoving_sphere1D(v_lab.v[0],e_lab,omega_lab);
         } // LT_to_comoving
@@ -289,7 +295,7 @@ namespace nut
         inline
         LT_to_lab(vec_t<1> const v_lab,
             geom_t const & e_com,
-            vec_t<1> const & omega_com)
+            vec_t<1> const & omega_com) noexcept
         {
             return spec_1D::LT_to_lab_sphere1D(v_lab.v[0],e_com,omega_com);
         }
