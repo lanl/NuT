@@ -462,7 +462,7 @@ namespace Nut_Test
             fp_t const rns[] = {0.30897681610609407, // 1st seed burned for d_coll
                                 // 0.92436920169905545,
                                 0.21932404923057958};
-            BRNG rng(rns,3);
+            BRNG rng(rns,2);
             fp_t const e     = 5.0;
             cell_t const cell  = 1;
             Species const s(nut::nu_e);
@@ -488,14 +488,14 @@ namespace Nut_Test
             geom_t const d_exp = 7343.827;
             geom_t const epsilon =  0.001;
             geom_t const d = e_n_d.second;
-            passed = nut::soft_equiv(d,d_exp,epsilon) && passed;
-            if(!passed)
+            bool d_passed = nut::soft_equiv(d,d_exp,epsilon);
+            if(!d_passed)
             {
                 std::cout << "distance to event was " << std::setprecision(15) <<  d
-                          << "expected distance was " << std::setprecision(15) << d_exp
+                          << ", expected distance was " << std::setprecision(15) << d_exp
                           << std::endl;
             }
-
+            passed = passed && d_passed;
             return passed;
         } // test_7
 
