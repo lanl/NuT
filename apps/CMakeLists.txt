@@ -13,8 +13,10 @@ else()
 
     message(STATUS "Custom configuring OMP for Clang")
     set(GOMP_LIB_PATH "/Users/tkelley/exports/gcc-5.2.0/lib")
+    set(CLANG_OMP_INCLUDE_PATH "/Users/tkelley/wnld/llvm/omp/libomp_oss/build-clang-3.7.0/src")
     set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${GOMP_LIB_PATH})
     link_directories( ${GOMP_LIB_PATH})
+    include_directories(${CLANG_OMP_INCLUDE_PATH})
 
     set(OpenMP_C_FLAGS " -fopenmp")
     set(OpenMP_CXX_FLAGS " -fopenmp")
@@ -56,7 +58,6 @@ message( " PROJECT_SOURCE_DIR = " ${PROJECT_SOURCE_DIR} )
 add_library(bh-3_support ${bh-3_SOURCES})
 
 include_directories ("${PROJECT_SOURCE_DIR}/lib")
-include_directories ("${BOOST_ROOT}/")
 
 add_executable(bh-3 bh-3.cc)
 
