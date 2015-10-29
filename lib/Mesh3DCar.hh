@@ -95,7 +95,7 @@ namespace nut
         ijk_T mkIJK(cell_t const idx) const
         {
             ijk_T ijk((idx%m_nx),(idx/m_nx%m_ny),(idx/m_nx/m_ny));
-            return std::move(ijk);
+            return ijk;
         }
         /** \brief Convert Cartesian index to lexical. */
         inline
@@ -282,7 +282,7 @@ namespace nut
             case 1: out.j = newIdx; break;
             case 2: out.k = newIdx; break;
             }
-            return std::move(out);
+            return out;
         }
 
         /*!\brief which cell is across a face. Computed.
@@ -329,7 +329,7 @@ namespace nut
             extents_t zs = cell_extents(cell,dir_t::Z);
             coord.x.v[2] = zs.first + rng.random() * (zs.second - zs.first);
             coord.omega = sample_direction(rng);
-            return std::move(coord);
+            return coord;
         } // sample_position
 
         /** Sample a direction uniformly on the unit sphere. */
@@ -398,7 +398,7 @@ namespace nut
             newc.omega.v[0] = oldomega.v[0];
             newc.omega.v[1] = oldomega.v[1];
             newc.omega.v[2] = oldomega.v[2];
-            return std::move(newc);
+            return newc;
         } // new_coordinate
 
         /** Distance-to-boundary. This is possibly not the most elegant
@@ -439,7 +439,7 @@ namespace nut
                 {return (d1->d) < (d2->d) ? true : false;};
 
             d_to_b_t const * result = std::min(&dx,std::min(&dy,&dz,comp),comp);
-            return std::move(*result);
+            return *result;
         }
 
         geom_t const m_dx;
@@ -486,7 +486,7 @@ namespace nut
             res.omega.v[0] = eoec*(omega_lab.v[0] - goc * v_lab.v[0] * fac);
             res.omega.v[1] = eoec*(omega_lab.v[1] - goc * v_lab.v[1] * fac);
             res.omega.v[2] = eoec*(omega_lab.v[2] - goc * v_lab.v[2] * fac);
-            return std::move(res);
+            return res;
         } // LT_to_comoving
 
         /** Transform energy and momentum to the lab frame from the

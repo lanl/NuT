@@ -9,7 +9,7 @@
 
 
 #include <array>
-
+#include <numeric> // inner_product
 
 namespace nut
 {
@@ -47,7 +47,7 @@ namespace nut
             {
                 vout.v[d] = v[d]/div;
             }
-            return std::move(vout);
+            return vout;
         }
 
         // for STL
@@ -99,7 +99,7 @@ namespace nut
         {
             vout.v[d] = v.v[d] * f;
         }
-        return std::move(vout);
+        return vout;
     }
     /** scale a vector by a scalar, generating a new vector */
     template <typename fp_t,size_t dim>
@@ -111,7 +111,7 @@ namespace nut
         {
             vout.v[d] = v.v[d] * f;
         }
-        return std::move(vout);
+        return vout;
     }
     /** generate a new vector by unary negating a vector */
     template <typename fp_t,size_t dim>
@@ -123,7 +123,7 @@ namespace nut
         {
             vout.v[d] = -v.v[d];
         }
-        return std::move(vout);
+        return vout;
     }
     /** generate a new vector by adding two vectors */
     template <typename fp_t,size_t dim>
@@ -135,7 +135,7 @@ namespace nut
         {
             vout.v[d] = v1.v[d] + v2.v[d];
         }
-        return std::move(vout);
+        return vout;
     }
 
     /** generate a new vector by subtracting v2 from v1 */
@@ -148,7 +148,7 @@ namespace nut
         {
             vout.v[d] = v1.v[d] - v2.v[d];
         }
-        return std::move(vout);
+        return vout;
     }
 
     template <typename fp_t,size_t dim>

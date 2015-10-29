@@ -168,7 +168,7 @@ namespace nut
             coord_t coord;
             coord.x.v[0] = new_r;
             coord.omega.v[0] = std::cos(theta - std::asin(distance/new_r*s));
-            return std::move(coord);
+            return coord;
         }
 
 
