@@ -1,990 +1,819 @@
-//T. M. Kelley (c) 2011 LANS LLC
+// T. M. Kelley (c) 2011 LANS LLC
 
 #include "Tally.hh"
-#include "nut_Test_Tally.hh"
+#include "gtest/gtest.h"
+#include "soft_equiv.hh"
 #include "test_aux.hh"
 #include "types.hh"
-#include "soft_equiv.hh"
 #include <iomanip>
 
+using test_aux::check_one_changed;
+using test_aux::check_same;
+using test_aux::check_same_v;
+using test_aux::check_same_verb;
+using test_aux::check_two_changed;
+using test_aux::comp_verb;
+using test_aux::comp_verb_iter;
+using test_aux::tallies_same;
 
-namespace Nut_Test
+TEST(nut_Tally, inst_init)
 {
-    namespace Tally_tests
-    {
-        // target describes the code being tested
-        char target[] = "Tally";
-
-        // for each test of target, add a declaration and
-        // a description of the aspect being tested.
-        bool test_1();
-        char aspect1[] = "inst. & init.";
-        bool test_2();
-        char aspect2[] = "deposit_inelastic_el_scat";
-        bool test_3();
-        char aspect3[] = "deposit_energy";
-        bool test_4();
-        char aspect4[] = "deposit_momentum_elastic";
-        bool test_5();
-        char aspect5[] = "count_electron_scatter (nu_e)";
-        bool test_6();
-        char aspect6[] = "count_electron_scatter (nu_e_bar)";
-        bool test_7();
-        char aspect7[] = "count_electron_scatter (nu_mu)";
-        bool test_8();
-        char aspect8[] = "count_electron_scatter (nu_mu_bar)";
-        bool test_9();
-        char aspect9[] = "count_electron_scatter (nu_tau)";
-        bool test_10();
-        char aspect10[] = "count_electron_scatter (nu_tau_bar)";
-        bool test_11();
-        char aspect11[] = "count_nucleon_abs (nu_e)";
-        bool test_12();
-        char aspect12[] = "count_nucleon_abs (nu_e_bar)";
-        bool test_13();
-        char aspect13[] = "count_nucleon_elastic_scatter";
-        bool test_14();
-        char aspect14[] = "count_escape";
-        bool test_15();
-        char aspect15[] = "count_reflect";
-        bool test_16();
-        char aspect16[] = "count_cell_bdy";
-        bool test_17();
-        char aspect17[] = "count_cutoff";
-        bool test_18();
-        char aspect18[] = "count_census (nu_e)";
-        bool test_19();
-        char aspect19[] = "count_census (nu_e_bar)";
-        bool test_20();
-        char aspect20[] = "count_census (nu_mu)";
-        bool test_21();
-        char aspect21[] = "count_census (nu_mu_bar)";
-        bool test_22();
-        char aspect22[] = "count_census (nu_tau)";
-        bool test_23();
-        char aspect23[] = "count_census (nu_tau_bar)";
-        bool test_24();
-        char aspect24[] = "merge";
+  bool passed(true);
 
-    }
+  typedef double fp_t;
 
-    bool test_Tally()
-    {
-        using namespace Tally_tests;
-        using test_aux::test;
+  size_t n_cells(100);
 
-        bool passed1 = test( target, aspect1, test_1);
+  nut::Tally<fp_t> tally(n_cells);
 
-        bool passed2 = test( target, aspect2, test_2);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_1
 
-        bool passed3 = test( target, aspect3, test_3);
+TEST(nut_Tally, deposit_inelastic_el_scat)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-        bool passed4 = test( target, aspect4, test_4);
+  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
 
-        bool passed5 = test( target, aspect5, test_5);
+  fp_t const ei(2.0), ef(1.9);
+  fp_t const omega_i(1.0), omega_f(-1.0);
+  fp_t const wt(0.5);
+  nut::Species const s(nut::nu_e);
+  nut::cell_t const c(21);
 
-        bool passed6 = test( target, aspect6, test_6);
+  tally.deposit_inelastic_scat(c, ei, ef, omega_i, omega_f, wt, s);
 
-        bool passed7 = test( target, aspect7, test_7);
+  ref.momentum[c - 1] = 0.5 * (ei * omega_i - ef * omega_f);
+  ref.energy[c - 1] = 0.5 * (ei - ef);
 
-        bool passed8 = test( target, aspect8, test_8);
+  passed = check_same(&tally.momentum, &ref.momentum) and passed;
+  passed = check_same(&tally.energy, &ref.energy) and passed;
 
-        bool passed9 = test( target, aspect9, test_9);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_2
 
-        bool passed10 = test( target, aspect10, test_10);
+TEST(nut_Tally, deposit_energy)
+{
+  bool passed(true);
+  typedef double fp_t;
+  typedef std::vector<fp_t> vf;
+  size_t n_cells(100);
 
-        bool passed11 = test( target, aspect11, test_11);
+  typedef nut::Tally<fp_t> t_t;
 
-        bool passed12 = test( target, aspect12, test_12);
+  t_t tally(n_cells), ref(n_cells);
 
-        bool passed13 = test( target, aspect13, test_13);
+  fp_t const wt = 0.2;
+  nut::cell_t const c(21);
+  fp_t const e = 3.0;
+  tally.deposit_energy(c, wt, e);
 
-        bool passed14 = test( target, aspect14, test_14);
+  passed = check_one_changed<t_t, vf>(tally, ref, &tally.energy) and passed;
 
-        bool passed15 = test( target, aspect15, test_15);
+  ref.energy[20] = 0.6;
 
-        bool passed16 = test( target, aspect16, test_16);
+  passed =
+      check_same_verb(&tally.energy, &ref.energy, comp_verb<fp_t>()) and passed;
 
-        bool passed17 = test( target, aspect17, test_17);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_3
 
-        bool passed18 = test( target, aspect18, test_18);
+TEST(nut_Tally, deposit_momentum_elastic)
+{
+  bool passed(true);
+  typedef double fp_t;
+  // typedef std::vector<fp_t> vf;
+  size_t n_cells(100);
 
-        bool passed19 = test( target, aspect19, test_19);
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vv vv;
 
-        bool passed20 = test( target, aspect20, test_20);
+  static const size_t dim = t_t::dim;
 
-        bool passed21 = test( target, aspect21, test_21);
+  t_t tally(n_cells), ref(n_cells);
 
-        bool passed22 = test( target, aspect22, test_22);
+  fp_t const o = 0.3;
+  fp_t const wt = 0.2;
+  fp_t const e = 4.0;
+  nut::cell_t const c(21);
+  tally.deposit_momentum_elastic(c, o, e, wt);
 
-        bool passed23 = test( target, aspect23, test_23);
+  passed = check_one_changed<t_t, vv>(tally, ref, &tally.momentum) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-        bool passed24 = test( target, aspect24, test_24);
+  ref.momentum[c - 1] = 0.2 * 0.3 * 4.0;
+  passed = check_same_verb(&tally.momentum, &ref.momentum,
+                           comp_verb_iter<nut::vec_t<dim>>()) and
+           passed;
 
-        // call additional tests here.
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-        return passed1 and passed2 and passed3 and passed4 and passed5
-            and passed6 and passed7 and passed8 and passed9 and passed10
-            and passed11 and passed12 and passed13 and passed14 and passed15
-            and passed16 and passed17 and passed18 and passed19 and passed20
-            and passed21 and passed22 and passed23 and passed24;
-    }
+  EXPECT_TRUE(passed);
+  return;
+}  // test_4
 
-    namespace Tally_tests
-    {
-        using test_aux::check_one_changed;
-        using test_aux::check_two_changed;
-        using test_aux::check_same;
-        using test_aux::check_same_v;
-        using test_aux::check_same_verb;
-        using test_aux::comp_verb;
-        using test_aux::comp_verb_iter;
-        using test_aux::tallies_same;
+TEST(nut_Tally, count_electron_scatter_nu_e_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-        bool test_1()
-        {
-            bool passed(true);
+  t_t tally(n_cells), ref(n_cells);
 
-            typedef double fp_t;
+  nut::Species const s(nut::nu_e);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-            size_t n_cells(100);
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_e_el_scat) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            nut::Tally<fp_t> tally(n_cells);
+  ref.n_nu_e_el_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_e_el_scat, &ref.n_nu_e_el_scat) and passed;
 
-            return passed;
-        } // test_1
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
+  EXPECT_TRUE(passed);
+  return;
+}  // test_5
 
-        bool test_2()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+TEST(nut_Tally, count_electron_scatter_nu_e_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            fp_t const ei(2.0), ef(1.9);
-            fp_t const omega_i(1.0), omega_f(-1.0);
-            fp_t const wt(0.5);
-            nut::Species const s(nut::nu_e);
-            nut::cell_t const c(21);
+  t_t tally(n_cells), ref(n_cells);
 
-            tally.deposit_inelastic_scat(c,ei,ef,omega_i,omega_f,wt,s);
+  nut::Species const s(nut::nu_e_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-            ref.momentum[c-1] = 0.5*(ei*omega_i - ef*omega_f);
-            ref.energy[c-1] = 0.5*(ei-ef);
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_e_bar_pos_scat) and
+      passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_same(&tally.momentum,&ref.momentum) and passed;
-            passed = check_same(&tally.energy,&ref.energy) and passed;
+  ref.n_nu_e_bar_pos_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_e_bar_pos_scat, &ref.n_nu_e_bar_pos_scat) and
+           passed;
 
-            return passed;
-        } // test_2
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
+  EXPECT_TRUE(passed);
+  return;
+}  // test_6
 
-        bool test_3()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            typedef std::vector<fp_t> vf;
-            size_t n_cells(100);
+TEST(nut_Tally, count_electron_scatter_nu_mu_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            typedef nut::Tally<fp_t> t_t;
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            t_t tally(n_cells), ref(n_cells);
+  t_t tally(n_cells), ref(n_cells);
 
-            fp_t const wt = 0.2;
-            nut::cell_t const c(21);
-            fp_t const e  = 3.0;
-            tally.deposit_energy(c,wt,e);
+  nut::Species const s(nut::nu_mu);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_x_el_scat) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_one_changed<t_t,vf>(tally,ref,&tally.energy)
-                and passed;
+  ref.n_nu_x_el_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_x_el_scat, &ref.n_nu_x_el_scat) and passed;
 
-            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            ref.energy[20] = 0.6;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_7
 
-            passed = check_same_verb(&tally.energy,&ref.energy,comp_verb<fp_t>()) and passed;
+TEST(nut_Tally, count_electron_scatter_nu_mu_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            std::cout << __LINE__ << ": here, passed = " << passed << "\n";
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            return passed;
-        } // test_3
+  t_t tally(n_cells), ref(n_cells);
 
+  nut::Species const s(nut::nu_mu_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-        bool test_4()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            // typedef std::vector<fp_t> vf;
-            size_t n_cells(100);
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_x_bar_pos_scat) and
+      passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vv vv;
+  ref.n_nu_x_bar_pos_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_x_bar_pos_scat, &ref.n_nu_x_bar_pos_scat) and
+           passed;
 
-            static const size_t dim = t_t::dim;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            t_t tally(n_cells), ref(n_cells);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_8
 
-            fp_t const o  = 0.3;
-            fp_t const wt = 0.2;
-            fp_t const e  = 4.0;
-            nut::cell_t const c(21);
-            tally.deposit_momentum_elastic(c,o,e,wt);
+TEST(nut_Tally, count_electron_scatter_nu_tau_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            passed = check_one_changed<t_t,vv>(tally,ref,&tally.momentum)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            ref.momentum[c - 1] = 0.2 * 0.3 * 4.0;
-            passed = check_same_verb(&tally.momentum,&ref.momentum,
-                                     comp_verb_iter<nut::vec_t<dim>>()) and passed;
+  t_t tally(n_cells), ref(n_cells);
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  nut::Species const s(nut::nu_tau);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-            return passed;
-        } // test_4
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_x_el_scat) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
+  ref.n_nu_x_el_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_x_el_scat, &ref.n_nu_x_el_scat) and passed;
 
-        bool test_5()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_9
 
-            t_t tally(n_cells), ref(n_cells);
+TEST(nut_Tally, count_electron_scatter_nu_tau_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            nut::Species const s(nut::nu_e);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_e_el_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  t_t tally(n_cells), ref(n_cells);
 
-            ref.n_nu_e_el_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_e_el_scat, &ref.n_nu_e_el_scat)
-                and passed;
+  nut::Species const s(nut::nu_tau_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_lepton_scatter(c, s, n);
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nu_x_bar_pos_scat) and
+      passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            return passed;
-        } // test_5
+  ref.n_nu_x_bar_pos_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nu_x_bar_pos_scat, &ref.n_nu_x_bar_pos_scat) and
+           passed;
 
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-        bool test_6()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_10
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+TEST(nut_Tally, count_nucleon_abs_nu_e_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            t_t tally(n_cells), ref(n_cells);
+  typedef nut::Tally<fp_t> t_t;
 
-            nut::Species const s(nut::nu_e_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  t_t tally(n_cells), ref(n_cells);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_e_bar_pos_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  nut::Species const s(nut::nu_e);
+  nut::cell_t const c(21);
+  fp_t const wt(59.2);
+  t_t::cntr_t const n(1);
+  tally.count_nucleon_abs(c, s, wt, n);
 
-            ref.n_nu_e_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_e_bar_pos_scat,
-                                &ref.n_nu_e_bar_pos_scat) and passed;
+  ref.n_nu_e_nucl_abs[c - 1] = 1;
+  ref.ew_nu_e_nucl_abs[c - 1] = 59.2;
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  passed = check_same(&tally.n_nu_e_nucl_abs, &ref.n_nu_e_nucl_abs) and passed;
+  passed =
+      check_same(&tally.ew_nu_e_nucl_abs, &ref.ew_nu_e_nucl_abs) and passed;
 
-            return passed;
-        } // test_6
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
+  EXPECT_TRUE(passed);
+  return;
+}  // test_11
 
-        bool test_7()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+TEST(nut_Tally, count_nucleon_abs_nu_e_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  typedef nut::Tally<fp_t> t_t;
 
-            t_t tally(n_cells), ref(n_cells);
+  t_t tally(n_cells), ref(n_cells);
 
-            nut::Species const s(nut::nu_mu);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  nut::Species const s(nut::nu_e_bar);
+  nut::cell_t const c(21);
+  fp_t const wt(59.2);
+  t_t::cntr_t const n(1);
+  tally.count_nucleon_abs(c, s, wt, n);
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  ref.n_nu_e_bar_nucl_abs[c - 1] = 1;
+  ref.ew_nu_e_bar_nucl_abs[c - 1] = 59.2;
 
-            ref.n_nu_x_el_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_el_scat, &ref.n_nu_x_el_scat)
-                and passed;
+  passed = check_same(&tally.n_nu_e_bar_nucl_abs, &ref.n_nu_e_bar_nucl_abs) and
+           passed;
+  passed =
+      check_same(&tally.ew_nu_e_bar_nucl_abs, &ref.ew_nu_e_bar_nucl_abs) and
+      passed;
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            return passed;
-        } // test_7
+  EXPECT_TRUE(passed);
+  return;
+}  // test_12
 
+TEST(nut_Tally, count_nucleon_elastic_scatter)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-        bool test_8()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  t_t tally(n_cells), ref(n_cells);
 
-            t_t tally(n_cells), ref(n_cells);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_nucleon_elastic_scatter(c, n);
 
-            nut::Species const s(nut::nu_mu_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  passed =
+      check_one_changed<t_t, vc>(tally, ref, &tally.n_nucl_el_scat) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_x_bar_pos_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  ref.n_nucl_el_scat[c - 1] = 1;
+  passed = check_same(&tally.n_nucl_el_scat, &ref.n_nucl_el_scat) and passed;
 
-            ref.n_nu_x_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_bar_pos_scat,
-                                &ref.n_nu_x_bar_pos_scat) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_13
 
-            return passed;
-        } // test_8
+TEST(nut_Tally, count_escape)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
+  typedef nut::Tally<fp_t> t_t;
 
-        bool test_9()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  t_t tally(n_cells), ref(n_cells);
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  nut::cell_t const c(21);
+  fp_t const ew(37.64);
+  t_t::cntr_t const n(1);
+  tally.count_escape(c, ew, n);
 
-            t_t tally(n_cells), ref(n_cells);
+  // two change
+  // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
+  //     and passed;
+  // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            nut::Species const s(nut::nu_tau);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  ref.n_escape[c - 1] = 1;
+  ref.ew_escaped[c - 1] = ew;
+  passed = check_same(&tally.n_escape, &ref.n_escape) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nu_x_el_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  passed = check_same(&tally.ew_escaped, &ref.ew_escaped) and passed;
 
-            ref.n_nu_x_el_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_el_scat, &ref.n_nu_x_el_scat)
-                and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_14
 
-            return passed;
-        } // test_9
+TEST(nut_Tally, count_reflect)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
+  typedef nut::Tally<fp_t> t_t;
 
-        bool test_10()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  t_t tally(n_cells), ref(n_cells);
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_reflect(c, n);
 
-            t_t tally(n_cells), ref(n_cells);
+  // two change
+  // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
+  //     and passed;
+  // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            nut::Species const s(nut::nu_tau_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_lepton_scatter(c,s,n);
+  ref.n_reflect[c - 1] = 1;
+  passed = check_same(&tally.n_reflect, &ref.n_reflect) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_one_changed<t_t,vc>(tally,ref,
-                                               &tally.n_nu_x_bar_pos_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_15
 
-            ref.n_nu_x_bar_pos_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nu_x_bar_pos_scat,
-                                &ref.n_nu_x_bar_pos_scat) and passed;
+TEST(nut_Tally, count_cell_bdy)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            return passed;
-        } // test_10
+  t_t tally(n_cells), ref(n_cells);
 
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_cell_bdy(c, n);
 
-        bool test_11()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  passed = check_one_changed<t_t, vc>(tally, ref, &tally.n_cell_bdy) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            typedef nut::Tally<fp_t> t_t;
+  ref.n_cell_bdy[c - 1] = 1;
+  passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            t_t tally(n_cells), ref(n_cells);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_16
 
-            nut::Species const s(nut::nu_e);
-            nut::cell_t const c(21);
-            fp_t const wt(59.2);
-            t_t::cntr_t const n(1);
-            tally.count_nucleon_abs(c,s,wt,n);
+TEST(nut_Tally, count_cutoff)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            ref.n_nu_e_nucl_abs[c - 1] = 1;
-            ref.ew_nu_e_nucl_abs[c - 1] = 59.2;
+  typedef nut::Tally<fp_t> t_t;
+  typedef t_t::vc vc;
 
-            passed = check_same(&tally.n_nu_e_nucl_abs,
-                                  &ref.n_nu_e_nucl_abs) and passed;
-            passed = check_same(&tally.ew_nu_e_nucl_abs,
-                                  &ref.ew_nu_e_nucl_abs) and passed;
+  t_t tally(n_cells), ref(n_cells);
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  tally.count_cutoff(c, n);
 
-            return passed;
-        } // test_11
+  passed = check_one_changed<t_t, vc>(tally, ref, &tally.n_cutoff) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
+  ref.n_cutoff[c - 1] = 1;
+  passed = check_same(&tally.n_cutoff, &ref.n_cutoff) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-        bool test_12()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_17
 
-            typedef nut::Tally<fp_t> t_t;
+TEST(nut_Tally, count_census_nu_e_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            t_t tally(n_cells), ref(n_cells);
+  typedef nut::Tally<fp_t> t_t;
 
-            nut::Species const s(nut::nu_e_bar);
-            nut::cell_t const c(21);
-            fp_t const wt(59.2);
-            t_t::cntr_t const n(1);
-            tally.count_nucleon_abs(c,s,wt,n);
+  t_t tally(n_cells), ref(n_cells);
 
+  nut::Species const s(nut::nu_e);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
 
-            ref.n_nu_e_bar_nucl_abs[c - 1] = 1;
-            ref.ew_nu_e_bar_nucl_abs[c - 1] = 59.2;
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_e,
+                             &tally.ew_census_nu_e) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_same(&tally.n_nu_e_bar_nucl_abs,
-                                &ref.n_nu_e_bar_nucl_abs) and passed;
-            passed = check_same(&tally.ew_nu_e_bar_nucl_abs,
-                                &ref.ew_nu_e_bar_nucl_abs) and passed;
+  ref.n_census_nu_e[c - 1] = n;
+  ref.ew_census_nu_e[c - 1] = ew;
+  passed = check_same(&tally.n_census_nu_e, &ref.n_census_nu_e) and passed;
+  passed = check_same(&tally.ew_census_nu_e, &ref.ew_census_nu_e) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_18
 
-            return passed;
-        } // test_12
+TEST(nut_Tally, count_census_nu_e_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
+  typedef nut::Tally<fp_t> t_t;
 
-        bool test_13()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  t_t tally(n_cells), ref(n_cells);
 
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
+  nut::Species const s(nut::nu_e_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
 
-            t_t tally(n_cells), ref(n_cells);
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_e_bar,
+                             &tally.ew_census_nu_e_bar) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_nucleon_elastic_scatter(c,n);
+  ref.n_census_nu_e_bar[c - 1] = n;
+  ref.ew_census_nu_e_bar[c - 1] = ew;
+  passed =
+      check_same(&tally.n_census_nu_e_bar, &ref.n_census_nu_e_bar) and passed;
+  passed =
+      check_same(&tally.ew_census_nu_e_bar, &ref.ew_census_nu_e_bar) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_nucl_el_scat)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  EXPECT_TRUE(passed);
+  return;
+}  // test_19
 
-            ref.n_nucl_el_scat[c - 1] = 1;
-            passed = check_same(&tally.n_nucl_el_scat, &ref.n_nucl_el_scat)
-                and passed;
+TEST(nut_Tally, count_census_nu_mu_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  typedef nut::Tally<fp_t> t_t;
 
-            return passed;
-        } // test_13
+  t_t tally(n_cells), ref(n_cells);
 
+  nut::Species const s(nut::nu_mu);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
 
-        bool test_14()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_x,
+                             &tally.ew_census_nu_x) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            typedef nut::Tally<fp_t> t_t;
+  ref.n_census_nu_x[c - 1] = n;
+  ref.ew_census_nu_x[c - 1] = ew;
+  passed = check_same(&tally.n_census_nu_x, &ref.n_census_nu_x) and passed;
+  passed = check_same(&tally.ew_census_nu_x, &ref.ew_census_nu_x) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-            t_t tally(n_cells), ref(n_cells);
+  EXPECT_TRUE(passed);
+  return;
+}  // test_20
 
-            nut::cell_t const c(21);
-            fp_t const ew(37.64);
-            t_t::cntr_t const n(1);
-            tally.count_escape(c,ew,n);
+TEST(nut_Tally, count_census_nu_mu_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
 
-            // two change
-            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
-            //     and passed;
-            // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  typedef nut::Tally<fp_t> t_t;
 
-            ref.n_escape[c - 1] = 1;
-            ref.ew_escaped[c - 1] = ew;
-            passed = check_same(&tally.n_escape, &ref.n_escape)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+  t_t tally(n_cells), ref(n_cells);
 
-            passed = check_same(&tally.ew_escaped, &ref.ew_escaped)
-                and passed;
-
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_14
-
-
-        bool test_15()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_reflect(c,n);
-
-            // two change
-            // passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_escape)
-            //     and passed;
-            // if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_reflect[c - 1] = 1;
-            passed = check_same(&tally.n_reflect, &ref.n_reflect)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_15
-
-
-        bool test_16()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_cell_bdy(c,n);
-
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cell_bdy)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_cell_bdy[c - 1] = 1;
-            passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_16
-
-
-        bool test_17()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-            typedef t_t::vc vc;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            tally.count_cutoff(c,n);
-
-            passed = check_one_changed<t_t,vc>(tally,ref,&tally.n_cutoff)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_cutoff[c - 1] = 1;
-            passed = check_same(&tally.n_cutoff, &ref.n_cutoff)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_17
-
-
-        bool test_18()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_e);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_e,
-                                       &tally.ew_census_nu_e)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_e[c - 1] = n;
-            ref.ew_census_nu_e[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_e, &ref.n_census_nu_e)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_e, &ref.ew_census_nu_e)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_18
-
-
-        bool test_19()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_e_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_e_bar,
-                                       &tally.ew_census_nu_e_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_e_bar[c - 1] = n;
-            ref.ew_census_nu_e_bar[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_e_bar, &ref.n_census_nu_e_bar)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_e_bar, &ref.ew_census_nu_e_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_19
-
-
-        bool test_20()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_mu);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_x,
-                                       &tally.ew_census_nu_x)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_x[c - 1] = n;
-            ref.ew_census_nu_x[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_x, &ref.n_census_nu_x)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_x, &ref.ew_census_nu_x)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_20
-
-
-        bool test_21()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_mu_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_x_bar,
-                                       &tally.ew_census_nu_x_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_x_bar[c - 1] = n;
-            ref.ew_census_nu_x_bar[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_x_bar, &ref.n_census_nu_x_bar)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_x_bar, &ref.ew_census_nu_x_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_21
-
-
-        bool test_22()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_tau);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_x,
-                                       &tally.ew_census_nu_x)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_x[c - 1] = n;
-            ref.ew_census_nu_x[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_x, &ref.n_census_nu_x)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_x, &ref.ew_census_nu_x)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_22
-
-
-        bool test_23()
-        {
-            bool passed(true);
-            typedef double fp_t;
-            size_t n_cells(100);
-
-            typedef nut::Tally<fp_t> t_t;
-
-            t_t tally(n_cells), ref(n_cells);
-
-            nut::Species const s(nut::nu_tau_bar);
-            nut::cell_t const c(21);
-            t_t::cntr_t const n(1);
-            fp_t const ew(17.13);
-            tally.count_census(c,ew,s,n);
-
-            passed = check_two_changed(tally,ref,
-                                       &tally.n_census_nu_x_bar,
-                                       &tally.ew_census_nu_x_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            ref.n_census_nu_x_bar[c - 1] = n;
-            ref.ew_census_nu_x_bar[c - 1] = ew;
-            passed = check_same(&tally.n_census_nu_x_bar, &ref.n_census_nu_x_bar)
-                and passed;
-            passed = check_same(&tally.ew_census_nu_x_bar, &ref.ew_census_nu_x_bar)
-                and passed;
-            if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
-
-            return passed;
-        } // test_23
-
-
-        bool test_24()
-        {
-            size_t const n_cells(3);
-
-            typedef nut::Tally<double> tally_t;
-            tally_t t1(n_cells);
-            tally_t t2(n_cells);
-            tally_t ref(n_cells);
-
-            for(uint32_t i = 0; i < n_cells; ++i)
-            {
-                t1.energy[i] = (double)i;
-                t1.momentum[i] = (double)i;
-                t1.n_n[i] = (double)i;
-                t1.n_p[i] = (double)i;
-                t1.n_e_minus[i] = (double)i;
-                t1.n_e_plus[i] = (double)i;
-                t1.ew_n[i] = (double)i;
-                t1.ew_p[i] = (double)i;
-                t1.ew_e_minus[i] = (double)i;
-                t1.ew_e_plus[i] = (double)i;
-                t1.n_escape[i] = (double)i;
-                t1.n_reflect[i] = (double)i;
-                t1.n_cell_bdy[i] = (double)i;
-                t1.n_cutoff[i] = (double)i;
-                t1.n_nucl_el_scat[i] = (double)i;
-                t1.n_nu_e_el_scat[i] = (double)i;
-                t1.n_nu_e_bar_pos_scat[i] = (double)i;
-                t1.n_nu_x_el_scat[i] = (double)i;
-                t1.n_nu_x_bar_pos_scat[i] = (double)i;
-                t1.ew_escaped[i] = (double)i;
-                t1.n_nu_e_nucl_abs[i] = (double)i;
-                t1.n_nu_e_bar_nucl_abs[i] = (double)i;
-                t1.n_nu_x_nucl_abs[i] = (double)i;
-                t1.ew_nu_e_nucl_abs[i] = (double)i;
-                t1.ew_nu_e_bar_nucl_abs[i] = (double)i;
-                t1.ew_nu_x_nucl_abs[i] = (double)i;
-                t1.n_census_nu_e[i] = (double)i;
-                t1.n_census_nu_e_bar[i] = (double)i;
-                t1.n_census_nu_x[i] = (double)i;
-                t1.n_census_nu_x_bar[i] = (double)i;
-                t1.ew_census_nu_e[i] = (double)i;
-                t1.ew_census_nu_e_bar[i] = (double)i;
-                t1.ew_census_nu_x[i] = (double)i;
-                t1.ew_census_nu_x_bar[i] = (double)i;
-
-                t2.energy[i] = 2*(double)i;
-                t2.momentum[i] = 2*(double)i;
-                t2.n_n[i] = 2*(double)i;
-                t2.n_p[i] = 2*(double)i;
-                t2.n_e_minus[i] = 2*(double)i;
-                t2.n_e_plus[i] = 2*(double)i;
-                t2.ew_n[i] = 2*(double)i;
-                t2.ew_p[i] = 2*(double)i;
-                t2.ew_e_minus[i] = 2*(double)i;
-                t2.ew_e_plus[i] = 2*(double)i;
-                t2.n_escape[i] = 2*(double)i;
-                t2.n_reflect[i] = 2*(double)i;
-                t2.n_cell_bdy[i] = 2*(double)i;
-                t2.n_cutoff[i] = 2*(double)i;
-                t2.n_nucl_el_scat[i] = 2*(double)i;
-                t2.n_nu_e_el_scat[i] = 2*(double)i;
-                t2.n_nu_e_bar_pos_scat[i] = 2*(double)i;
-                t2.n_nu_x_el_scat[i] = 2*(double)i;
-                t2.n_nu_x_bar_pos_scat[i] = 2*(double)i;
-                t2.ew_escaped[i] = 2*(double)i;
-                t2.n_nu_e_nucl_abs[i] = 2*(double)i;
-                t2.n_nu_e_bar_nucl_abs[i] = 2*(double)i;
-                t2.n_nu_x_nucl_abs[i] = 2*(double)i;
-                t2.ew_nu_e_nucl_abs[i] = 2*(double)i;
-                t2.ew_nu_e_bar_nucl_abs[i] = 2*(double)i;
-                t2.ew_nu_x_nucl_abs[i] = 2*(double)i;
-                t2.n_census_nu_e[i] = 2*(double)i;
-                t2.n_census_nu_e_bar[i] = 2*(double)i;
-                t2.n_census_nu_x[i] = 2*(double)i;
-                t2.n_census_nu_x_bar[i] = 2*(double)i;
-                t2.ew_census_nu_e[i] = 2*(double)i;
-                t2.ew_census_nu_e_bar[i] = 2*(double)i;
-                t2.ew_census_nu_x[i] = 2*(double)i;
-                t2.ew_census_nu_x_bar[i] = 2*(double)i;
-
-                ref.energy[i] = 3*(double)i;
-                ref.momentum[i] = 3*(double)i;
-                ref.n_n[i] = 3*(double)i;
-                ref.n_p[i] = 3*(double)i;
-                ref.n_e_minus[i] = 3*(double)i;
-                ref.n_e_plus[i] = 3*(double)i;
-                ref.ew_n[i] = 3*(double)i;
-                ref.ew_p[i] = 3*(double)i;
-                ref.ew_e_minus[i] = 3*(double)i;
-                ref.ew_e_plus[i] = 3*(double)i;
-                ref.n_escape[i] = 3*(double)i;
-                ref.n_reflect[i] = 3*(double)i;
-                ref.n_cell_bdy[i] = 3*(double)i;
-                ref.n_cutoff[i] = 3*(double)i;
-                ref.n_nucl_el_scat[i] = 3*(double)i;
-                ref.n_nu_e_el_scat[i] = 3*(double)i;
-                ref.n_nu_e_bar_pos_scat[i] = 3*(double)i;
-                ref.n_nu_x_el_scat[i] = 3*(double)i;
-                ref.n_nu_x_bar_pos_scat[i] = 3*(double)i;
-                ref.ew_escaped[i] = 3*(double)i;
-                ref.n_nu_e_nucl_abs[i] = 3*(double)i;
-                ref.n_nu_e_bar_nucl_abs[i] = 3*(double)i;
-                ref.n_nu_x_nucl_abs[i] = 3*(double)i;
-                ref.ew_nu_e_nucl_abs[i] = 3*(double)i;
-                ref.ew_nu_e_bar_nucl_abs[i] = 3*(double)i;
-                ref.ew_nu_x_nucl_abs[i] = 3*(double)i;
-                ref.n_census_nu_e[i] = 3*(double)i;
-                ref.n_census_nu_e_bar[i] = 3*(double)i;
-                ref.n_census_nu_x[i] = 3*(double)i;
-                ref.n_census_nu_x_bar[i] = 3*(double)i;
-                ref.ew_census_nu_e[i] = 3*(double)i;
-                ref.ew_census_nu_e_bar[i] = 3*(double)i;
-                ref.ew_census_nu_x[i] = 3*(double)i;
-                ref.ew_census_nu_x_bar[i] = 3*(double)i;
-            }
-            t1.path_length = 1.0;
-            t2.path_length = 2.0;
-            ref.path_length = 3.0;
-
-            t2.merge(t1);
-
-            bool passed = tallies_same(t2,ref);
-
-            return passed;
-        } // test_24
-
-
-        // define additional tests here.
-
-
-        // additional helpers
-
-    } // Tally_tests::
-
-} // Nut_Test::
-
-
-
-// version
-// $Id$
+  nut::Species const s(nut::nu_mu_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
+
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_x_bar,
+                             &tally.ew_census_nu_x_bar) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  ref.n_census_nu_x_bar[c - 1] = n;
+  ref.ew_census_nu_x_bar[c - 1] = ew;
+  passed =
+      check_same(&tally.n_census_nu_x_bar, &ref.n_census_nu_x_bar) and passed;
+  passed =
+      check_same(&tally.ew_census_nu_x_bar, &ref.ew_census_nu_x_bar) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  EXPECT_TRUE(passed);
+  return;
+}  // test_21
+
+TEST(nut_Tally, count_census_nu_tau_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
+
+  typedef nut::Tally<fp_t> t_t;
+
+  t_t tally(n_cells), ref(n_cells);
+
+  nut::Species const s(nut::nu_tau);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
+
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_x,
+                             &tally.ew_census_nu_x) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  ref.n_census_nu_x[c - 1] = n;
+  ref.ew_census_nu_x[c - 1] = ew;
+  passed = check_same(&tally.n_census_nu_x, &ref.n_census_nu_x) and passed;
+  passed = check_same(&tally.ew_census_nu_x, &ref.ew_census_nu_x) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  EXPECT_TRUE(passed);
+  return;
+}  // test_22
+
+TEST(nut_Tally, count_census_nu_tau_bar_)
+{
+  bool passed(true);
+  typedef double fp_t;
+  size_t n_cells(100);
+
+  typedef nut::Tally<fp_t> t_t;
+
+  t_t tally(n_cells), ref(n_cells);
+
+  nut::Species const s(nut::nu_tau_bar);
+  nut::cell_t const c(21);
+  t_t::cntr_t const n(1);
+  fp_t const ew(17.13);
+  tally.count_census(c, ew, s, n);
+
+  passed = check_two_changed(tally, ref, &tally.n_census_nu_x_bar,
+                             &tally.ew_census_nu_x_bar) and
+           passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  ref.n_census_nu_x_bar[c - 1] = n;
+  ref.ew_census_nu_x_bar[c - 1] = ew;
+  passed =
+      check_same(&tally.n_census_nu_x_bar, &ref.n_census_nu_x_bar) and passed;
+  passed =
+      check_same(&tally.ew_census_nu_x_bar, &ref.ew_census_nu_x_bar) and passed;
+  if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
+
+  EXPECT_TRUE(passed);
+  return;
+}  // test_23
+
+TEST(nut_Tally, merge)
+{
+  size_t const n_cells(3);
+
+  typedef nut::Tally<double> tally_t;
+  tally_t t1(n_cells);
+  tally_t t2(n_cells);
+  tally_t ref(n_cells);
+
+  for(uint32_t i = 0; i < n_cells; ++i) {
+    t1.energy[i] = (double)i;
+    t1.momentum[i] = (double)i;
+    t1.n_n[i] = (double)i;
+    t1.n_p[i] = (double)i;
+    t1.n_e_minus[i] = (double)i;
+    t1.n_e_plus[i] = (double)i;
+    t1.ew_n[i] = (double)i;
+    t1.ew_p[i] = (double)i;
+    t1.ew_e_minus[i] = (double)i;
+    t1.ew_e_plus[i] = (double)i;
+    t1.n_escape[i] = (double)i;
+    t1.n_reflect[i] = (double)i;
+    t1.n_cell_bdy[i] = (double)i;
+    t1.n_cutoff[i] = (double)i;
+    t1.n_nucl_el_scat[i] = (double)i;
+    t1.n_nu_e_el_scat[i] = (double)i;
+    t1.n_nu_e_bar_pos_scat[i] = (double)i;
+    t1.n_nu_x_el_scat[i] = (double)i;
+    t1.n_nu_x_bar_pos_scat[i] = (double)i;
+    t1.ew_escaped[i] = (double)i;
+    t1.n_nu_e_nucl_abs[i] = (double)i;
+    t1.n_nu_e_bar_nucl_abs[i] = (double)i;
+    t1.n_nu_x_nucl_abs[i] = (double)i;
+    t1.ew_nu_e_nucl_abs[i] = (double)i;
+    t1.ew_nu_e_bar_nucl_abs[i] = (double)i;
+    t1.ew_nu_x_nucl_abs[i] = (double)i;
+    t1.n_census_nu_e[i] = (double)i;
+    t1.n_census_nu_e_bar[i] = (double)i;
+    t1.n_census_nu_x[i] = (double)i;
+    t1.n_census_nu_x_bar[i] = (double)i;
+    t1.ew_census_nu_e[i] = (double)i;
+    t1.ew_census_nu_e_bar[i] = (double)i;
+    t1.ew_census_nu_x[i] = (double)i;
+    t1.ew_census_nu_x_bar[i] = (double)i;
+
+    t2.energy[i] = 2 * (double)i;
+    t2.momentum[i] = 2 * (double)i;
+    t2.n_n[i] = 2 * (double)i;
+    t2.n_p[i] = 2 * (double)i;
+    t2.n_e_minus[i] = 2 * (double)i;
+    t2.n_e_plus[i] = 2 * (double)i;
+    t2.ew_n[i] = 2 * (double)i;
+    t2.ew_p[i] = 2 * (double)i;
+    t2.ew_e_minus[i] = 2 * (double)i;
+    t2.ew_e_plus[i] = 2 * (double)i;
+    t2.n_escape[i] = 2 * (double)i;
+    t2.n_reflect[i] = 2 * (double)i;
+    t2.n_cell_bdy[i] = 2 * (double)i;
+    t2.n_cutoff[i] = 2 * (double)i;
+    t2.n_nucl_el_scat[i] = 2 * (double)i;
+    t2.n_nu_e_el_scat[i] = 2 * (double)i;
+    t2.n_nu_e_bar_pos_scat[i] = 2 * (double)i;
+    t2.n_nu_x_el_scat[i] = 2 * (double)i;
+    t2.n_nu_x_bar_pos_scat[i] = 2 * (double)i;
+    t2.ew_escaped[i] = 2 * (double)i;
+    t2.n_nu_e_nucl_abs[i] = 2 * (double)i;
+    t2.n_nu_e_bar_nucl_abs[i] = 2 * (double)i;
+    t2.n_nu_x_nucl_abs[i] = 2 * (double)i;
+    t2.ew_nu_e_nucl_abs[i] = 2 * (double)i;
+    t2.ew_nu_e_bar_nucl_abs[i] = 2 * (double)i;
+    t2.ew_nu_x_nucl_abs[i] = 2 * (double)i;
+    t2.n_census_nu_e[i] = 2 * (double)i;
+    t2.n_census_nu_e_bar[i] = 2 * (double)i;
+    t2.n_census_nu_x[i] = 2 * (double)i;
+    t2.n_census_nu_x_bar[i] = 2 * (double)i;
+    t2.ew_census_nu_e[i] = 2 * (double)i;
+    t2.ew_census_nu_e_bar[i] = 2 * (double)i;
+    t2.ew_census_nu_x[i] = 2 * (double)i;
+    t2.ew_census_nu_x_bar[i] = 2 * (double)i;
+
+    ref.energy[i] = 3 * (double)i;
+    ref.momentum[i] = 3 * (double)i;
+    ref.n_n[i] = 3 * (double)i;
+    ref.n_p[i] = 3 * (double)i;
+    ref.n_e_minus[i] = 3 * (double)i;
+    ref.n_e_plus[i] = 3 * (double)i;
+    ref.ew_n[i] = 3 * (double)i;
+    ref.ew_p[i] = 3 * (double)i;
+    ref.ew_e_minus[i] = 3 * (double)i;
+    ref.ew_e_plus[i] = 3 * (double)i;
+    ref.n_escape[i] = 3 * (double)i;
+    ref.n_reflect[i] = 3 * (double)i;
+    ref.n_cell_bdy[i] = 3 * (double)i;
+    ref.n_cutoff[i] = 3 * (double)i;
+    ref.n_nucl_el_scat[i] = 3 * (double)i;
+    ref.n_nu_e_el_scat[i] = 3 * (double)i;
+    ref.n_nu_e_bar_pos_scat[i] = 3 * (double)i;
+    ref.n_nu_x_el_scat[i] = 3 * (double)i;
+    ref.n_nu_x_bar_pos_scat[i] = 3 * (double)i;
+    ref.ew_escaped[i] = 3 * (double)i;
+    ref.n_nu_e_nucl_abs[i] = 3 * (double)i;
+    ref.n_nu_e_bar_nucl_abs[i] = 3 * (double)i;
+    ref.n_nu_x_nucl_abs[i] = 3 * (double)i;
+    ref.ew_nu_e_nucl_abs[i] = 3 * (double)i;
+    ref.ew_nu_e_bar_nucl_abs[i] = 3 * (double)i;
+    ref.ew_nu_x_nucl_abs[i] = 3 * (double)i;
+    ref.n_census_nu_e[i] = 3 * (double)i;
+    ref.n_census_nu_e_bar[i] = 3 * (double)i;
+    ref.n_census_nu_x[i] = 3 * (double)i;
+    ref.n_census_nu_x_bar[i] = 3 * (double)i;
+    ref.ew_census_nu_e[i] = 3 * (double)i;
+    ref.ew_census_nu_e_bar[i] = 3 * (double)i;
+    ref.ew_census_nu_x[i] = 3 * (double)i;
+    ref.ew_census_nu_x_bar[i] = 3 * (double)i;
+  }
+  t1.path_length = 1.0;
+  t2.path_length = 2.0;
+  ref.path_length = 3.0;
+
+  t2.merge(t1);
+
+  bool passed = tallies_same(t2, ref);
+
+  EXPECT_TRUE(passed);
+  return;
+}  // test_24
 
 // End of file

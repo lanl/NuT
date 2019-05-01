@@ -5,10 +5,10 @@
 
 #include <string>
 
-namespace nut
-{
-    std::string copyright();
-} // nut::
+namespace nut {
+std::string
+copyright();
+}  // namespace nut
 
 // version
 // $Id$

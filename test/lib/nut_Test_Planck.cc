@@ -1,353 +1,2251 @@
-//T. M. Kelley (c) 2011 LANS LLC
+// T. M. Kelley (c) 2011 LANS LLC
 
 #include "Planck.hh"
 #include "RNG.hh"
-#include "nut_Test_Planck.hh"
-#include "test_aux.hh"
 #include "expect.hh"
-#include <string>
-#include <fstream>
+#include "gtest/gtest.h"
+#include "test_aux.hh"
 #include <algorithm>
-#include <vector>
-#include <iostream>
-#include <iomanip>
+#include <fstream>
 #include <functional>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
 
+using test_aux::soft_eq_bound_tol;
 
-namespace Nut_Test
+/* Read in 1000 test cases from a file, run them, check the results.
+ * The test cases were generated using Mathematica and random sampling.
+ * Here, we use a Buffer_RNG object loaded with the random values from
+ * Mathematica as inputs and verify the outputs. */
+namespace {
+using std::bind;
+using namespace std::placeholders;  // for _1, _2, etc in bind
+
+extern std::string const energies_tests;
+
+/**\brief Read problem specs, one per line, from string below
+ *\param rns: vector to hold random numbers
+ *\param nrgs: vector to hold sampled energies
+ *\param rejfs: vector to hold rejection function values */
+template <typename vt>
+bool
+read_input_t1(vt & all_rns, vt & x_rns, vt & nrgs, vt & rejfs)
 {
-    namespace Planck_tests
-    {
-        // target describes the code being tested
-        char target[] = "Planck-ish functions";
-
-        // for each test of target, add a declaration and
-        // a description of the aspect being tested.
-        bool test_1();
-        char aspect1[] = "gen_power_law_energies: 1000 tests via Mathematica";
-        bool test_2();
-        char aspect2[] = "pwr_law_reject: 1000 tests via Mathematica";
-        bool test_3();
-        char aspect3[] = "gen_pwr_law specialized to alpha=2: 1000 tests via Mathematica";
-        bool test_4();
-        char aspect4[] = "prw_law_reject specialized to alpha=2: 1000 tests via Mathematica";
-
-    }
-
-    bool test_Planck()
-    {
-        using namespace Planck_tests;
-        using test_aux::test;
-
-        bool passed1 = test( target, aspect1, test_1);
-
-        bool passed2 = test( target, aspect2, test_2);
-
-        bool passed3 = test( target, aspect3, test_3);
-
-        bool passed4 = test( target, aspect4, test_4);
-
-        // call additional tests here.
-
-        return passed1 and passed2 and passed3 and passed4;
-    }
-
-    namespace Planck_tests
-    {
-        using test_aux::soft_eq_bound_tol;
-
-        /* Read in 1000 test cases from a file, run them, check the results.
-         * The test cases were generated using Mathematica and random sampling.
-         * Here, we use a Buffer_RNG object loaded with the random values from
-         * Mathematica as inputs and verify the outputs. */
-        namespace
-        {
-            using std::bind;
-            using namespace std::placeholders;  // for _1, _2, etc in bind
-
-            /*\param rns: vector to hold random numbers
-             *\param nrgs: vector to hold sampled energies
-             *\param rejfs: vector to hold rejection function values */
-            template <typename vt>
-            bool read_input_t1(vt & all_rns, vt & x_rns, vt & nrgs, vt & rejfs)
-            {
-                typedef typename vt::value_type geom_t;
-                std::string const fname("generate-power-law-energies-tests-cxx.txt");
-                std::ifstream inf(fname.c_str());
-                if(!inf.good())
-                {
-                    std::cerr << "Planck test_1 cannot read file " << fname
-                              << std::endl;
-                    return false;
-                }
-                std::string trash;
-                std::getline(inf,trash);
-
-                uint32_t count(0);
-                while(1)
-                {
-                    geom_t r1,r2,nrg,rejf;
-                    inf >> r1 >> r2 >> nrg >> rejf;
-                    if(inf.eof()) break;
-                    x_rns.push_back(r1);
-                    all_rns.push_back(r1);
-                    all_rns.push_back(r2);
-                    nrgs.push_back(nrg);
-                    rejfs.push_back(rejf);
-                    count++;
-                }
-                std::cout << "read " << count << " input lines, will run that "
-                          << " many problems."
-                          << std::endl;
-                inf.close();
-                return true;
-            } // read_input_t1
-
-            /** - Log(x) */
-            template <typename fp_t>
-            fp_t neg_log(fp_t const x){ return -std::log(x);}
-
-        } // anonymous::
-
-
-        bool test_1()
-        {
-            bool passed(true);
-
-            using nut::gen_power_law_energy;
-            using namespace test_aux;
-
-            typedef double fp_t;
-            typedef std::vector<fp_t> vf;
-            vf rns, x_rns, es_exp, rejs_exp;
-            fp_t const ebar(2.0);
-            fp_t const alpha(2.0);
-
-            // load values
-            bool read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
-            if(!read_ok)
-            {
-                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
-                return true;
-            }
-
-            // construct Buffer_RNG from rns
-            typedef nut::Buffer_RNG<fp_t> rng_t;
-            rng_t rng(&rns[0],rns.size());
-
-            vf es(es_exp.size());
-            std::generate(es.begin(),es.end(),
-                          std::bind( nut::gen_power_law_energy<rng_t,fp_t>,
-                                          alpha,ebar,rng));
-
-            bool es_passed = check_same_verb(&es,&es_exp,comp_verb<fp_t>("energies",1e-15));
-
-            passed = es_passed and passed;
-
-            return passed;
-        } // test_1
-
-
-        bool test_2()
-        {
-            bool passed(true);
-
-            using nut::gen_power_law_energy;
-
-            typedef double fp_t;
-            typedef std::vector<fp_t> vf;
-            vf rns, x_rns, es_exp, rejs_exp;
-
-            // load values
-            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
-            if(!read_ok)
-            {
-                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
-                return true;
-            }
-
-            fp_t const e_a(0.1353352832366127); // exp(-2)
-            fp_t const alpha(2.0);
-
-            // divide energies by ebar (= 2.0 MeV) to get xs.
-            vf xs(es_exp.size());
-            std::transform(x_rns.begin(),x_rns.end(),xs.begin(),
-                           neg_log<fp_t>);
-
-            // construct Buffer_RNG from rns
-            typedef nut::Buffer_RNG<fp_t> rng_t;
-            rng_t rng(&rns[0],rns.size());
-
-            vf rejs(rejs_exp.size());
-            // std::transform(xs.begin(),xs.end(),rejs.begin(),
-            //                pl_rej<fp_t>(alpha,e_a));
-            std::transform(xs.begin(),xs.end(),rejs.begin(),
-                           bind(nut::pwr_law_reject<fp_t>,alpha,e_a,_1));
-
-            // accept a relative error less than 10^(-15)
-            // soft_eq_bound_tol<fp_t> seq(1e-15);
-            // bool rejs_passed = std::equal(rejs.begin(),rejs.end(),
-            //                               rejs_exp.begin(),seq);
-            soft_eq_bound_tol<fp_t> seq(1e-15);
-            bool rejs_passed = std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),
-                                          bind(nut::soft_equiv<fp_t>,_1,_2,1e-15));
-
-            passed = rejs_passed and passed;
-
-            return passed;
-        } // test_2
-
-
-        bool test_3()
-        {
-            bool passed(true);
-
-            using nut::gen_power_law_energy;
-            using namespace test_aux;
-
-            typedef double fp_t;
-            typedef std::vector<fp_t> vf;
-            vf rns, x_rns, es_exp, rejs_exp;
-            fp_t const ebar(2.0);
-
-            // load values
-            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
-            if(!read_ok)
-            {
-                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
-                return true;
-            }
-
-            // construct Buffer_RNG from rns
-            typedef nut::Buffer_RNG<fp_t> rng_t;
-            rng_t rng(&rns[0],rns.size());
-
-            vf es(es_exp.size());
-            // std::generate(es.begin(),es.end(),pl_gen_a2<fp_t,rng_t>(ebar,rng));
-            std::generate(es.begin(),es.end(),
-                          bind(nut::gen_power_law_energy_alpha2<rng_t,fp_t>,ebar,rng));
-
-            bool es_passed = check_same_verb(&es,&es_exp,comp_verb<fp_t>("energies",1e-15));
-
-            passed = es_passed and passed;
-
-            return passed;
-        } // test_3
-
-
-        bool test_4()
-        {
-            bool passed(true);
-
-            using nut::gen_power_law_energy;
-
-            typedef double fp_t;
-            typedef std::vector<fp_t> vf;
-            vf rns, x_rns, es_exp, rejs_exp;
-
-            // load values
-            bool const read_ok = read_input_t1(rns,x_rns,es_exp,rejs_exp);
-            if(!read_ok)
-            {
-                std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
-                return true;
-            }
-
-            // divide energies by ebar (= 2.0 MeV) to get xs.
-            vf xs(es_exp.size());
-            std::transform(x_rns.begin(),x_rns.end(),xs.begin(),
-                           neg_log<fp_t>);
-
-            // construct Buffer_RNG from rns
-            typedef nut::Buffer_RNG<fp_t> rng_t;
-            rng_t rng(&rns[0],rns.size());
-
-            vf rejs(rejs_exp.size());
-            // std::transform(xs.begin(),xs.end(),rejs.begin(),
-            //                pl_rej_a2<fp_t>(e_a));
-            std::transform(xs.begin(),xs.end(),rejs.begin(),
-                           bind(nut::pwr_law_reject_alpha2<fp_t>,_1));
-
-            // accept a relative error less than 10^(-15)
-            soft_eq_bound_tol<fp_t> seq(1e-15);
-            // bool rejs_passed =
-            //     std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),seq);
-            bool rejs_passed =
-                std::equal(rejs.begin(),rejs.end(),rejs_exp.begin(),
-                           bind(nut::soft_equiv<fp_t>,_1,_2,1e-15));
-
-            passed = rejs_passed and passed;
-
-            return passed;
-        } // test_4
-
-
-        // define additional tests above here.
-
-
-        // functors for use with older compilers without ::bind:
-        namespace
-        {
-
-            // run the power law generator, wd be nice to replace with boost::bind
-            template <typename fp_t, typename rng_t>
-            struct pl_gen
-            {
-                pl_gen(fp_t const alpha, fp_t const ebar, rng_t & rng)
-                    : m_a(alpha),m_e(ebar),m_rng(rng){}
-                fp_t operator()(){return gen_power_law_energy(m_a,m_e,m_rng);}
-                fp_t const m_a, m_e;    rng_t & m_rng;
-            }; // pl_gen
-
-
-            // run the power law rejection function,
-            // wd be nice to replace with boost::bind
-            template <typename fp_t>
-            struct pl_rej
-            {
-                pl_rej(fp_t const alpha, fp_t const e_a)
-                    : m_a(alpha),m_e(e_a){}
-                fp_t operator()(fp_t const x){return nut::pwr_law_reject(m_a,m_e,x);}
-                fp_t const m_a, m_e;
-            }; // pl_rej
-
-
-            // run the power law generator specialized to alpha = 2,
-            // wd be nice to replace with boost::bind
-            template <typename fp_t, typename rng_t>
-            struct pl_gen_a2
-            {
-                pl_gen_a2(fp_t const ebar, rng_t & rng)
-                    : m_e(ebar),m_rng(rng){}
-                fp_t operator()(){return gen_power_law_energy_alpha2(m_e,m_rng);}
-                fp_t const m_e;    rng_t & m_rng;
-            }; // pl_gen
-
-
-            // run the power law rejection function, specialized to alpha = 2
-            // wd be nice to replace with boost::bind
-            template <typename fp_t>
-            struct pl_rej_a2
-            {
-                pl_rej_a2(fp_t const e_a)
-                    : m_e(e_a){}
-                fp_t operator()(fp_t const x){
-                    return nut::pwr_law_reject_alpha2<fp_t>(x);}
-                fp_t const m_e;
-            }; // pl_rej_a2
-
-
-        } // anonymous::
-
-
-
-    } // Planck_tests::
-
-} // Nut_Test::
-
-
-
-// version
-// $Id$
+  typedef typename vt::value_type geom_t;
+  std::stringstream instr(energies_tests);
+
+  uint32_t count(0);
+  while(1) {
+    geom_t r1, r2, nrg, rejf;
+    instr >> r1 >> r2 >> nrg >> rejf;
+    if(instr.eof()) break;
+    x_rns.push_back(r1);
+    all_rns.push_back(r1);
+    all_rns.push_back(r2);
+    nrgs.push_back(nrg);
+    rejfs.push_back(rejf);
+    count++;
+  }
+  std::cout << "read " << count << " input lines, will run that "
+            << " many problems." << std::endl;
+  return true;
+}  // read_input_t1
+
+/** - Log(x) */
+template <typename fp_t>
+fp_t
+neg_log(fp_t const x)
+{
+  return -std::log(x);
+}
+
+}  // namespace
+
+using nut::gen_power_law_energy;
+
+TEST(nut_Planck, gen_power_law_energies_1000_tests_via_Mathematica)
+{
+  using namespace test_aux;
+
+  typedef double fp_t;
+  typedef std::vector<fp_t> vf;
+  vf rns, x_rns, es_exp, rejs_exp;
+  fp_t const ebar(2.0);
+  fp_t const alpha(2.0);
+
+  // load values
+  bool read_ok = read_input_t1(rns, x_rns, es_exp, rejs_exp);
+  if(!read_ok) {
+    std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+    EXPECT_TRUE(false);
+    return;
+  }
+
+  // construct Buffer_RNG from rns
+  typedef nut::Buffer_RNG<fp_t> rng_t;
+  rng_t rng(&rns[0], rns.size());
+
+  vf es(es_exp.size());
+  std::generate(
+      es.begin(), es.end(),
+      std::bind(nut::gen_power_law_energy<rng_t, fp_t>, alpha, ebar, rng));
+
+  bool es_passed =
+      check_same_verb(&es, &es_exp, comp_verb<fp_t>("energies", 1e-15));
+  EXPECT_TRUE(es_passed);
+  return;
+}  // test_1
+
+TEST(nut_Planck, pwr_law_reject_1000_tests_via_Mathematica)
+{
+  using nut::gen_power_law_energy;
+
+  typedef double fp_t;
+  typedef std::vector<fp_t> vf;
+  vf rns, x_rns, es_exp, rejs_exp;
+
+  // load values
+  bool const read_ok = read_input_t1(rns, x_rns, es_exp, rejs_exp);
+  if(!read_ok) {
+    std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+    EXPECT_TRUE(false);
+    return;
+  }
+
+  fp_t const e_a(0.1353352832366127);  // exp(-2)
+  fp_t const alpha(2.0);
+
+  // divide energies by ebar (= 2.0 MeV) to get xs.
+  vf xs(es_exp.size());
+  std::transform(x_rns.begin(), x_rns.end(), xs.begin(), neg_log<fp_t>);
+
+  // construct Buffer_RNG from rns
+  typedef nut::Buffer_RNG<fp_t> rng_t;
+  rng_t rng(&rns[0], rns.size());
+
+  vf rejs(rejs_exp.size());
+  std::transform(xs.begin(), xs.end(), rejs.begin(),
+                 bind(nut::pwr_law_reject<fp_t>, alpha, e_a, _1));
+
+  // accept a relative error less than 10^(-15)
+  // soft_eq_bound_tol<fp_t> seq(1e-15);
+  // bool rejs_passed = std::equal(rejs.begin(),rejs.end(),
+  //                               rejs_exp.begin(),seq);
+  soft_eq_bound_tol<fp_t> seq(1e-15);
+  bool rejs_passed = std::equal(rejs.begin(), rejs.end(), rejs_exp.begin(),
+                                bind(nut::soft_equiv<fp_t>, _1, _2, 1e-15));
+  EXPECT_TRUE(rejs_passed);
+  return;
+}  // test_2
+
+TEST(nut_Planck, gen_pwr_law_specialized_to_alpha_2_1000_tests_via_Mathematica)
+{
+  using nut::gen_power_law_energy;
+  using namespace test_aux;
+
+  typedef double fp_t;
+  typedef std::vector<fp_t> vf;
+  vf rns, x_rns, es_exp, rejs_exp;
+  fp_t const ebar(2.0);
+
+  // load values
+  bool const read_ok = read_input_t1(rns, x_rns, es_exp, rejs_exp);
+  if(!read_ok) {
+    std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+    EXPECT_TRUE(false);
+    return;
+  }
+
+  // construct Buffer_RNG from rns
+  typedef nut::Buffer_RNG<fp_t> rng_t;
+  rng_t rng(&rns[0], rns.size());
+
+  vf es(es_exp.size());
+  // std::generate(es.begin(),es.end(),pl_gen_a2<fp_t,rng_t>(ebar,rng));
+  std::generate(es.begin(), es.end(),
+                bind(nut::gen_power_law_energy_alpha2<rng_t, fp_t>, ebar, rng));
+
+  bool es_passed =
+      check_same_verb(&es, &es_exp, comp_verb<fp_t>("energies", 1e-15));
+  EXPECT_TRUE(es_passed);
+  return;
+}  // test_3
+
+TEST(nut_Planck,
+     prw_law_reject_specialized_to_alpha_2_1000_tests_via_Mathematica)
+{
+  using nut::gen_power_law_energy;
+
+  typedef double fp_t;
+  typedef std::vector<fp_t> vf;
+  vf rns, x_rns, es_exp, rejs_exp;
+
+  // load values
+  bool const read_ok = read_input_t1(rns, x_rns, es_exp, rejs_exp);
+  if(!read_ok) {
+    std::cerr << "Failed to read input file; this test SKIPPED" << std::endl;
+    EXPECT_TRUE(false);
+    return;
+  }
+
+  // divide energies by ebar (= 2.0 MeV) to get xs.
+  vf xs(es_exp.size());
+  std::transform(x_rns.begin(), x_rns.end(), xs.begin(), neg_log<fp_t>);
+
+  // construct Buffer_RNG from rns
+  typedef nut::Buffer_RNG<fp_t> rng_t;
+  rng_t rng(&rns[0], rns.size());
+
+  vf rejs(rejs_exp.size());
+  std::transform(xs.begin(), xs.end(), rejs.begin(),
+                 bind(nut::pwr_law_reject_alpha2<fp_t>, _1));
+
+  // accept a relative error less than 10^(-15)
+  soft_eq_bound_tol<fp_t> seq(1e-15);
+  bool rejs_passed = std::equal(rejs.begin(), rejs.end(), rejs_exp.begin(),
+                                bind(nut::soft_equiv<fp_t>, _1, _2, 1e-15));
+  EXPECT_TRUE(rejs_passed);
+  return;
+}  // test_4
+
+// define additional tests above here.
+
+// functors for use with older compilers without ::bind:
+namespace {
+
+// run the power law generator, wd be nice to replace with boost::bind
+template <typename fp_t, typename rng_t>
+struct pl_gen {
+  pl_gen(fp_t const alpha, fp_t const ebar, rng_t & rng)
+      : m_a(alpha), m_e(ebar), m_rng(rng)
+  {
+  }
+  fp_t operator()() { return gen_power_law_energy(m_a, m_e, m_rng); }
+  fp_t const m_a, m_e;
+  rng_t & m_rng;
+};  // pl_gen
+
+// run the power law rejection function,
+// wd be nice to replace with boost::bind
+template <typename fp_t>
+struct pl_rej {
+  pl_rej(fp_t const alpha, fp_t const e_a) : m_a(alpha), m_e(e_a) {}
+  fp_t operator()(fp_t const x) { return nut::pwr_law_reject(m_a, m_e, x); }
+  fp_t const m_a, m_e;
+};  // pl_rej
+
+// run the power law generator specialized to alpha = 2,
+// wd be nice to replace with boost::bind
+template <typename fp_t, typename rng_t>
+struct pl_gen_a2 {
+  pl_gen_a2(fp_t const ebar, rng_t & rng) : m_e(ebar), m_rng(rng) {}
+  fp_t operator()() { return gen_power_law_energy_alpha2(m_e, m_rng); }
+  fp_t const m_e;
+  rng_t & m_rng;
+};  // pl_gen
+
+// run the power law rejection function, specialized to alpha = 2
+// wd be nice to replace with boost::bind
+template <typename fp_t>
+struct pl_rej_a2 {
+  pl_rej_a2(fp_t const e_a) : m_e(e_a) {}
+  fp_t operator()(fp_t const x) { return nut::pwr_law_reject_alpha2<fp_t>(x); }
+  fp_t const m_e;
+};  // pl_rej_a2
+
+std::string const energies_tests =
+    "0.6609137635603124 0.16622586375744186 0.8282638224833981 "
+    "0.5535488457132182\n"
+    "0.22780071019014447 0.6843439077637068 2.9585682207402404 "
+    "0.8390779256243914\n"
+    "0.26399030006522795 0.6324543034525971 2.663685837375996 "
+    "0.913420837958419\n"
+    "0.8262123742778842 0.04374167687600261 0.3818068535842902 "
+    "0.1838229801289995\n"
+    "0.26999646512864905 0.728869803224909 2.6186928243711587 "
+    "0.9234518281721309\n"
+    "0.5227097988013667 0.11512459664613495 1.2974576938556928 "
+    "0.8496433585633633\n"
+    "0.1150092277776944 0.14275286490471406 4.3254858245857974 "
+    "0.45715569410603085\n"
+    "0.1387915342006616 0.1880728924436581 3.949564451120383 "
+    "0.5550771323683453\n"
+    "0.3798533598331164 0.6129562044961396 1.9359399918288385 "
+    "0.9989521812327766\n"
+    "0.215465080560457 0.8017630255229871 3.069912843461421 "
+    "0.8082297945550341\n"
+    "0.7618252213160126 0.2627322280213098 0.5440762359122474 "
+    "0.31736510983654115\n"
+    "0.15053622447964754 0.33133297927677896 3.7871030590769705 "
+    "0.600378676539\n"
+    "0.3926300659530353 0.0914660712868729 1.8697748368580345 "
+    "0.9955766450409933\n"
+    "0.37977443739699357 0.32751352659579647 1.9363555766017737 "
+    "0.9989658725370925\n"
+    "0.6463928402808625 0.5783092554633738 0.8726956962695294 "
+    "0.5878245440625935\n"
+    "0.6990123682347364 0.15311530383093674 0.7161736854413894 "
+    "0.4629514108486347\n"
+    "0.25894642371732446 0.7127285875597662 2.7022681938299664 "
+    "0.9044940334579575\n"
+    "0.3784076873744051 0.6777836811054463 1.943566253078596 "
+    "0.9991888355708892\n"
+    "0.43286978253314334 0.11303599697145539 1.6746366587774912 "
+    "0.9706992638153827\n"
+    "0.27780099737779507 0.8376235899314228 2.5617005167909963 "
+    "0.9355204502826753\n"
+    "0.46230522552776754 0.6347683862113696 1.5430598894509964 "
+    "0.940052571617313\n"
+    "0.5814073995606204 0.36995639487681453 1.084607127591802 "
+    "0.7345730487218431\n"
+    "0.32165399694025787 0.08964846734028686 2.2685577096749445 "
+    "0.9835728693331218\n"
+    "0.33690202730248653 0.9420333939261567 2.175926222135479 "
+    "0.9927149287633481\n"
+    "0.1663379398136926 0.5379499079867047 3.5874675560230207 "
+    "0.6577904639026652\n"
+    "0.3586843883819706 0.5942842377016371 2.0506248363244866 "
+    "0.9993700908634281\n"
+    "0.5270061395688213 0.801643786187527 1.281086160945844 0.842009519169053\n"
+    "0.23897124322389507 0.30608320061808736 2.8628241110574804 "
+    "0.8645887712129245\n"
+    "0.18552401616035197 0.19032584418645526 3.369141876286179 "
+    "0.7217185141101233\n"
+    "0.2870627049586205 0.6897982593723746 2.4961092058206593 "
+    "0.9484396075422028\n"
+    "0.46310135469343905 0.20969197783038096 1.539618680455523 "
+    "0.9390904390140201\n"
+    "0.21882442160847337 0.6079323048910759 3.0389711970728985 "
+    "0.8169090714728462\n"
+    "0.3434628757459015 0.47449530261567974 2.137352499183114 "
+    "0.9954991255632534\n"
+    "0.4447000122404372 0.02406106531068719 1.6207107078806597 "
+    "0.959564689511806\n"
+    "0.09964923553692273 0.0035302891443045326 4.612197807667431 "
+    "0.39020494173513093\n"
+    "0.24608456286071978 0.47895654408367583 2.8041601013048654 "
+    "0.879636669441823\n"
+    "0.32779324945490873 0.31801506390367895 2.2307444127432343 "
+    "0.9877080907648815\n"
+    "0.44408913679811324 0.3615341739749556 1.62345995628981 "
+    "0.9601795094420208\n"
+    "0.13965888652634018 0.5400312322458991 3.9371047086833943 "
+    "0.5584959821671323\n"
+    "0.7295213857419345 0.13133850756130516 0.6307331916658107 "
+    "0.39110772995663234\n"
+    "0.2752082208891049 0.036145076439255686 2.5804546019046293 "
+    "0.931631627749572\n"
+    "0.3314755857094327 0.7376634193124634 2.208402240007417 "
+    "0.9898933888841178\n"
+    "0.30212099934958725 0.2742111417808313 2.3938553635042417 "
+    "0.9662435576300886\n"
+    "0.5845886774069557 0.4152048807430131 1.0736935891912154 "
+    "0.7277638706094599\n"
+    "0.5507723967999982 0.6833433112646452 1.1928672562512386 "
+    "0.7973656828717344\n"
+    "0.1608738417454425 0.07534345772421691 3.654269625618587 "
+    "0.638411960478847\n"
+    "0.16055549675611513 0.2735320198702855 3.658231243993559 "
+    "0.6372673069765319\n"
+    "0.47445049216083546 0.8892498674433089 1.4911960064674297 "
+    "0.9246561005116759\n"
+    "0.5660091630397563 0.5564940367905742 1.1382900235876383 "
+    "0.766799384342186\n"
+    "0.23443440495217427 0.5241664754174997 2.9011589064880607 "
+    "0.8545051859773318\n"
+    "0.2595156143074959 0.0887819451480063 2.6978768148891694 "
+    "0.9055244698965367\n"
+    "0.33509657900745715 0.4454796836491024 2.186672986323195 "
+    "0.9918286299352665\n"
+    "0.5726664624932474 0.2883588269046937 1.1149036432742192 "
+    "0.7530210933068884\n"
+    "0.4272784448719982 0.3911088709452948 1.7006387651131516 "
+    "0.975382792942426\n"
+    "0.33026296551086975 0.5010301645916202 2.215732153331302 "
+    "0.9891980346321837\n"
+    "0.8329838152250271 0.06561612450978616 0.3654821330116356 "
+    "0.1712120788926185\n"
+    "0.2895007422529541 0.33291284868584814 2.4791948361177765 "
+    "0.9515895253484257\n"
+    "0.32951712761464136 0.717710545694237 2.220253891538909 "
+    "0.9887585201424252\n"
+    "0.23507241932627143 0.2978704501213323 2.8957232899318917 "
+    "0.8559461538084171\n"
+    "0.43431324120605463 0.739136636579389 1.6679785025796792 "
+    "0.9694290080761189\n"
+    "0.9186350376674175 0.03954648347813672 0.16973273070772663 "
+    "0.04491032322996006\n"
+    "0.2641331826173061 0.4067071146753365 2.662603646863743 "
+    "0.9136670145166171\n"
+    "0.6375953727567025 0.5310288188672128 0.900102817629855 "
+    "0.6084200648173079\n"
+    "0.20291821878740057 0.7084968206590772 3.189904488455499 "
+    "0.7739740765951401\n"
+    "0.7484697103550091 0.3425374072499039 0.5794490861376933 "
+    "0.34746254501915025\n"
+    "0.25424345288291494 0.5677846100481876 2.738925990182711 "
+    "0.8957547563005583\n"
+    "0.6523569178128024 0.29158000096886005 0.8543268937536891 "
+    "0.5737829944458426\n"
+    "0.3857146176815265 0.04802862168996591 1.9053150307791817 "
+    "0.9976880156517558\n"
+    "0.5133632986898977 0.8025772834332063 1.3335429997500847 "
+    "0.8657503070239271\n"
+    "0.13199360510189773 0.19179335662869512 4.050003607534132 "
+    "0.5278926000726569\n"
+    "0.9422984305463107 0.007052273940173492 0.11886649865420124 "
+    "0.02317527245629665\n"
+    "0.36901598625585286 0.0010588137353810811 1.9938306253868778 "
+    "0.9999904651364873\n"
+    "0.8605747841479658 0.08640432990869562 0.30030951864599736 "
+    "0.12337989644598821\n"
+    "0.359477381601222 0.6134027887890761 2.046208040139098 0.99947442441955\n"
+    "0.6186439422754006 0.2568505192451027 0.9604507724291836 "
+    "0.6521698572206203\n"
+    "0.8369950791731957 0.09917093231757867 0.35587417526792664 "
+    "0.16389576407851292\n"
+    "0.4137940798682136 0.6583320553862029 1.7647736410394832 "
+    "0.9850891490619266\n"
+    "0.47264720153593065 0.35199694239378276 1.4988120858478662 "
+    "0.9270379796194546\n"
+    "0.6324063005428968 0.19683848283702932 0.9164464215772862 "
+    "0.6204910308508224\n"
+    "0.26195153513718883 0.5173221490596316 2.6791915454488646 "
+    "0.9098680110133246\n"
+    "0.3890782384457945 0.9686220496425959 1.8879496569540497 "
+    "0.9967440991423421\n"
+    "0.7298809573655096 0.26892401100693997 0.6297476604788855 "
+    "0.39027089472996007\n"
+    "0.2947476227232775 0.12020721890402553 2.4432716099948566 "
+    "0.9580167266732739\n"
+    "0.32664700538655844 0.38815918111818126 2.237750370778286 "
+    "0.9869828584985803\n"
+    "0.21201320088313214 0.22561986115139554 3.1022134758641093 "
+    "0.7990944941849021\n"
+    "0.7706108846903703 0.060883789159070556 0.5211434438695494 "
+    "0.2979297057686321\n"
+    "0.565447808508039 0.30910564498210036 1.1402745606646725 "
+    "0.7679499097885152\n"
+    "0.3532494209793362 0.004832022139316106 2.0811617930863147 "
+    "0.9983977151214876\n"
+    "0.5078099364317945 0.024976266008889025 1.3552960845882236 "
+    "0.8749832290894493\n"
+    "0.49060138911221807 0.4791877181708639 1.4242466314119029 "
+    "0.9018969567214669\n"
+    "0.4420369576730412 0.588510630936284 1.6327235715101178 "
+    "0.9622135319448843\n"
+    "0.3994549368908278 0.35556186162496495 1.8353086378189247 "
+    "0.9928480237641654\n"
+    "0.45252221735825193 0.012190760429861225 1.5858368358264416 "
+    "0.9513181624746795\n"
+    "0.5438777974463502 0.4936907594020936 1.2180613888160507 "
+    "0.8107183185744724\n"
+    "0.3009745265013526 0.32501285569793814 2.401459294756315 "
+    "0.9650257715145872\n"
+    "0.2657929019564047 0.16148312042288926 2.650075675025034 "
+    "0.9164996040397244\n"
+    "0.10117697873133857 0.11820497318377332 4.581768061797682 "
+    "0.39697082237773146\n"
+    "0.3185859971941676 0.81200596279816 2.2877256670523054 "
+    "0.9812738572675825\n"
+    "0.6872190807718253 0.3419260061888292 0.7502042854631464 "
+    "0.49099658597021584\n"
+    "0.25635241645979234 0.6706160989228911 2.722404308776919 "
+    "0.8997234721243773\n"
+    "0.3209812448630349 0.9202863659199316 2.272745169554035 "
+    "0.9830820656870942\n"
+    "0.5921059426340938 0.37545432522623523 1.048139405913734 "
+    "0.7114852652319167\n"
+    "0.44151311423225437 0.2111153347863377 1.6350951111379122 "
+    "0.9627249526934978\n"
+    "0.3189474960881462 0.13456650463737585 2.285457557617863 "
+    "0.9815528485196612\n"
+    "0.3391973301363529 0.9509136184911395 2.162346492311293 "
+    "0.9937665975146538\n"
+    "0.17569366386235585 0.23633925329491268 3.478026693382321 "
+    "0.6897742748222694\n"
+    "0.6200390769019932 0.4323069575371359 0.9559455513357096 "
+    "0.6489831297092655\n"
+    "0.2413767247720573 0.8069905770058026 2.8427927852943013 "
+    "0.8697814913441869\n"
+    "0.20476330196707937 0.41802599392241246 3.1718011829740633 "
+    "0.7791931653993246\n"
+    "0.5429724241068947 0.24528697878692673 1.2213934893425935 "
+    "0.812448275399015\n"
+    "0.16075179389680794 0.005538855460311964 3.6557875127639834 "
+    "0.6379733227644254\n"
+    "0.38288456522564807 0.4742342341819019 1.9200434630163175 "
+    "0.9983591690435565\n"
+    "0.10162908432227624 0.234386651581048 4.572851043577329 "
+    "0.39896895886583567\n"
+    "0.20626322171835154 0.5349203675948024 3.1572043010418107 "
+    "0.7833898455438448\n"
+    "0.8264982774352674 0.15865204450100845 0.38111489178217123 "
+    "0.18328406808696812\n"
+    "0.13614705187348553 0.5417995736984718 3.9880394272301882 "
+    "0.5445833286483233\n"
+    "0.5429984610543066 0.5788664560192618 1.2212975864126987 "
+    "0.8123986023810619\n"
+    "0.6945356757066072 0.20554484564874986 0.729023498398148 "
+    "0.4735884956346474\n"
+    "0.2671473465037397 0.8216171475055691 2.6399098264716185 "
+    "0.918774402998673\n"
+    "0.7700276716898335 0.13576606725536222 0.5226576550412225 "
+    "0.2992101130360641\n"
+    "0.13927524931658275 0.478472471785367 3.9426061859479007 "
+    "0.5569852053231215\n"
+    "0.5491693112887166 0.2229949552504058 1.1986969711698745 "
+    "0.8004981053677879\n"
+    "0.5846397136888399 0.19649479273549808 1.073518991029538 "
+    "0.7276542359186378\n"
+    "0.4965303762174431 0.5558023963532273 1.4002212333371755 "
+    "0.8929228477281924\n"
+    "0.24162130719778707 0.7774825372864549 2.8407672495326923 "
+    "0.8703035129558749\n"
+    "0.21528809146615102 0.7062045703030695 3.0715563749848998 "
+    "0.8077667444420099\n"
+    "0.24949550311892743 0.244407909482536 2.7766287750488465 "
+    "0.8865231018280912\n"
+    "0.17923762243965857 0.5338251300748467 3.4380857076542806 "
+    "0.7014887641537185\n"
+    "0.18518662147093856 0.08103368282832557 3.3727823953144753 "
+    "0.7206507355174293\n"
+    "0.09640861514718724 0.03583807674761075 4.6783194252240605 "
+    "0.3757858334291186\n"
+    "0.5046587787813166 0.6147741942401403 1.3677455273334231 "
+    "0.8801065311411861\n"
+    "0.07744089248866137 0.14925910818836585 5.116480622349984 "
+    "0.29000957625804846\n"
+    "0.6549321222498137 0.24522739173355568 0.8464473577396333 "
+    "0.5677033579445607\n"
+    "0.3170310483778549 0.6983325294390934 2.29751113098292 "
+    "0.9800490554554994\n"
+    "0.29340183620737204 0.6793576269535113 2.4524243098346763 "
+    "0.9564138406429281\n"
+    "0.18715262012663691 0.5036506155714777 3.3516616891747417 "
+    "0.7268438935892249\n"
+    "0.6426143796837751 0.4399897600645446 0.8844209104056509 "
+    "0.5966887580302698\n"
+    "0.3812918460430219 0.039036736056954124 1.9283803939417437 "
+    "0.9986870605777531\n"
+    "0.41802440529710316 0.6501490309196574 1.744430924567065 "
+    "0.9822901791060484\n"
+    "0.31790500773621444 0.9125004031498827 2.2920053172753176 "
+    "0.9807424022113256\n"
+    "0.5389850182245486 0.2343022581555434 1.2361350079224143 "
+    "0.8200006029000169\n"
+    "0.21335018839834063 0.17008029584255757 3.0896407726005686 "
+    "0.8026588697293702\n"
+    "0.27187157056870537 0.2814770690755768 2.60485098243782 "
+    "0.9264507374149126\n"
+    "0.6135516596551098 0.6028806718591739 0.9769816271187851 "
+    "0.6637492387746812\n"
+    "0.46809538810851836 0.7073495622796409 1.5181663661768379 "
+    "0.9329028686055575\n"
+    "0.21984100877321167 0.6657618359724984 3.029701362577371 "
+    "0.8194944815201824\n"
+    "0.2703215733589379 0.9110088672565655 2.6162860324718324 "
+    "0.9239762980816048\n"
+    "0.666080374708266 0.08355010142013142 0.812689865956361 "
+    "0.5412924090256058\n"
+    "0.4604276028244476 0.5913486855388965 1.551199299850788 "
+    "0.9422949775277137\n"
+    "0.4704841194063418 0.008882554296252732 1.507986146232937 "
+    "0.9298515381628907\n"
+    "0.36522488336389003 0.4888970100470629 2.0144839926354687 "
+    "0.9999478066956786\n"
+    "0.3828975901995775 0.855811549249279 1.9199754281380514 "
+    "0.9983563392604453\n"
+    "0.3812684785290896 0.3868924811872738 1.928502967924085 "
+    "0.9986916029459196\n"
+    "0.14177579066686774 0.5486965470232712 3.9070168163688095 "
+    "0.5667919708430489\n"
+    "0.3463328274192059 0.539472443251523 2.1207100746487004 "
+    "0.9965036377420988\n"
+    "0.4596208124540273 0.347927259260558 1.5547069003805751 "
+    "0.9432469225243589\n"
+    "0.36888846008964116 0.7012960010836982 1.994521913632194 "
+    "0.9999924839429571\n"
+    "0.19420445703858724 0.5955186272357844 3.277687545246305 "
+    "0.7484838946087149\n"
+    "0.5592991668511444 0.7509251201695071 1.162141533567105 "
+    "0.7804325284966689\n"
+    "0.4908488052449591 0.1782946734595896 1.4232382617996506 "
+    "0.901528935121245\n"
+    "0.648109757124157 0.2761628614576217 0.8673904373894467 "
+    "0.5837882528148745\n"
+    "0.5402005518695732 0.0684634528315009 1.2316296320436477 "
+    "0.8177099414922038\n"
+    "0.22680227096377026 0.7565703824904209 2.9673533882218006 "
+    "0.8366856316887148\n"
+    "0.340250054369706 0.8960104438759695 2.156148955314339 "
+    "0.9942209258230394\n"
+    "0.5170730421051637 0.15708125995649413 1.3191422675705071 "
+    "0.8594409386124215\n"
+    "0.34338093022118543 0.4248264193148412 2.137829728645725 "
+    "0.9954685462881981\n"
+    "0.5495568961759396 0.3884086025285498 1.1972859375541598 "
+    "0.7997422860957677\n"
+    "0.10957986634338601 0.2703880052664347 4.422203245179681 "
+    "0.43377838063980995\n"
+    "0.797405333043032 0.19281368546479305 0.45278431203465513 "
+    "0.24080748752103462\n"
+    "0.4736652875025116 0.6713627919516749 1.4945087024679935 "
+    "0.9256972773013964\n"
+    "0.24675095334165342 0.061771232190982905 2.7987514741653654 "
+    "0.8809988098293844\n"
+    "0.6652272175060856 0.03264620973216581 0.8152532324509583 "
+    "0.5433179472204888\n"
+    "0.2398947349747238 0.8309333674476351 2.8551101122542364 "
+    "0.8665949022066682\n"
+    "0.4221829689108849 0.7705077697250349 1.7246329665893254 "
+    "0.9793180489107924\n"
+    "0.2672148862106958 0.6831972954708643 2.6394042540102367 "
+    "0.9188869719386231\n"
+    "0.3918018930682088 0.105976826439109 1.873997883525142 "
+    "0.9958644392894961\n"
+    "0.33935921525789015 0.3771544962526381 2.1613922011725077 "
+    "0.9938376069215539\n"
+    "0.34858235637613744 0.11465261535576277 2.1077615199644026 "
+    "0.9972010300221135\n"
+    "0.20395520967380532 0.5525868308602491 3.1797097393347236 "
+    "0.776915047102807\n"
+    "0.4370809704912795 0.5052590757440654 1.6552736277693887 "
+    "0.9669240479996691\n"
+    "0.47708581342123035 0.45969245259687175 1.4801178038473908 "
+    "0.9211164598592995\n"
+    "0.6477941526014348 0.12107017649527552 0.8683645976696751 "
+    "0.5845305824516062\n"
+    "0.3170808085417418 0.5030064117857485 2.2971972421101854 "
+    "0.9800888733832053\n"
+    "0.5197651998784414 0.3559211221734542 1.3087562161525275 "
+    "0.8547928573388867\n"
+    "0.6061123175945842 0.4715579100655556 1.001379935042627 "
+    "0.6805075728792896\n"
+    "0.1830738288825129 0.710662617614471 3.3957315419657648 "
+    "0.7139177817165241\n"
+    "0.17228103397776673 0.4287209508473171 3.5172564341716983 "
+    "0.6782846318789215\n"
+    "0.1083782521388521 0.3925848178422975 4.444255672260068 "
+    "0.42855969927863985\n"
+    "0.12682327206097033 0.09029342579631483 4.129921440430752 "
+    "0.5067694911496673\n"
+    "0.5423169712607636 0.6369394500965759 1.2238092613150104 "
+    "0.8136972238399359\n"
+    "0.49412879740361726 0.011299367971009833 1.4099181445751463 "
+    "0.8965966287813435\n"
+    "0.6323622831561939 0.08470665081917139 0.9165856324567718 "
+    "0.6205931546237975\n"
+    "0.8059234653550644 0.14254736208316543 0.43153299423856756 "
+    "0.2234315959825278\n"
+    "0.617697491707502 0.43153798650379294 0.9635128739709306 "
+    "0.6543282813713992\n"
+    "0.5010540454936894 0.8263724584634593 1.3820826169569644 "
+    "0.8858621126810183\n"
+    "0.3161065188709822 0.9258391766658949 2.303352074321735 "
+    "0.9793017469730645\n"
+    "0.24657945899755385 0.6961666402251825 2.800141977136341 "
+    "0.8806490432439866\n"
+    "0.1547542049041537 0.3071397717973139 3.7318343910930034 "
+    "0.6161105058241003\n"
+    "0.5112528638291449 0.8086148792371481 1.3417819400380304 "
+    "0.869289360566868\n"
+    "0.6711009179419223 0.07145476513596671 0.7976715080039557 "
+    "0.5293620430062955\n"
+    "0.36453234490769293 0.4830747916988396 2.018279987452743 "
+    "0.9999169695313822\n"
+    "0.636318161112517 0.4818355955652094 0.9041131748108514 "
+    "0.6113968619928684\n"
+    "0.6965411648373692 0.29737937523463054 0.7232567701722309 "
+    "0.46882154683140753\n"
+    "0.4031587639194405 0.935207580486797 1.816849678960631 "
+    "0.9911038779634255\n"
+    "0.2176176562400638 0.09015752741671035 3.0500312529659404 "
+    "0.8138152216288722\n"
+    "0.16393281223028167 0.029727801965289347 3.6165972332460274 "
+    "0.649323382368683\n"
+    "0.18235502896322986 0.03978766662065114 3.403599566954921 "
+    "0.7116089168587155\n"
+    "0.29749265114314527 0.041086025150465 2.4247315126828015 "
+    "0.9611889510676459\n"
+    "0.550689153016285 0.7672453883458521 1.1931695592554084 "
+    "0.7975287479250442\n"
+    "0.11702777061722447 0.10233199805000726 4.290688033292032 "
+    "0.4657584192947661\n"
+    "0.43397703623100736 0.5656429905038025 1.6695273163834758 "
+    "0.9697270945073305\n"
+    "0.09306705248890879 0.2949526938199327 4.748870102232317 "
+    "0.3608290313211643\n"
+    "0.4087519131179831 0.7244523669612244 1.7892937527413184 "
+    "0.9881249388037561\n"
+    "0.3229982867728405 0.4424613427259707 2.2602165197648008 "
+    "0.9845312365342532\n"
+    "0.8356055161735074 0.05402545811986115 0.3591972957385141 "
+    "0.1664169988672544\n"
+    "0.600843776648587 0.12870687295012617 1.0188406345151726 "
+    "0.6922526425433226\n"
+    "0.14327681378217139 0.5081076696947004 3.8859535183562937 "
+    "0.5726325165827917\n"
+    "0.26301982181016914 0.7664113813662938 2.671051763089805 "
+    "0.9117390155731131\n"
+    "0.6043828817951546 0.24965757229414698 1.0070947432533603 "
+    "0.6843746917212791\n"
+    "0.8828583412605084 0.0885382752768138 0.2491810403436396 "
+    "0.08940071888942772\n"
+    "0.12648564064660284 0.18146471199913572 4.135252979865379 "
+    "0.5053771344648385\n"
+    "0.21205784091634716 0.10786089919815312 3.10179241402324 "
+    "0.7992140352314333\n"
+    "0.525141123329341 0.6905406317583689 1.2881764923417258 "
+    "0.8453406807084818\n"
+    "0.6907308960554386 0.15649034731357547 0.740009944750978 "
+    "0.48263837395752784\n"
+    "0.7250501954838944 0.04752587037095424 0.6430287827478111 "
+    "0.4015373479286264\n"
+    "0.26260942452491776 0.894263712064765 2.67417485695497 "
+    "0.9110226839945271\n"
+    "0.31023071476590247 0.5310817085856487 2.340878034265496 "
+    "0.9742179613347361\n"
+    "0.6180078059682939 0.06388392836743573 0.9625083811751204 "
+    "0.6536209043276202\n"
+    "0.3854097395225582 0.8755000287175045 1.9068965042315806 "
+    "0.9977657416000753\n"
+    "0.506174811341731 0.8352045676785169 1.361746384796305 "
+    "0.8776522968798202\n"
+    "0.6575973913619475 0.3090398881240424 0.8383248043100985 "
+    "0.5614017581490716\n"
+    "0.7006177549963448 0.3347358132191691 0.7115856519631361 "
+    "0.45914051356433255\n"
+    "0.21135271314081905 0.5339080687555422 3.1084538297167255 "
+    "0.797321489153393\n"
+    "0.47176702248193414 0.7351401743841388 1.502540023383968 "
+    "0.9281885994861705\n"
+    "0.536590148091703 0.7818491639806819 1.245041402065975 "
+    "0.8244834622352357\n"
+    "0.2800422164899883 0.8500708142269306 2.545629827998982 "
+    "0.9387857471505018\n"
+    "0.5708494739331813 0.2785439949134638 1.1212594448204551 "
+    "0.7568057297267308\n"
+    "0.44000059144413983 0.7829711052963078 1.6419584157590135 "
+    "0.9641837348844032\n"
+    "0.6951684545596251 0.46273366416432826 0.7272021642509215 "
+    "0.4720841405851406\n"
+    "0.10963442583830907 0.3428110474315451 4.421207698849073 "
+    "0.43401496132966755\n"
+    "0.6944832230425142 0.11154659486829965 0.729174547931499 "
+    "0.4737132061020115\n"
+    "0.6772147152774581 0.40319903134039525 0.7795337987411098 "
+    "0.5148155366814166\n"
+    "0.17254118335534008 0.45059365408416885 3.514238653833259 "
+    "0.6791676941090422\n"
+    "0.4112407063527639 0.5501995698198565 1.7771531513844376 "
+    "0.9866676232059635\n"
+    "0.2791003303218258 0.6047076843662507 2.5523679098311343 "
+    "0.937424338327077\n"
+    "0.057473758842105704 0.044618277450027 5.712853606619528 "
+    "0.1991472738998832\n"
+    "0.5286892154950311 0.4884904077407941 1.2747090282091458 "
+    "0.8389807552210188\n"
+    "0.4978317461943156 0.8702210594214881 1.3949862361845398 "
+    "0.8909103267772236\n"
+    "0.2540047368282792 0.12611587413193148 2.7408047264145132 "
+    "0.8953004296641527\n"
+    "0.7194588833222779 0.23311890906802768 0.6585118009386088 "
+    "0.41463700174994134\n"
+    "0.6114268695472027 0.2332439134759554 0.9839198458326367 "
+    "0.6685554811290882\n"
+    "0.5835038254129967 0.2517051967122341 1.0774085425986033 "
+    "0.7300913735329224\n"
+    "0.6679772480258197 0.031218727171791638 0.8070023317342564 "
+    "0.5367868795923165\n"
+    "0.5952161445529178 0.6012733900171676 1.037661342492489 "
+    "0.7046762793328281\n"
+    "0.5812470110715175 0.4083923567265779 1.0851589286726857 "
+    "0.7349150378720666\n"
+    "0.43183557163174946 0.26075075455958663 1.6794207688309446 "
+    "0.9715940333422555\n"
+    "0.39057899958729747 0.29568607519108814 1.8802500529647344 "
+    "0.99627210163279\n"
+    "0.19385814071152985 0.23193658950829632 3.281257241692219 "
+    "0.7474422052351897\n"
+    "0.5859660586938693 0.40892819894629895 1.0689868228004 "
+    "0.7248006892465924\n"
+    "0.36838806694285187 0.45150463795793416 1.997236733406192 "
+    "0.9999980893311577\n"
+    "0.4734806054889509 0.5468942222543776 1.4952886541830053 "
+    "0.9259412609470778\n"
+    "0.35072761964727817 0.1317321171781427 2.095490738341345 "
+    "0.9977928770018115\n"
+    "0.22371707711141675 0.28445935657878807 2.9947461481100395 "
+    "0.8291770547109472\n"
+    "0.18193390699947343 0.336092343451887 3.4082236124284297 "
+    "0.7102519363427318\n"
+    "0.44374605856104044 0.5416380118967783 1.625005640695846 "
+    "0.9605229263559321\n"
+    "0.26366780514272703 0.02304821876540286 2.6661305640615005 "
+    "0.9128638470252701\n"
+    "0.2580361224665968 0.8369543752483293 2.709311388600981 "
+    "0.9028338459101853\n"
+    "0.25534654686856495 0.23459301627154816 2.7302672982213294 "
+    "0.8978406936834815\n"
+    "0.39151996207768125 0.33690442726093317 1.8754375522939848 "
+    "0.9959602552400495\n"
+    "0.3132452108760484 0.4833500983139698 2.3215379476541296 "
+    "0.9768984629421998\n"
+    "0.25688480304276173 0.08583466153622243 2.718255063525865 "
+    "0.9007125404545089\n"
+    "0.6228776734539747 0.41271655108214467 0.9468102605404269 "
+    "0.642481182668599\n"
+    "0.6975737555318939 0.27390382623188425 0.720294056357851 "
+    "0.4663681688131764\n"
+    "0.273553368868227 0.5619171798818496 2.5925170863653118 "
+    "0.929086954998428\n"
+    "0.25249673444958654 0.1249830224469044 2.752713926446555 "
+    "0.8924063749769574\n"
+    "0.713043774520542 0.09950462859440123 0.6764249312259145 "
+    "0.4297348449199213\n"
+    "0.3306924157780624 0.22850974927670276 2.213133186201097 "
+    "0.9894470159090041\n"
+    "0.2944484022459415 0.7813626463502352 2.445302991676872 "
+    "0.9576630584964003\n"
+    "0.6073139925442326 0.553871763678456 0.9974186715280796 "
+    "0.6778140004233422\n"
+    "0.44871680518510026 0.16750551987233386 1.602726627296118 "
+    "0.9554160808709864\n"
+    "0.39640507677951886 0.6134266332500506 1.8506373387891903 "
+    "0.9941456782390539\n"
+    "0.16244845767320482 0.28972727774104245 3.63478902215039 "
+    "0.6440484994451641\n"
+    "0.07540355695964673 0.0514662326897668 5.169801661099572 "
+    "0.28071162742887756\n"
+    "0.4544338366347427 0.33362302171327674 1.5774058998449665 "
+    "0.9491988779257196\n"
+    "0.3428009036773445 0.7683393425544569 2.141210912194076 "
+    "0.9952490798248158\n"
+    "0.7594038513792887 0.16857010642523473 0.5504431191781345 "
+    "0.3227746787810419\n"
+    "0.6131231654640428 0.25324821089619265 0.9783788815491228 "
+    "0.6647197194298665\n"
+    "0.6213953739603191 0.6060963272217008 0.9515754531899281 "
+    "0.6458794473086893\n"
+    "0.3818970912305153 0.4578411231112245 1.9252082027066861 "
+    "0.9985667026094791\n"
+    "0.6568534099351948 0.3520079119804298 0.8405888114694849 "
+    "0.5631616857967499\n"
+    "0.5279230909520789 0.5119465981484619 1.277609333922177 "
+    "0.8403620672199431\n"
+    "0.6304318892309637 0.5347981549822192 0.922700312017731 "
+    "0.6250671183707205\n"
+    "0.39328377991236363 0.11452007690607524 1.8664476828014946 "
+    "0.9953428133736012\n"
+    "0.5640813093423771 0.22206509643270222 1.1451137447485134 "
+    "0.7707431028014127\n"
+    "0.5223648455764576 0.6040886331005799 1.298777994713789 "
+    "0.8502501155504597\n"
+    "0.09597916753967373 0.27766376818324345 4.6872482317166275 "
+    "0.37386846762685133\n"
+    "0.16526525405613635 0.5166487232629058 3.6004069910950958 "
+    "0.6540263957228202\n"
+    "0.8062643287801914 0.06498932608155972 0.4306872777992146 "
+    "0.22274499311299045\n"
+    "0.34144553110562037 0.6772788984284075 2.1491342233025117 "
+    "0.9947155759384603\n"
+    "0.638539823365929 0.3220885584959785 0.8971424705301742 "
+    "0.6062165395938784\n"
+    "0.29619229215703347 0.6106835306725835 2.4334927998286577 "
+    "0.9597024620561747\n"
+    "0.1835657165939144 0.532873466073581 3.3903650940461083 "
+    "0.7154924520327847\n"
+    "0.19907493640740048 0.42558588092381266 3.228147920558178 "
+    "0.7629024285805402\n"
+    "0.2767413275052162 0.4688841854626864 2.5693440896245145 "
+    "0.9339455368592481\n"
+    "0.20209594004069564 0.04680281678225784 3.1980254872756024 "
+    "0.7716280233422724\n"
+    "0.37049017272054185 0.7182504359999262 1.98585671793756 "
+    "0.9999497561382824\n"
+    "0.6466262143277279 0.5681684166124419 0.8719737454256722 "
+    "0.5872762042264149\n"
+    "0.24982813824538064 0.8647040995767628 2.773964089076835 "
+    "0.8871832722593439\n"
+    "0.2890925868791909 0.30309205817876506 2.482016544705938 "
+    "0.9510694406414443\n"
+    "0.5022243020002064 0.3369628578393933 1.3774168846996013 "
+    "0.8840060248357265\n"
+    "0.30597824089390935 0.06951117511588079 2.3684825754958045 "
+    "0.9701758226545515\n"
+    "0.3940190812399331 0.2879202828548668 1.8627118826277964 "
+    "0.9950727895466405\n"
+    "0.5482542357431395 0.06660318746194172 1.2020323315606107 "
+    "0.8022787002755374\n"
+    "0.4051446483490111 0.4412993372835423 1.807022238446915 "
+    "0.9900934336996021\n"
+    "0.16522100354597158 0.024772691209649977 3.6009425717361823 "
+    "0.6538706960672485\n"
+    "0.3618146792520547 0.9797362162218042 2.033246268016051 "
+    "0.9997267333799775\n"
+    "0.4425977441682152 0.6306770356335343 1.6301878963026013 "
+    "0.9616625269375522\n"
+    "0.2818853781497477 0.8047186384902159 2.5325095022667106 "
+    "0.9414044294422383\n"
+    "0.5756305415101131 0.30453730212691577 1.1045784901481654 "
+    "0.7468094296646075\n"
+    "0.7500882634374677 0.30358096139040414 0.5751287895855559 "
+    "0.3437826291097357\n"
+    "0.5441032220081357 0.6583557333005436 1.2172326075745388 "
+    "0.8102867243082327\n"
+    "0.16214551375660124 0.2552819132407884 3.638522227708448 "
+    "0.6429673374265197\n"
+    "0.8058586174400828 0.06798699972320521 0.431693928934911 "
+    "0.22356229712918033\n"
+    "0.4313098025036397 0.8500956097611916 1.681857295556996 "
+    "0.9720439835199018\n"
+    "0.1309278643254317 0.3486351301392765 4.066217522901839 "
+    "0.5235695192470797\n"
+    "0.31487991630441825 0.6126501029420957 2.311127861839602 "
+    "0.9782882595621627\n"
+    "0.3490259531729505 0.3280677892630883 2.105217990304392 "
+    "0.9973292615841507\n"
+    "0.34522964842320847 0.002991785336689423 2.1270908715847527 "
+    "0.9961327807114091\n"
+    "0.7121917541231195 0.3089108123526829 0.678816172481964 "
+    "0.4317448996610656\n"
+    "0.27898890464995985 0.02369230666943767 2.5531665324625283 "
+    "0.9372622426841789\n"
+    "0.5310259008543288 0.6530362919982615 1.265888962852676 "
+    "0.8347407358306297\n"
+    "0.41230178889786195 0.09964781990208804 1.7719994009058655 "
+    "0.98602188011612\n"
+    "0.20492019598054156 0.16134328115092678 3.1702693270714626 "
+    "0.7796340803042755\n"
+    "0.5986263989682854 0.49209727788564206 1.026235166705461 "
+    "0.697163253725135\n"
+    "0.2695349541934413 0.5097754814817965 2.622114393764463 "
+    "0.9227040554312789\n"
+    "0.7685865523278481 0.17323133549528347 0.5264041946504727 "
+    "0.3023801081843318\n"
+    "0.5109427281291725 0.6731317756431059 1.342995546169493 "
+    "0.8698063268972712\n"
+    "0.6447159574279766 0.08848651944065211 0.8778908705220883 "
+    "0.5917617323245244\n"
+    "0.9279566093783265 0.013453048410467572 0.14954060884901896 "
+    "0.035571534493524834\n"
+    "0.18185054863574335 0.025567481862142083 3.4091401811701423 "
+    "0.7099829552987263\n"
+    "0.4745500545454817 0.2768092565276177 1.4907763549283148 "
+    "0.9245236377161286\n"
+    "0.38658953409197094 0.013094810553849756 1.9007835684908074 "
+    "0.9974577187256728\n"
+    "0.26704734646073236 0.7793189541917895 2.6406586174685525 "
+    "0.9186075814373955\n"
+    "0.389342795213665 0.9885845349173503 1.8865902035651152 "
+    "0.9966631641275195\n"
+    "0.5696251529029075 0.21381389117841154 1.1255535219416293 "
+    "0.7593457932586928\n"
+    "0.2814991749365967 0.8608991013450764 2.535251524720325 "
+    "0.9408607040994761\n"
+    "0.5285612460869962 0.5725402501453203 1.2751931875008558 "
+    "0.8392117881248231\n"
+    "0.06912762672262973 0.04319985667524073 5.343601640515116 "
+    "0.2520579591328688\n"
+    "0.5460585227383055 0.006741237487545293 1.2100582489573788 "
+    "0.80652884701105\n"
+    "0.8760500112193126 0.018580931480307594 0.26466419848467426 "
+    "0.09930638362464635\n"
+    "0.33664419270386814 0.7190294396143575 2.1774574287761164 "
+    "0.9925915470844645\n"
+    "0.15967243248127683 0.1062500349477642 3.66926171863516 "
+    "0.6340831832643723\n"
+    "0.4668221955717371 0.5918598489615419 1.5236136626918615 "
+    "0.9345051156427574\n"
+    "0.5961589210451541 0.014879055090024407 1.0344960028232209 "
+    "0.7026041340072657\n"
+    "0.23653416741994704 0.5193053342041056 2.8833252207296263 "
+    "0.859219255473647\n"
+    "0.3598174453240255 0.6820500274131385 2.0443169449419107 "
+    "0.9995162538749102\n"
+    "0.41052048524105644 0.09779691912980315 1.780658896379384 "
+    "0.9870976257194934\n"
+    "0.33806660461161986 0.6626033345043729 2.169024695695906 "
+    "0.9932590014039788\n"
+    "0.6063536993123051 0.10336461372097516 1.0005836018916965 "
+    "0.67996693996873\n"
+    "0.4014002778375516 0.08507832630649559 1.8255923008977186 "
+    "0.9919548405393053\n"
+    "0.1453227697572188 0.1179728371672133 3.8575960241993155 "
+    "0.5805368560302725\n"
+    "0.16804654024981325 0.4172185576008016 3.567028625293586 "
+    "0.6637450768305915\n"
+    "0.7875307626235906 0.19768255289070913 0.477705690792619 "
+    "0.26144771883839746\n"
+    "0.42258274382466765 0.5003096565379934 1.7227400159754476 "
+    "0.9790209224658409\n"
+    "0.7850877933998024 0.14871099974180724 0.4839194574546995 "
+    "0.26663158330700726\n"
+    "0.19646288189516703 0.5201517571255159 3.2545635234475165 "
+    "0.7552235056363411\n"
+    "0.052448384711863305 0.1438986517391707 5.895851482674704 "
+    "0.17663886990100405\n"
+    "0.7420844503594022 0.20729286073077957 0.5965844555811869 "
+    "0.3620591288238334\n"
+    "0.6984848296914123 0.39905512425597567 0.7176836378596542 "
+    "0.46420415020162215\n"
+    "0.6490383283404113 0.276927325951944 0.8645270129731443 "
+    "0.5816032126747137\n"
+    "0.6632247075019597 0.3167065045641977 0.8212828417523437 "
+    "0.5480697917564094\n"
+    "0.39162106227767635 0.9378525747569357 1.8749211691782364 "
+    "0.9959260218262508\n"
+    "0.33651160598097185 0.23656030159698438 2.1782452804138495 "
+    "0.9925276869346203\n"
+    "0.32259020343155287 0.8167974432670508 2.262744962584531 "
+    "0.9842434532112782\n"
+    "0.31689669890877425 0.6686986132325636 2.2983588583251424 "
+    "0.979941343506564\n"
+    "0.07997041311498543 0.10056012194719433 5.052197097554322 "
+    "0.3015422850627868\n"
+    "0.2732525242840158 0.6935151587002035 2.594717827932543 "
+    "0.9286190941623286\n"
+    "0.43538309776140904 0.5108353284287344 1.6630579019190626 "
+    "0.9684714953400204\n"
+    "0.4281335366306256 0.059579549395142095 1.6966402611785083 "
+    "0.9746911132862006\n"
+    "0.1417929310440622 0.21433448165526903 3.9067750354401944 "
+    "0.566858861660708\n"
+    "0.41406275405993664 0.9075989793757835 1.7634754735779372 "
+    "0.984918178155975\n"
+    "0.34648415863205884 0.08194357912655525 2.1198363592617717 "
+    "0.9965530274698695\n"
+    "0.38991204365321774 0.763902767709691 1.8836681887765379 "
+    "0.996485719764278\n"
+    "0.39941764880935815 0.5647031813919863 1.835495341341685 "
+    "0.9928646476409654\n"
+    "0.2655101168474845 0.6466419505632421 2.6522046682783382 "
+    "0.9160204945712791\n"
+    "0.21153861743853541 0.5298768107628389 3.106695417602322 "
+    "0.7978213413937906\n"
+    "0.3501466180343893 0.4315684456806048 2.098806607093469 "
+    "0.9976396235849935\n"
+    "0.46279495297601136 0.6342686065573269 1.5409423782651999 "
+    "0.9394615255956152\n"
+    "0.6763248634884405 0.17169411354719522 0.7821635021681189 "
+    "0.5169336135606086\n"
+    "0.19556709688211615 0.5031697846456091 3.263703503760953 "
+    "0.7525614116324186\n"
+    "0.711505324280161 0.014394241608767011 0.6807447566072292 "
+    "0.43336505744324516\n"
+    "0.5512446813715071 0.5680765306108462 1.1911530011465652 "
+    "0.7964396916917625\n"
+    "0.17076840164480722 0.27476374818147264 3.5348940336444925 "
+    "0.6731266703140966\n"
+    "0.7182636463253615 0.35356066913412 0.6618371637888744 "
+    "0.41744478964263204\n"
+    "0.2894622467932457 0.6871122966200238 2.4794607975729535 "
+    "0.9515405975283733\n"
+    "0.441946233343405 0.0762520914866387 1.6331340966462369 0.96230233221342\n"
+    "0.5331554614819183 0.8104672748307284 1.2578844495410257 "
+    "0.8308415239365946\n"
+    "0.3508337977334619 0.15735675600932386 2.0948853567775134 "
+    "0.9978203202118839\n"
+    "0.34921437058393767 0.6418710315726155 2.104138605976963 "
+    "0.9973828038905646\n"
+    "0.09767677265165586 0.181725895035024 4.6521829794744685 "
+    "0.38143904973136783\n"
+    "0.21686070824828763 0.6612972699042208 3.0570000580387857 "
+    "0.8118608704023278\n"
+    "0.6540173487588616 0.32785807001212164 0.8492428014451088 "
+    "0.569864047788338\n"
+    "0.5377961933205884 0.4465232664653451 1.2405512268320604 "
+    "0.8222309595212757\n"
+    "0.3648696179068316 0.9819212033614755 2.0164304008578577 "
+    "0.9999328800986139\n"
+    "0.3437769316986967 0.8981192579844097 2.135524572620916 "
+    "0.9956153429845822\n"
+    "0.5755759312269217 0.530441173359065 1.1047682398916756 "
+    "0.7469242905104486\n"
+    "0.3339469735782157 0.021729574479152802 2.1935461207025706 "
+    "0.9912370733647483\n"
+    "0.8910439215642785 0.03643305207071523 0.2307231160826685 "
+    "0.07807453627251275\n"
+    "0.34542189263358614 0.6791943898414827 2.125977463714564 "
+    "0.9961987772557366\n"
+    "0.6670755220812028 0.2023987185768077 0.8097040259352014 "
+    "0.5389290316733909\n"
+    "0.7427344898355337 0.3546212658990413 0.5948332938736857 "
+    "0.3605675947324682\n"
+    "0.7350508441309154 0.3060196668670119 0.6156312129470155 "
+    "0.3782726965231628\n"
+    "0.37797622059395697 0.7157226120113422 1.9458479876459325 "
+    "0.999253660729574\n"
+    "0.6458536069969647 0.19874829915815773 0.8743648308725515 "
+    "0.5890911699682815\n"
+    "0.3712687357675786 0.9377800826652114 1.981658246849226 "
+    "0.999915380829361\n"
+    "0.7888589896256357 0.13054085757773648 0.4743353889634741 "
+    "0.25864184250404026\n"
+    "0.2768862769145304 0.9125409965216169 2.5682968194994773 "
+    "0.9341621436442699\n"
+    "0.3375887106101665 0.47943098864310696 2.1718539139104633 "
+    "0.9930383523351773\n"
+    "0.45791210015167305 0.0060318495697677665 1.5621560687067453 "
+    "0.9452399153023068\n"
+    "0.31302900488344987 0.020801497847720896 2.322918850752147 "
+    "0.9767112957068534\n"
+    "0.07921017739733127 0.23713769336152346 5.071300971851877 "
+    "0.29807785753275656\n"
+    "0.4945035005629168 0.5913604154309142 1.4084020978993002 "
+    "0.8960268828292617\n"
+    "0.6404129052165441 0.2079414666727084 0.8912842925133017 "
+    "0.6018408027683242\n"
+    "0.6488709238697579 0.19948021397086313 0.865042933392994 "
+    "0.5819972402408387\n"
+    "0.3616968740473143 0.7668832771214045 2.033897564904092 "
+    "0.9997159842243472\n"
+    "0.4135977172161107 0.16526283239298611 1.7657229502131129 "
+    "0.9852135184991595\n"
+    "0.12116519006373716 0.31389177946334423 4.221200914590104 "
+    "0.483233190027974\n"
+    "0.2577262190295544 0.6089524300855202 2.7117148480969897 "
+    "0.9022652177732184\n"
+    "0.5704158358326221 0.3008421977221165 1.1227792951750288 "
+    "0.7577063220638035\n"
+    "0.3205373660078572 0.2760948361386142 2.275512845618248 "
+    "0.9827541425251161\n"
+    "0.5649743107446896 0.4960963692936289 1.1419500331557952 "
+    "0.7689189733132601\n"
+    "0.27417380460317564 0.04046037146839554 2.5879861006456895 "
+    "0.9300467270997481\n"
+    "0.6176922619146905 0.38862128609295965 0.9635298072271639 "
+    "0.6543402003531248\n"
+    "0.1299908942670258 0.44135992559611426 4.0805817501591175 "
+    "0.519755389375457\n"
+    "0.12374041271031744 0.10462766475646834 4.179138707164937 "
+    "0.4939985388909233\n"
+    "0.43350251741953416 0.8093120790719912 1.67171535116449 "
+    "0.9701455172201267\n"
+    "0.16194394100623533 0.14554875835635128 3.641010093615788 "
+    "0.64224709129161\n"
+    "0.399856658165493 0.43940900609613376 1.8332983013695423 "
+    "0.9926677407371325\n"
+    "0.6087962938387499 0.4217695579658136 0.992543120206152 "
+    "0.6744841355299149\n"
+    "0.2768268546884549 0.863582018301748 2.56872608312291 0.9340733905656775\n"
+    "0.5360676598456653 0.6115861866725516 1.2469897896449174 "
+    "0.8254561029887764\n"
+    "0.3476318439931496 0.5933288217225818 2.113222557518922 "
+    "0.9969159684455962\n"
+    "0.07019693202622812 0.11465946926182058 5.312901344470948 "
+    "0.2569382363624099\n"
+    "0.1846753148614484 0.19856845022192626 3.3783121012396666 "
+    "0.7190286683717805\n"
+    "0.4397360796023133 0.11186133613227911 1.6431611022378336 "
+    "0.9644361128505239\n"
+    "0.5516793535823361 0.11478637304924577 1.1895765653466077 "
+    "0.7955861871194342\n"
+    "0.5731925936448012 0.5670484620135114 1.1130670083557805 "
+    "0.7519218989760122\n"
+    "0.2793312390062752 0.6105936234200746 2.550713929574342 "
+    "0.9377595501517005\n"
+    "0.1012171119071057 0.1886526443218315 4.58097489286342 "
+    "0.39714827251129947\n"
+    "0.10599275716049839 0.10973560740468513 4.488769031758247 "
+    "0.4181536291953871\n"
+    "0.4094002642029271 0.5291723829808277 1.7861239208267408 "
+    "0.9877530590284735\n"
+    "0.36940672535852337 0.5840271098667349 1.991714010429108 "
+    "0.9999827881865053\n"
+    "0.34782248634169055 0.38076732634343946 2.1121260521410665 "
+    "0.9969742692008973\n"
+    "0.42283862204540257 0.8317874245495653 1.7215293617910228 "
+    "0.9788297008381711\n"
+    "0.6791970341913043 0.25874314778210494 0.7736880212302198 "
+    "0.5100964250861415\n"
+    "0.5665574840544649 0.6182246609611981 1.1363534627363858 "
+    "0.7656738474749499\n"
+    "0.12898500942134916 0.45329578880585 4.096118174817925 "
+    "0.5156468955241293\n"
+    "0.5018079133050961 0.747170908472754 1.3790757506707703 "
+    "0.884667815640833\n"
+    "0.44867415771628183 0.7168555106513252 1.602916722675339 "
+    "0.9554610873120203\n"
+    "0.10578890587844203 0.2507793984628308 4.49261924885614 "
+    "0.41726163020568036\n"
+    "0.47840145615837604 0.25073216699899525 1.474610065082066 "
+    "0.9193234666102282\n"
+    "0.20797060765169917 0.620368665901492 3.1407170372655187 "
+    "0.7881166720954005\n"
+    "0.17670999055232617 0.680491274034501 3.4664907232529187 "
+    "0.6931564429921464\n"
+    "0.2571702940658409 0.3065701014481097 2.7160335814004126 "
+    "0.9012408033985049\n"
+    "0.2739805331001788 0.1002834478070187 2.5893964443953394 "
+    "0.9297484860593641\n"
+    "0.5978028568324849 0.26786767648502696 1.0289885004671462 "
+    "0.6989819924893328\n"
+    "0.3732889161133095 0.5412620003048054 1.970805170271299 "
+    "0.9997848420027563\n"
+    "0.19337501852221095 0.3591328528578306 3.2862477486100303 "
+    "0.7459853733094634\n"
+    "0.7349458016398591 0.027207300160965397 0.6159170435073429 "
+    "0.3785158266197937\n"
+    "0.6234113523331377 0.3540765758390576 0.9450974029263731 "
+    "0.641256123075744\n"
+    "0.15831007189837876 0.3085017975773652 3.6863993774692023 "
+    "0.629145120815478\n"
+    "0.5884359267907597 0.16704764151263385 1.0605744673418394 "
+    "0.7194649953647214\n"
+    "0.7362716966650773 0.35874418717267464 0.6123121505918869 "
+    "0.375448989175737\n"
+    "0.16692349853080013 0.0008977233557234676 3.580439328303609 "
+    "0.6598368517416026\n"
+    "0.741591333611918 0.050222949402907835 0.5979139017336921 "
+    "0.3631914084382238\n"
+    "0.2750367964334639 0.28936839052830376 2.5817007701081773 "
+    "0.9313702954658422\n"
+    "0.3789079789810985 0.34677827463833144 1.9409238058049083 "
+    "0.9991103256556607\n"
+    "0.8731458691094607 0.015450943084315716 0.27130529525592484 "
+    "0.1036618894275582\n"
+    "0.3182658213905325 0.8800797572992285 2.289736658126003 "
+    "0.9810249463377824\n"
+    "0.2789312162072688 0.9205220199901265 2.5535801288949926 "
+    "0.9371782343553354\n"
+    "0.146528904054255 0.4899516887035704 3.841065145373797 "
+    "0.5851657801612149\n"
+    "0.22629492674237328 0.29569125441654354 2.9718322897555023 "
+    "0.8354629634454556\n"
+    "0.5638001984962697 0.6366979233185026 1.1461106964671983 "
+    "0.7713163773890556\n"
+    "0.48146715786904326 0.07146083343773757 1.4618345160530433 "
+    "0.9150793029613462\n"
+    "0.41994474946568583 0.6711469081845214 1.7352642504985232 "
+    "0.9809446956503404\n"
+    "0.34679208812810836 0.13590031560192184 2.118059696537564 "
+    "0.9966524222492259\n"
+    "0.5610173395031359 0.7734605975237154 1.1560069314637123 "
+    "0.7769667207514657\n"
+    "0.2307226959513946 0.41846108235990687 2.933077480009978 "
+    "0.8459733436555086\n"
+    "0.6274550706480326 0.5098370870432722 0.9321664222010896 "
+    "0.6319477169459086\n"
+    "0.4878215866514446 0.8074022996757262 1.435611082202927 "
+    "0.905992506743255\n"
+    "0.111707336156047 0.3674146684088646 4.383745795497974 "
+    "0.44297894871539656\n"
+    "0.2967620845794945 0.09935309669553183 2.4296490464459466 "
+    "0.9603574074461844\n"
+    "0.5737842631655614 0.17718548351853824 1.1110036029096162 "
+    "0.7506840234453358\n"
+    "0.26044718869215333 0.028643263321198376 2.690710337779373 "
+    "0.9071982734151808\n"
+    "0.423863312595399 0.7411650673666665 1.7166885033574506 "
+    "0.9780557839020828\n"
+    "0.6561318297608243 0.11496626965111245 0.8427871004530954 "
+    "0.5648679640565963\n"
+    "0.5013437030499801 0.0161483954206183 1.380926758158304 "
+    "0.8854038202556206\n"
+    "0.3383304572325252 0.1595685633522086 2.1674643540021137 "
+    "0.9933792668795381\n"
+    "0.1871094150190622 0.6371148375545317 3.352123452364266 "
+    "0.7267085392745933\n"
+    "0.41790906046454257 0.42922165939069234 1.7449828576479476 "
+    "0.9823695132990056\n"
+    "0.36145161753010036 0.6841519768203534 2.0352541688628856 "
+    "0.9996929367697608\n"
+    "0.4535671573209912 0.762017506559221 1.5812238673701922 0.9501647057852\n"
+    "0.38168335149287413 0.029342569584767553 1.9263278738311131 "
+    "0.998609801314729\n"
+    "0.7752979254854457 0.24001221614574297 0.5090158070359997 "
+    "0.2876926420521493\n"
+    "0.7032599775510573 0.007149108843812035 0.7040572878804999 "
+    "0.4528733597609681\n"
+    "0.2319102528713528 0.7953361117880411 2.9228096464597835 "
+    "0.8487307465140581\n"
+    "0.6019120912532532 0.3754073845976753 1.0152877443098647 "
+    "0.689879746556069\n"
+    "0.6430779437826126 0.06214914845654995 0.8829786862888401 "
+    "0.5956026788647854\n"
+    "0.33887495627983366 0.14960583847282583 2.1642482003578603 "
+    "0.9936239515024399\n"
+    "0.5757043444396839 0.4359081737438282 1.104322081936888 "
+    "0.7466541766264976\n"
+    "0.7372454959286454 0.15864973986946151 0.6096686811835076 "
+    "0.3731994542925679\n"
+    "0.39230109823018267 0.703276521684717 1.8714512526107754 "
+    "0.9956920936212692\n"
+    "0.5469323432953179 0.2198001379131851 1.206860342111717 "
+    "0.8048412341876944\n"
+    "0.13681590269637556 0.1559293237014454 3.978238065538827 "
+    "0.5472473536547774\n"
+    "0.6067474048395862 0.47409415981343117 0.9992854230679972 "
+    "0.6790846782826016\n"
+    "0.33257938683117194 0.3416464541495585 2.201753379994508 "
+    "0.9905056849055358\n"
+    "0.27703124243683885 0.7191843453042785 2.5672499811486134 "
+    "0.934378400795806\n"
+    "0.6017116469188615 0.24793746276415374 1.0159538805113626 "
+    "0.6903253078963064\n"
+    "0.5524410841391763 0.20399339213427115 1.1868169726367288 "
+    "0.7940875869979267\n"
+    "0.3775480990965767 0.43483797357453446 1.9481146071685367 "
+    "0.9993153396754302\n"
+    "0.21741061208044576 0.11363916615740455 3.051934983737736 "
+    "0.8132817088169921\n"
+    "0.21756367561580148 0.008312625698175369 3.050527419695418 "
+    "0.813676200261026\n"
+    "0.2526756558347918 0.23902264397198536 2.7512972109163494 "
+    "0.8927519171880572\n"
+    "0.7363312982701158 0.2895276166456202 0.612150256027565 "
+    "0.37531123486953777\n"
+    "0.7136315024269924 0.21377778879547438 0.6747771058259954 "
+    "0.42834892105612554\n"
+    "0.3209386220179642 0.5666751620225459 2.2730107656032144 "
+    "0.9830507186275365\n"
+    "0.06663843753138021 0.003845007155212521 5.416947455612562 "
+    "0.2407065064273324\n"
+    "0.622736347113477 0.32382951043151254 0.9472640972467278 "
+    "0.642805459284116\n"
+    "0.25449361057701436 0.05172119667422481 2.736959098188956 "
+    "0.8962297446137008\n"
+    "0.4328403869982902 0.9283670577052439 1.6747724803764468 "
+    "0.9707248731931583\n"
+    "0.2573776522048523 0.00009174485813678857 2.714421617720531 "
+    "0.9016235631771945\n"
+    "0.684461185674865 0.2908621155669684 0.7582466810000433 "
+    "0.49756252029998105\n"
+    "0.8749994371707022 0.08413386758175512 0.2670640717164255 "
+    "0.10087311958312636\n"
+    "0.5360138303252875 0.02156560341578273 1.2471906307970744 "
+    "0.8255561993048115\n"
+    "0.5419963391578806 0.32176277934320785 1.2249920637731098 "
+    "0.8143071141323538\n"
+    "0.0503097831711552 0.061726099614350716 5.979111448687975 "
+    "0.16715030016841673\n"
+    "0.6400243996075068 0.5529355347474953 0.8924979579368122 "
+    "0.6027489971154104\n"
+    "0.2548955254887382 0.7896147958660495 2.7338030434820886 "
+    "0.8969904957531297\n"
+    "0.7628047569766445 0.291223039015746 0.5415063381420244 "
+    "0.3151830446158758\n"
+    "0.29602110734165077 0.3735675222508197 2.4346490372275102 "
+    "0.9595045982890962\n"
+    "0.4277790421611394 0.031309477337020386 1.6982969466790596 "
+    "0.9749789459810505\n"
+    "0.41238408593455134 0.3439412824074046 1.7716002329827854 "
+    "0.9859711889391637\n"
+    "0.4306320715036296 0.43624580583271744 1.6850024317204204 "
+    "0.9726190651832366\n"
+    "0.4558504148021658 0.35570653943913455 1.5711811219968803 "
+    "0.9476024738341307\n"
+    "0.05252356379606926 0.002034217479511158 5.892986751739322 "
+    "0.176973513752279\n"
+    "0.1489343054710366 0.562634268491091 3.808499946283761 "
+    "0.5943282433871458\n"
+    "0.4532956986383372 0.822882102991487 1.5824212201517203 "
+    "0.9504655160928177\n"
+    "0.5657978154267118 0.11423681779850803 1.1390369623131353 "
+    "0.7672327624049304\n"
+    "0.6876890107531124 0.24268791360225306 0.7488371249889795 "
+    "0.4898779318530126\n"
+    "0.19483358875732026 0.5156268166824125 3.271218951503763 "
+    "0.7503706866852385\n"
+    "0.4947903446944164 0.31861799229796994 1.4072423044126103 "
+    "0.8955898639800433\n"
+    "0.1863311316326388 0.5167071284468989 3.360459820979943 "
+    "0.7242645520818858\n"
+    "0.0990238494012099 0.04884407955383785 4.624789109635003 "
+    "0.3874292890392753\n"
+    "0.20947579870535882 0.08381325050291943 3.1262941311979535 "
+    "0.7922392468534255\n"
+    "0.4307061242251218 0.9195277431922115 1.684658535573509 "
+    "0.9725564983574507\n"
+    "0.32539527515279576 0.14926660856714413 2.2454292088461956 "
+    "0.9861663807687394\n"
+    "0.4426559492400395 0.07696565516879939 1.6299248979221752 "
+    "0.9616051290772706\n"
+    "0.48373453955908086 0.40623118628321 1.4524379894333097 "
+    "0.9118814216431128\n"
+    "0.041357270995486584 0.12461653555058683 6.3710140653854745 "
+    "0.12824777746344945\n"
+    "0.5915093036094992 0.6022355411352864 1.050155733692624 "
+    "0.7127866350974184\n"
+    "0.6113610364881727 0.5596402598303682 0.9841351998078229 "
+    "0.6687041477018859\n"
+    "0.5174365322660173 0.594051987476929 1.317736808656188 "
+    "0.8588167429813026\n"
+    "0.177601518889138 0.2118765121523234 3.4564257923138664 "
+    "0.696108277839656\n"
+    "0.5497081945516311 0.10497419432100807 1.1967353938211764 "
+    "0.7994469792843257\n"
+    "0.4823310692646674 0.41914964547255207 1.4582490700429702 "
+    "0.9138667249597345\n"
+    "0.6370118711767898 0.4444243096681302 0.9019339750266189 "
+    "0.6097804795457149\n"
+    "0.19380117771399163 0.10419345816376735 3.2818450051767094 "
+    "0.7472706566522862\n"
+    "0.49508058117838094 0.4706687921760009 1.4060694788059755 "
+    "0.8951469146613978\n"
+    "0.37571501210936353 0.251787026922744 1.9578487389931591 "
+    "0.9995495779807866\n"
+    "0.42418470760274807 0.7710406357273278 1.7151725749426374 "
+    "0.9778103622544418\n"
+    "0.5333708193454378 0.5064501195758744 1.257076751239285 "
+    "0.8304453641815182\n"
+    "0.3320976543490721 0.5505154992787138 2.204652427421165 "
+    "0.9902408781681334\n"
+    "0.8021559189043668 0.2293108209694774 0.4409045548246836 "
+    "0.23106583067069766\n"
+    "0.20875527832323137 0.07663169902035549 3.133185260380186 "
+    "0.7902710135940918\n"
+    "0.5863782056520472 0.7057740504504284 1.0675805909018292 "
+    "0.723912293506954\n"
+    "0.2867698350090193 0.5563031392161539 2.498150707162127 "
+    "0.9480542181175173\n"
+    "0.2526023591929367 0.19088641829644848 2.751877458939729 "
+    "0.8926104335585121\n"
+    "0.24833539751909472 0.28098858044797015 2.7859500742956094 "
+    "0.8842048384874417\n"
+    "0.516092140249431 0.3271331544707441 1.3229399261335713 "
+    "0.8611200669787707\n"
+    "0.5526869248437158 0.758675588012985 1.1859271546008217 "
+    "0.7936031446557498\n"
+    "0.08615624945252298 0.299541978213427 4.903185554225067 "
+    "0.329654645480767\n"
+    "0.3484438031916677 0.299929104023706 2.1085566303595735 "
+    "0.997160351910526\n"
+    "0.8489045309610455 0.09210440516544804 0.32761709560552965 "
+    "0.1428827457763604\n"
+    "0.45150346077402115 0.3521395924093682 1.5903444821914665 "
+    "0.9524310654347814\n"
+    "0.22305494914896973 0.48461214524263374 3.0006742582717822 "
+    "0.8275426874268045\n"
+    "0.2358562344506563 0.09968310174256212 2.8890656712723812 "
+    "0.857706144604906\n"
+    "0.6646362197828406 0.06095673874171581 0.8170308518533123 "
+    "0.5447207189746074\n"
+    "0.6527624093549731 0.490411438845364 0.8530841213978523 "
+    "0.5728263177194943\n"
+    "0.40627558316360535 0.5348726115593399 1.8014471467595656 "
+    "0.9894946870781126\n"
+    "0.29926670854681214 0.23163576526264862 2.412840202719716 "
+    "0.963169912518522\n"
+    "0.26843722041250495 0.4913551134981604 2.630276416681514 "
+    "0.9209100678742709\n"
+    "0.5573571851836041 0.5758996065418835 1.169097957078548 "
+    "0.7843284782629758\n"
+    "0.22796326990622728 0.20413028507812236 2.957141519815416 "
+    "0.8394656815119826\n"
+    "0.12426531075167957 0.16235652812401802 4.17067279246278 "
+    "0.49618202893963603\n"
+    "0.3414549641230069 0.7086157968579307 2.149078970641528 "
+    "0.9947193891583569\n"
+    "0.1367565052337154 0.0335239017513298 3.9791065370932928 "
+    "0.5470110441520706\n"
+    "0.3040693067422289 0.7095132312505237 2.3809992417106454 "
+    "0.9682614794616689\n"
+    "0.3924188454212685 0.48181323687091493 1.8708510527921158 "
+    "0.9956509423110109\n"
+    "0.3363701793651668 0.7877046078545189 2.179086002341341 "
+    "0.992459259472645\n"
+    "0.7240577465123295 0.1936363513139887 0.6457682588019295 "
+    "0.40385807427138837\n"
+    "0.6323604188017073 0.5086000953176126 0.9165915289413805 "
+    "0.6205974799675673\n"
+    "0.12658755668193433 0.1791839250386802 4.133642125110046 "
+    "0.505797590474165\n"
+    "0.6398856685274192 0.49838102863846845 0.8929315230257501 "
+    "0.6030732280225375\n"
+    "0.5230343616507591 0.700167783484225 1.2962162320447141 "
+    "0.8490716237771875\n"
+    "0.2243763594676329 0.483985126073895 2.988860921698557 "
+    "0.8307963515600053\n"
+    "0.46134872559380846 0.18249922792675477 1.5472021346055171 "
+    "0.9411996020133547\n"
+    "0.33590005817846746 0.8091991859260028 2.181883218324312 "
+    "0.9922294992181173\n"
+    "0.8221247583385303 0.004628255954867155 0.39172624261604155 "
+    "0.19158864268035955\n"
+    "0.05026423104549016 0.056831254490056216 5.9809231345050184 "
+    "0.16694887638053535\n"
+    "0.4752722366386153 0.27183907794371054 1.487735018716255 "
+    "0.9235598290137015\n"
+    "0.557721312082365 0.1695025409235078 1.1677917641509779 "
+    "0.7835997151060683\n"
+    "0.6634547030745366 0.1888773085217843 0.8205893944189565 "
+    "0.5475242084010359\n"
+    "0.5734378823028483 0.2830086836993644 1.112211323226407 "
+    "0.7514089377967771\n"
+    "0.1761449527212986 0.6825540593096875 3.4728960558097453 "
+    "0.6912783400328222\n"
+    "0.3145631335988823 0.7777071270032982 2.3131409604500646 "
+    "0.9780224312242617\n"
+    "0.6919654857119308 0.4514533794552553 0.7364384014943034 "
+    "0.4797010750562683\n"
+    "0.26384619684419564 0.8154153326841072 2.664777866634725 "
+    "0.9131721849410386\n"
+    "0.8009051209884193 0.12046914207051507 0.4440255792614314 "
+    "0.233618425488947\n"
+    "0.5785353089891323 0.5298372957030144 1.094511397586607 "
+    "0.7406777335071018\n"
+    "0.40666351722645455 0.160526689762172 1.7995383489560905 "
+    "0.9892854227593596\n"
+    "0.6868845713226812 0.15126471245133133 0.7511780386592524 "
+    "0.49179290650832064\n"
+    "0.6103518470163254 0.28483303231892254 0.9874393794232255 "
+    "0.6709812507996904\n"
+    "0.2648759263263192 0.6991916712367328 2.656987530358282 "
+    "0.9149407735142521\n"
+    "0.25377002673877747 0.10574229792602785 2.742653657263844 "
+    "0.8948527146890853\n"
+    "0.4995339802729517 0.627242286133286 1.388159309265779 "
+    "0.8882550070333245\n"
+    "0.5270778410038377 0.18826299588888684 1.280814070917161 "
+    "0.8418809244097301\n"
+    "0.14839705133192393 0.5713044989125902 3.8157276363544668 "
+    "0.5922897959793546\n"
+    "0.17456030259714184 0.6504916156428702 3.490970046827755 "
+    "0.6859811621883136\n"
+    "0.17711486182666447 0.46511122985416153 3.461913640005963 "
+    "0.694498707060442\n"
+    "0.2754249678432874 0.2310482624936161 2.578880073018158 "
+    "0.9319613033192734\n"
+    "0.05252641284908521 0.0407368350398154 5.89287826802109 "
+    "0.17698619709725838\n"
+    "0.9407325849317496 0.007025654347222021 0.12219272315631528 "
+    "0.024409115031190053\n"
+    "0.7745208788562146 0.15090573315205602 0.5110213232735519 "
+    "0.2893831742327103\n"
+    "0.2610556235319186 0.437764131570183 2.6860435547702206 "
+    "0.9082829872246211\n"
+    "0.3937443059503376 0.20434456323208128 1.8641071000507285 "
+    "0.9951745622863387\n"
+    "0.5015937694362127 0.2791925448592292 1.3799294222394667 "
+    "0.8850075753915966\n"
+    "0.26156274945705493 0.3045420715840901 2.6821621291601376 "
+    "0.9091819657185747\n"
+    "0.5121256082216412 0.4261614191773684 1.3383707109457321 "
+    "0.8678302929869214\n"
+    "0.41621278576185383 0.6291711221237135 1.7531172905186945 "
+    "0.9835167332370317\n"
+    "0.8623000293308256 0.07905626726288828 0.29630401401843415 "
+    "0.12059265144453006\n"
+    "0.19608695969862788 0.20661330255585875 3.2583940924262693 "
+    "0.7541081208487419\n"
+    "0.23788136604140497 0.23596914413553827 2.8719663831901054 "
+    "0.8622010040836202\n"
+    "0.4905746529996804 0.32150744915662965 1.424355627601768 "
+    "0.9019366915519281\n"
+    "0.13995322410998123 0.05073332337745384 3.932894051402636 "
+    "0.5596535748116176\n"
+    "0.1981207414512678 0.5754845558678976 3.2377572576677456 "
+    "0.7601117269252107\n"
+    "0.38147956731060173 0.3872914261907692 1.927395977021637 "
+    "0.9986502878928408\n"
+    "0.7264678568604777 0.017461489354807513 0.6391220815529893 "
+    "0.3982258284326405\n"
+    "0.19466645229368806 0.5879430742387384 3.272935372107361 "
+    "0.7498701399990092\n"
+    "0.08789444744256447 0.3198036440921246 4.863237290625646 "
+    "0.3375225348202524\n"
+    "0.6618754882109763 0.22891770995549132 0.8253556500172874 "
+    "0.5512693226781709\n"
+    "0.38510758859105465 0.408058259339638 1.908465065695245 "
+    "0.9978414830371026\n"
+    "0.1837344378736956 0.2931755678025161 3.3885276726391624 "
+    "0.7160315781949671\n"
+    "0.23450838701383425 0.15296373937616758 2.900527852435914 "
+    "0.8546726605290109\n"
+    "0.37543124161814245 0.26300655520275473 1.9593598721623007 "
+    "0.9995815024380131\n"
+    "0.6134639630140855 0.2477595206060541 0.9772675130995453 "
+    "0.6639479098770398\n"
+    "0.6811023187173391 0.16955007018711 0.7680854727385815 "
+    "0.5055601013887547\n"
+    "0.48161780674200827 0.2696308556033833 1.4612088230779503 "
+    "0.9148683755849157\n"
+    "0.3374684741109857 0.8375609729882507 2.172566366148132 "
+    "0.9929822648006762\n"
+    "0.6447879234213263 0.1439795393026413 0.8776676343007999 "
+    "0.591592866193489\n"
+    "0.7789691502756948 0.10003484736647006 0.499567671191127 "
+    "0.279742300003912\n"
+    "0.48702728149801455 0.02576991060348366 1.4388702759309422 "
+    "0.9071494332795829\n"
+    "0.543175597154927 0.2940327441538224 1.2206452559658352 "
+    "0.8120605419363407\n"
+    "0.6626747679659442 0.25694918044636617 0.8229419104154705 "
+    "0.5493741275715129\n"
+    "0.1732842227982836 0.04793470887059881 3.505644252460413 "
+    "0.6816833758011437\n"
+    "0.5313289140908866 0.08093385521240348 1.2647480512080456 "
+    "0.8341879472032353\n"
+    "0.6114637910157141 0.10013853512818582 0.9837990779840847 "
+    "0.6684720971894015\n"
+    "0.514404557588934 0.7733263866082238 1.3294904921767707 "
+    "0.8639906838636071\n"
+    "0.9534328428591148 0.006842647964744986 0.09537257732435482 "
+    "0.01527412099365975\n"
+    "0.695101210515433 0.01850163881681688 0.727395634757928 "
+    "0.47224399373266046\n"
+    "0.34433753651205157 0.7440424776367294 2.1322657837810715 "
+    "0.9958189453402276\n"
+    "0.39110999797306234 0.35066889656484546 1.8775328676437315 "
+    "0.9960976265060796\n"
+    "0.42663257687944056 0.9201409696709024 1.7036642237348107 "
+    "0.9758993035610365\n"
+    "0.26208829523646093 0.1990806618133274 2.678147654550118 "
+    "0.9101086855647789\n"
+    "0.3590154427187373 0.9190246182497748 2.0487797509787726 "
+    "0.9994148041904901\n"
+    "0.4939616029491305 0.1259774357587331 1.4105949832774463 "
+    "0.896850438801242\n"
+    "0.44424867305629356 0.8034423335531091 1.6227415977639172 "
+    "0.9600193556387284\n"
+    "0.8119218597868683 0.1915242336082552 0.4167023504812119 "
+    "0.21145080430035773\n"
+    "0.2343895669995364 0.08620793045924158 2.9015414633149903 "
+    "0.8544036363689489\n"
+    "0.9305584969960636 0.010216339320606505 0.14394067735818258 "
+    "0.03314235880198764\n"
+    "0.7172462445780141 0.11784246060567516 0.6646721199926464 "
+    "0.41983676154946326\n"
+    "0.43911518523919546 0.35524823446296594 1.6459870387358828 "
+    "0.9650253155949402\n"
+    "0.5864499144808859 0.24241829953836547 1.0673360236794134 "
+    "0.723757641646314\n"
+    "0.7031922570379501 0.028797590098051273 0.7042498874199484 "
+    "0.4530339041473634\n"
+    "0.443098794603926 0.16622447022223685 1.6279250423013603 "
+    "0.9611671458942549\n"
+    "0.5021595696005974 0.2215664253461629 1.377674684138756 "
+    "0.8841090074382938\n"
+    "0.3744483792918034 0.6222560252512312 1.9646026490654647 "
+    "0.9996830613645582\n"
+    "0.08756758932459063 0.06355572890728167 4.870688668760372 "
+    "0.33604427568098477\n"
+    "0.4687762683731067 0.12413523964307438 1.5152593281433853 "
+    "0.9320391178328407\n"
+    "0.5288209191256752 0.2572733545592014 1.2742108632194655 "
+    "0.8387428528132764\n"
+    "0.6796226739840445 0.19802390758575927 0.7724350520420318 "
+    "0.5090830510039284\n"
+    "0.5437689580962006 0.6630980350967115 1.2184616634455048 "
+    "0.8109265780610572\n"
+    "0.33368660733808 0.6614223692366843 2.195106055737461 0.991100148031983\n"
+    "0.6698827868470294 0.3840665042184299 0.8013050538124427 "
+    "0.5322582147425707\n"
+    "0.24817116073595002 0.7681197219498728 2.7872732132262374 "
+    "0.8838746506014482\n"
+    "0.3031252729082061 0.6918912402637343 2.3872182339501262 "
+    "0.9672918139223803\n"
+    "0.5095885513757941 0.827972711400091 1.348303281759237 "
+    "0.8720542047682118\n"
+    "0.5763712385796029 0.5309989969578488 1.102006628943224 "
+    "0.7452500063614952\n"
+    "0.5773267454588897 0.6807197684952342 1.0986937789218894 "
+    "0.7432341526258601\n"
+    "0.6033122615426489 0.1415925330056773 1.0106407392404158 "
+    "0.6867629821978966\n"
+    "0.5282550247971152 0.037063400207370645 1.2763522207477414 "
+    "0.8397641351465851\n"
+    "0.3393126291675088 0.8840511652189056 2.1616667732847126 "
+    "0.9938172150053294\n"
+    "0.4189573445332715 0.1754776092045256 1.7399723345309943 "
+    "0.9816423243092904\n"
+    "0.14473346562782208 0.5196531817635792 3.865722792299329 "
+    "0.5782668694540736\n"
+    "0.2995657314951732 0.582064183750594 2.410842829476588 "
+    "0.9634984745962825\n"
+    "0.2846826446929862 0.9273302182516765 2.512760493077533 "
+    "0.9452640613686688\n"
+    "0.4347145440108571 0.14454153512107415 1.6661313679303424 "
+    "0.9690714411035066\n"
+    "0.212288031399682 0.09216320890934693 3.0996225754935773 "
+    "0.799829876633012\n"
+    "0.2458177215395252 0.04422430291104407 2.8063299741095387 "
+    "0.879088948233916\n"
+    "0.4000867660556704 0.30206663374459497 1.8321476805153327 "
+    "0.9925634962871468\n"
+    "0.7110476205138101 0.1802492766161521 0.6820317492181407 "
+    "0.43444572812888127\n"
+    "0.6836390528034764 0.06897900105420973 0.7606504024445048 "
+    "0.49952002003268914\n"
+    "0.2240251920597398 0.27769670135629143 2.991993537796702 "
+    "0.8299348308258523\n"
+    "0.6724810744214134 0.1483725520189365 0.7935626200528646 "
+    "0.5260796599652633\n"
+    "0.29931563971468766 0.650322856288464 2.4125132223593586 "
+    "0.9632237825894235\n"
+    "0.48278400246680087 0.3498765526129759 1.45637185042988 "
+    "0.9132281002076106\n"
+    "0.4699488553048854 0.7461193086168962 1.5102628173988784 "
+    "0.9305403829567087\n"
+    "0.4885461405719542 0.5710659629781325 1.4326427167671953 "
+    "0.9049319847514934\n"
+    "0.300646631342411 0.23731984630385017 2.4036393722827336 "
+    "0.9646733372026006\n"
+    "0.48204539315947126 0.21701029923873527 1.4594339853729617 "
+    "0.9142684991782329\n"
+    "0.34166523832713813 0.41393682890307804 2.1478477131848273 "
+    "0.9948040259236401\n"
+    "0.6473015134677764 0.13297334646402148 0.8698861506184683 "
+    "0.5856889770180989\n"
+    "0.5791323264428971 0.4663945763627706 1.0924485688837267 "
+    "0.7394121581736947\n"
+    "0.34457151326931545 0.3562476660837448 2.130907248767867 "
+    "0.9959024628685081\n"
+    "0.3070368649553723 0.7067709807859728 2.361574914632526 "
+    "0.9712107311167815\n"
+    "0.12222290025276306 0.14871571174417775 4.20381770004935 "
+    "0.487665341535047\n"
+    "0.5972903947660309 0.41173770963035294 1.030703720922715 "
+    "0.700112322743779\n"
+    "0.035343109906431636 0.00986286002086123 6.685303632692527 "
+    "0.10312899096909495\n"
+    "0.2552403830267971 0.2920362745276954 2.7310989986592515 "
+    "0.897640902802125\n"
+    "0.6335819563072471 0.4403176347004476 0.912731833875718 "
+    "0.6177616858226627\n"
+    "0.5104246020603529 0.07811065682268103 1.3450246931686174 "
+    "0.8706682053121709\n"
+    "0.35752787516125006 0.14694859102468416 2.0570838948174988 "
+    "0.9992008532993145\n"
+    "0.7443209069412542 0.34225875823279206 0.5905660212193022 "
+    "0.3569326857562687\n"
+    "0.28653704525786683 0.8419776868273756 2.4997748967329048 "
+    "0.9477468153375188\n"
+    "0.32841913922978616 0.33588476773013887 2.2269292457304535 "
+    "0.9880950577783507\n"
+    "0.29258231914712174 0.9202839061681287 2.458018437846892 "
+    "0.9554223600681063\n"
+    "0.7072627493547985 0.3563960518394098 0.6927060846072532 "
+    "0.44339270874054276\n"
+    "0.6254373197210983 0.4367912108439891 0.9386083247519508 "
+    "0.6365981319620897\n"
+    "0.29873052369975905 0.6381863013652702 2.4164267409966773 "
+    "0.9625769088133082\n"
+    "0.38101873569231737 0.45211675863183776 1.9298134600380732 "
+    "0.998739664563887\n"
+    "0.7084746965197015 0.019399881437090816 0.6892818692925159 "
+    "0.44052582206365126\n"
+    "0.5204449584760205 0.23352101303094153 1.306142287846288 "
+    "0.8536101395994018\n"
+    "0.34870290722569597 0.7406218047374007 2.107069976017887 "
+    "0.9972361802236912\n"
+    "0.780540575065026 0.0454534286255559 0.495537108776183 "
+    "0.27635816845391464\n"
+    "0.48430469312970303 0.3809786970449778 1.450082078154936 "
+    "0.9110694785670084\n"
+    "0.31549946764678527 0.2705052282759286 2.3071965686683873 "
+    "0.9788033077474654\n"
+    "0.3112243084722992 0.7863211569364628 2.3344827553419436 "
+    "0.9751183610462653\n"
+    "0.40902387924074546 0.7721912253802197 1.7879634803838813 "
+    "0.9879696126832126\n"
+    "0.2739059603962404 0.8817521867442861 2.589940883473755 "
+    "0.9296332332042323\n"
+    "0.25160288146083487 0.7060273202614271 2.7598066033487862 "
+    "0.8906713699086007\n"
+    "0.31553340054891965 0.46174828497286513 2.306981474311961 "
+    "0.978831331777968\n"
+    "0.3576264026035083 0.983371342983989 2.056532811248848 "
+    "0.9992160619905571\n"
+    "0.25225132565836605 0.8090787614347021 2.7546587288535656 "
+    "0.8919314787849957\n"
+    "0.38791747922693975 0.1431723495647479 1.893925288767536 "
+    "0.9970876945604842\n"
+    "0.6819264113531436 0.05462800586716132 0.7656670564043153 "
+    "0.5035979087549638\n"
+    "0.4661098416756009 0.2997006218348841 1.5266679217638495 "
+    "0.9353942135904879\n"
+    "0.26716829559738375 0.05805557390161886 2.6397529971220424 "
+    "0.918809327792217\n"
+    "0.12146705613524089 0.11647956835601603 4.216224391774499 "
+    "0.48449959404403187\n"
+    "0.7944337915552042 0.20646613446169182 0.4602512599028382 "
+    "0.24696440454199986\n"
+    "0.27732826533534527 0.6331144539773186 2.5651068020544345 "
+    "0.934820327550382\n"
+    "0.5315778760888845 0.42094955094116937 1.2638111411991868 "
+    "0.8337332595848133\n"
+    "0.42513005897421885 0.3104597600118191 1.7107202715136443 "
+    "0.9770810755943558\n"
+    "0.32476197450608923 0.6414134717853242 2.2493255022265104 "
+    "0.9857435254675335\n"
+    "0.3717661688815568 0.03236797165054606 1.9789804012450494 "
+    "0.9998887702387597\n"
+    "0.513459269072212 0.570562053766386 1.333169145938894 0.8655884983975433\n"
+    "0.3987078297393294 0.6079854459493266 1.8390527732305408 "
+    "0.9931775289231979\n"
+    "0.6891959280173332 0.29562612468865956 0.7444593652402887 "
+    "0.48629115849088556\n"
+    "0.24272558257021792 0.8496566325643311 2.8316475272086286 "
+    "0.8726467243320999\n"
+    "0.05098579911167045 0.0013734285370889943 5.952416267645298 "
+    "0.17014297538679687\n"
+    "0.40202509131527364 0.15672639896102547 1.8224815522075561 "
+    "0.9916572077497933\n"
+    "0.5699847471362935 0.10668040747376328 1.124291355843184 "
+    "0.7586006033106661\n"
+    "0.5201825960018567 0.24195426764208783 1.307150765773261 "
+    "0.8540670581701241\n"
+    "0.5412272769375992 0.38125297784384604 1.227831966220114 "
+    "0.8157671197063128\n"
+    "0.6974421543233382 0.06002033432521814 0.7206714031910059 "
+    "0.4666808039088432\n"
+    "0.35991903655014856 0.2802819072557994 2.0437523425944892 "
+    "0.9995284112912931\n"
+    "0.3371343859120557 0.36097676206505125 2.174547313731019 "
+    "0.992825210253693\n"
+    "0.14622873917804302 0.47199094104088446 3.8451663531589135 "
+    "0.5840159524815814\n"
+    "0.80700806013758 0.02847526755986718 0.42884324596631257 "
+    "0.22124928012413828\n"
+    "0.2977300504649294 0.19421708975342544 2.423136147897616 "
+    "0.9614571806062545\n"
+    "0.49498584373051724 0.13426556684055058 1.4064522306932 "
+    "0.8952915840199999\n"
+    "0.14154290228819688 0.4991419426289039 3.910304822941125 "
+    "0.5658826680798417\n"
+    "0.46279793173118167 0.8132651313864145 1.5409295054126984 "
+    "0.9394579227830752\n"
+    "0.31515701483171066 0.2549077410942755 2.309368609126212 "
+    "0.978519411166279\n"
+    "0.20983111074276173 0.0985940877700684 3.122904612786108 "
+    "0.7932063275299216\n"
+    "0.42030727709633653 0.14222479895130213 1.7335384461365682 "
+    "0.9806854835733834\n"
+    "0.4650652527378667 0.4967641467456634 1.5311551095427374 "
+    "0.9366883815538513\n"
+    "0.43438446175772083 0.49074734865496183 1.6676505608729943 "
+    "0.9693656894672319\n"
+    "0.38682700097762845 0.39339967783530705 1.8995554235916388 "
+    "0.9973933609067414\n"
+    "0.5181731333897945 0.15046653805901644 1.314891716446553 "
+    "0.8575485847871527\n"
+    "0.7858724237336461 0.05265426040541654 0.4819216209963839 "
+    "0.26496340350697184\n"
+    "0.5691510914420073 0.33183418777991047 1.1272186830850548 "
+    "0.7603271089952901\n"
+    "0.6237765409701224 0.34405548169392564 0.9439261643363185 "
+    "0.6404173609165498\n"
+    "0.5627163317273169 0.4028533052148493 1.1499592582035731 "
+    "0.7735224456269022\n"
+    "0.40890794378481443 0.30566940521928965 1.7885304491871177 "
+    "0.9880359441362068\n"
+    "0.1852341025777391 0.28058849091078897 3.372269669065883 "
+    "0.720801126215764\n"
+    "0.3090888247391137 0.16304936608559495 2.34825316938019 "
+    "0.9731626071733748\n"
+    "0.36872816435756306 0.44545456643257153 1.9953911767658532 "
+    "0.9999946815290184\n"
+    "0.27326408869456786 0.24204606323365319 2.594633187061403 "
+    "0.9286371085268204\n"
+    "0.19868913145904465 0.6072455104191843 3.2320276583274556 "
+    "0.7617760814068254\n"
+    "0.4879429139164857 0.11175568707690009 1.4351137193019576 "
+    "0.9058152659222759\n"
+    "0.5637493038106145 0.3949341120718577 1.1462912461835015 "
+    "0.7714201191114353\n"
+    "0.504360404620368 0.8023718650002063 1.36892835586455 0.8805872244995414\n"
+    "0.29349075543799286 0.18666092452434957 2.4518182757318985 "
+    "0.9565207166407942\n"
+    "0.5094042555091205 0.35738707733798813 1.3490267250159031 "
+    "0.8723589410618935\n"
+    "0.4013199002362844 0.49404334152976537 1.8259928270274028 "
+    "0.9919927498884793\n"
+    "0.5878574371321066 0.6727800646316873 1.0625416286743194 "
+    "0.7207172459900898\n"
+    "0.5225748970403565 0.2674058679336411 1.2979739235959569 "
+    "0.8498807547107448\n"
+    "0.28768109819455234 0.3340919030838372 2.4918054205781286 "
+    "0.9492484153856741\n"
+    "0.38169391126777397 0.7930020453121491 1.9262725419504525 "
+    "0.9986076872752744\n"
+    "0.7012492378248474 0.27413268160515103 0.7097838180532193 "
+    "0.4576420946800439\n"
+    "0.7098034104172934 0.426549033535242 0.6855344680463843 "
+    "0.43738484099059943\n"
+    "0.2160805883156851 0.27187996903790546 3.0642076936523086 "
+    "0.80983562392043\n"
+    "0.05540112046908918 0.12695017094525696 5.786310920719222 "
+    "0.18983207789448842\n"
+    "0.36364907458313045 0.027990143424941882 2.0231319143715734 "
+    "0.9998672600423049\n"
+    "0.3015513667333294 0.617318341907751 2.3976298134696883 "
+    "0.9656413072457196\n"
+    "0.2791154328075218 0.035472203180173745 2.5522596901304575 "
+    "0.9374462916094848\n"
+    "0.738085710795499 0.04168127017006529 0.6073906436720313 "
+    "0.37126051517328684\n"
+    "0.2966464553650119 0.1590687926725709 2.4304284704559675 "
+    "0.960224951609395\n"
+    "0.3887531789706413 0.01830755962968733 1.8896212762113747 "
+    "0.9968422110757215\n"
+    "0.5079194000122296 0.5955253196033956 1.3548650107699087 "
+    "0.8748037362189133\n"
+    "0.6099939056757036 0.37246458312579467 0.9886126251205108 "
+    "0.6717880424661592\n"
+    "0.6309001666339034 0.6038656609882294 0.921215286968929 "
+    "0.6239826714037605\n"
+    "0.46152882120428473 0.11185574229221307 1.5464215516846855 "
+    "0.9409843772576015\n"
+    "0.25032416414738345 0.3671454227370561 2.7699970889270418 "
+    "0.8881639616758352\n"
+    "0.3241008997123225 0.6485499805674619 2.2534007856108094 "
+    "0.9852951126145548\n"
+    "0.9271561391383869 0.012718898349731056 0.15126658542970645 "
+    "0.036334629518066\n"
+    "0.4323862024809493 0.05381098553821051 1.6768722057643666 "
+    "0.9711192417798101\n"
+    "0.773685953280201 0.007585960396674807 0.5131784656905031 "
+    "0.2912025974870943\n"
+    "0.23673602691272655 0.22506513930710392 2.881619138179426 "
+    "0.8596681593308427\n"
+    "0.19066834874444916 0.16418229324195632 3.3144395084461826 "
+    "0.7377451747579794\n"
+    "0.16697267035045527 0.43268165627388355 3.579850261107356 "
+    "0.6600084268001333\n"
+    "0.2757586121632407 0.19898090954284542 2.576458779113138 "
+    "0.93246714577273\n"
+    "0.6579095274565943 0.15497341515042562 0.8373757067537443 "
+    "0.5606631832317575\n"
+    "0.17342136828210952 0.6468094344092041 3.504061982147993 "
+    "0.6821466468856705\n"
+    "0.5928515893839634 0.30528789925968036 1.045622364321476 "
+    "0.7098566851127687\n"
+    "0.5227502294221595 0.37289148718325715 1.2973030035960118 "
+    "0.8495721824249162\n"
+    "0.4137307311200251 0.1370377840343724 1.7650798493729183 "
+    "0.9851293261024245\n"
+    "0.4948688027303143 0.656560904880577 1.406925193066683 "
+    "0.8954701994752262\n"
+    "0.7973132582948335 0.22199421642661 0.45301526124111935 "
+    "0.24099754025697295\n"
+    "0.1887908388460353 0.10163291716608924 3.3342310990185444 "
+    "0.7319513239258689\n"
+    "0.39315802604216743 0.19754319396904596 1.8670872920914172 "
+    "0.9953882511860075\n"
+    "0.22695980637740432 0.8210502324198963 2.96596468319042 "
+    "0.8370643150694709\n"
+    "0.48905499130587216 0.7372875670468808 1.4305606783436315 "
+    "0.9041842354362812\n"
+    "0.32956363541813216 0.4518577165550668 2.219971632937678 "
+    "0.9887861904308325\n"
+    "0.24917543824089283 0.3017534708967 2.779196118725319 0.8858859689068286\n"
+    "0.5512547778134744 0.7270087892550645 1.1911163700466276 "
+    "0.7964198803999596\n"
+    "0.6586250868265213 0.24997705301532536 0.8352016372454295 "
+    "0.55896959366268\n"
+    "0.5208788921228837 0.6824789787446361 1.3044754339785647 "
+    "0.8528532315622264\n"
+    "0.5007362338328532 0.5620645267891029 1.3833515918234875 "
+    "0.8863641004966523\n"
+    "0.5139931730626748 0.12826860878141555 1.3310905911888202 "
+    "0.8646869430444287\n"
+    "0.3433570025956336 0.14502763465284274 2.137969098407715 "
+    "0.99545959739557\n"
+    "0.3140319516909973 0.6258593671881458 2.3165210825461506 "
+    "0.9775729214746695\n"
+    "0.21944727766051741 0.5761164156941083 3.033286536416849 "
+    "0.8184953992210053\n"
+    "0.4051880031587667 0.26388546915997657 1.806808228510545 "
+    "0.9900707916681378\n"
+    "0.4633961048821711 0.8294582890310109 1.5383461450777753 "
+    "0.938732525205612\n"
+    "0.48302444673167444 0.6258288494831825 1.4553760245182692 "
+    "0.9128882733564772\n"
+    "0.2514411794674547 0.6043505754626552 2.7610923913066143 "
+    "0.8903559417333698\n"
+    "0.5845296595092417 0.42636511080280703 1.0738955119424052 "
+    "0.7278906357103174\n"
+    "0.36731719168896526 0.2135426798889335 2.0030590433468216 "
+    "0.9999976629489274\n"
+    "0.5954223172755906 0.3741309544955935 1.0369686965505232 "
+    "0.7042234496024512\n"
+    "0.55456269419164 0.46763584737488717 1.1791508284315189 "
+    "0.7898943279417752\n"
+    "0.11556630861083317 0.34152414644080076 4.315821626452513 "
+    "0.45953482490272957\n"
+    "0.5879513448634999 0.32377886964840963 1.0622221626760011 "
+    "0.7205140694017709\n"
+    "0.5422673642305307 0.008254205762544764 1.2239922144654265 "
+    "0.8137916297091021\n"
+    "0.2947933638519853 0.31597282250362557 2.442961259197601 "
+    "0.9580706543698069\n"
+    "0.10749689792803374 0.39395840433587925 4.460586576628366 "
+    "0.424722024463866\n"
+    "0.6541488599282557 0.24422947175602605 0.8488406777120121 "
+    "0.5695534894844956\n"
+    "0.797868423591471 0.04454747678854676 0.4516231556888655 "
+    "0.2398523236145288\n"
+    "0.7596279985751857 0.10405829544152101 0.5498528821859856 "
+    "0.3222729923634237\n"
+    "0.37074277606921324 0.46088039395788405 1.984493565590581 "
+    "0.9999395769209521\n"
+    "0.343193885711925 0.6328527981030059 2.1389194541034446 "
+    "0.995398352002841\n"
+    "0.29896641650301436 0.1398334070997207 2.4148480625753144 "
+    "0.9628384083347885\n"
+    "0.48575383007583706 0.558197504477288 1.4441066117703802 "
+    "0.9089917728025432\n"
+    "0.687501051539509 0.35566148919631124 0.7493838398611345 "
+    "0.49032535672981403\n"
+    "0.8899856937916955 0.043008896188757806 0.23309978155299874 "
+    "0.07950212860045787\n"
+    "0.2687599766119386 0.07723980585787071 2.6278731559045965 "
+    "0.9214397828324524\n"
+    "0.1939903345716274 0.035665824658325684 3.2798938859113815 "
+    "0.7478400902143668\n"
+    "0.46817017112291337 0.409347556908769 1.517846871290727 "
+    "0.9328082349258582\n"
+    "0.47555594502061527 0.09680458074666465 1.4865414975485316 "
+    "0.9231797666784339\n"
+    "0.277327198232888 0.6142666085758239 2.5651144976602827 "
+    "0.9348187426645485\n"
+    "0.5635814438883375 0.26140383684272694 1.1468868475147351 "
+    "0.7717621720569454\n"
+    "0.3541525082149599 0.8719101834517355 2.076055288911175 "
+    "0.9985905389385005\n"
+    "0.25430605135837747 0.30328352792029145 2.7384336213945666 "
+    "0.8958737224593563\n"
+    "0.24716110474420994 0.5578759925994177 2.795429818092222 "
+    "0.8818331373926375\n"
+    "0.43330901792582144 0.7500108591988806 1.6726082765077126 "
+    "0.9703153694862727\n"
+    "0.25514189348463745 0.3914769879486488 2.7318708870881 "
+    "0.8974553707915719\n"
+    "0.37218519820091833 0.42954019487639883 1.9767274079327741 "
+    "0.9998635462761463\n"
+    "0.14237083674137185 0.27908184587398766 3.898640198285586 "
+    "0.5691114984568441\n"
+    "0.1756257137055377 0.3930812450926311 3.4788003501972216 "
+    "0.6895474980025733\n"
+    "0.07406114735369584 0.24184182477296678 5.205728422796517 "
+    "0.2745825029817977\n"
+    "0.521612457767137 0.2668598862903646 1.3016607697977838 "
+    "0.8515703169618464\n"
+    "0.16468104960167573 0.006973613602420103 3.6074894170351572 "
+    "0.6519681147340454\n"
+    "0.5174950448264768 0.7248170789851218 1.3175106582059863 "
+    "0.8587161645089676\n"
+    "0.27798294983208804 0.5240917063151624 2.5603909974232146 "
+    "0.9357888662936849\n"
+    "0.2722005626303843 0.21180081458168742 2.6024322435853633 "
+    "0.9269704113698951\n"
+    "0.47860858033797116 0.1659465099405344 1.4737443513489588 "
+    "0.9190396319921391\n"
+    "0.4213119727394745 0.9346184102247719 1.7287633836812362 "
+    "0.9799585018981968\n"
+    "0.26776530300847456 0.14750886723917644 2.635288834388472 "
+    "0.919801296438306\n"
+    "0.4674673415597872 0.5970257788003026 1.5208515806393532 "
+    "0.9336953376061701\n"
+    "0.26714415629563315 0.822252875889057 2.6399337101238185 "
+    "0.9187690838246978\n"
+    "0.30183136656154774 0.5228431039906685 2.3957736128668765 "
+    "0.9659380345031273\n"
+    "0.6127000350536354 0.2468825661946774 0.9797596040775722 "
+    "0.665677444094091\n"
+    "0.5123757759024286 0.3591353735000702 1.3373939716669525 "
+    "0.8674108955191946\n"
+    "0.3932265316788055 0.4945921046879591 1.8667388333830726 "
+    "0.9953635254177802\n"
+    "0.44381044610428155 0.7690210345931541 1.6247154617922352 "
+    "0.9604585782644961\n"
+    "0.56879400409826 0.2439227107583799 1.1284738837335486 "
+    "0.7610654681161967\n"
+    "0.6029167442670378 0.3032216121378013 1.0119523219925497 "
+    "0.6876441704778098\n"
+    "0.27665304185021244 0.047739937487288886 2.569982228793553 "
+    "0.9338134230658832\n"
+    "0.4909790504395719 0.1573557526418845 1.4227076384541315 "
+    "0.901334972142108\n"
+    "0.3655984362245652 0.6856829463140779 2.0124394333927915 "
+    "0.9999614755277257\n"
+    "0.5716139931173725 0.00733895971929166 1.118582705229703 "
+    "0.7552154683172148\n"
+    "0.48420091569954704 0.6881297860889124 1.4505106866404505 "
+    "0.9112174982202905\n"
+    "0.41610413861511075 0.622119762137795 1.7536394336792052 "
+    "0.9835889674351057\n"
+    "0.5091108887864282 0.5282554092698688 1.350178859993761 "
+    "0.8728434389990055\n"
+    "0.5447254345672281 0.3180769990589629 1.2149468020970133 "
+    "0.809093672907042\n"
+    "0.342273939781353 0.5794828410021025 2.144287738061814 "
+    "0.9950450978252413\n"
+    "0.48314042184608796 0.8767408121455471 1.4548958782461685 "
+    "0.9127241627135945\n"
+    "0.40140705285097944 0.07092213417356619 1.8255585442880364 "
+    "0.9919516412175284\n"
+    "0.5452475610606116 0.7396910817416125 1.2130306939533628 "
+    "0.8080905277376449\n"
+    "0.2770808830766256 0.25753510039818805 2.5668916375020197 "
+    "0.9344523679874689\n"
+    "0.7929327131364117 0.1459970176812866 0.4640338239466072 "
+    "0.2500926446871623\n"
+    "0.5949269008912181 0.04615290987658738 1.0386334732577835 "
+    "0.7053112585316167\n"
+    "0.3334764997439543 0.8492765882587077 2.196365763289281 "
+    "0.9909888587932579\n"
+    "0.27816640633707945 0.5946214299039942 2.559071520850164 "
+    "0.9360589058384261\n"
+    "0.294014536183981 0.3288284680516693 2.448252140126108 "
+    "0.9571474867963031\n"
+    "0.8564156493853303 0.09628478859770762 0.3099988979607107 "
+    "0.1302022416958265\n"
+    "0.32283176815321046 0.2687527216553285 2.2612478661510518 "
+    "0.9844141373948744\n"
+    "0.6274706835767134 0.5840152056605765 0.9321166569344862 "
+    "0.6319116900424792\n"
+    "0.833792409374962 0.16776432320767065 0.36354163445775894 "
+    "0.16972786863179154\n"
+    "0.6441421551112352 0.04065938928477597 0.8796716789728218 "
+    "0.5931078014751731\n"
+    "0.7483646881234025 0.02595521809211343 0.5797297377097995 "
+    "0.34770161129022836\n"
+    "0.5252216256144708 0.5921584013823642 1.2878699228813433 "
+    "0.8451974401465018\n"
+    "0.2814749471672311 0.003685836719153901 2.5354236659852916 "
+    "0.9408265065982168\n"
+    "0.4577743000339798 0.23015430825733874 1.5627580220335855 "
+    "0.9453992660513639\n"
+    "0.6070769216462235 0.2804809548929723 0.9981995433157402 "
+    "0.678345819142518\n"
+    "0.49541204106253245 0.3259449866394699 1.4047309129688088 "
+    "0.8946401154288357\n"
+    "0.2945273736568512 0.43400940490917117 2.4447666612224523 "
+    "0.9577565506862605\n"
+    "0.2084049086610611 0.783950032902103 3.1365448306890307 "
+    "0.7893104612989987\n"
+    "0.6602533829356734 0.5121697443817288 0.8302632081974265 "
+    "0.5551135510796744\n"
+    "0.15766586338270927 0.40556375777792986 3.694554547991093 "
+    "0.6267992747676941\n"
+    "0.5406762276634964 0.4217405752406025 1.2298692988266189 "
+    "0.816810747058267\n"
+    "0.25733698086161194 0.5115419303332045 2.714737686786473 "
+    "0.9015485500563937\n"
+    "0.49945521901972856 0.10980074538748785 1.3884746730492596 "
+    "0.8883784360980179\n"
+    "0.2411978598018134 0.33770553073725007 2.8442753745905662 "
+    "0.869399036915281\n"
+    "0.501104879148041 0.6462664739212434 1.381879720377808 0.885781737727323\n"
+    "0.3011300282812832 0.27089000223139315 2.4004262397352045 "
+    "0.9651922661973786\n"
+    "0.30321547832604523 0.7606104978913149 2.3866231532578195 "
+    "0.9673851260893666\n"
+    "0.11733708130291509 0.40041163610496877 4.285408899279484 "
+    "0.46707225393551655\n"
+    "0.24321408951653622 0.4111407369754514 2.8276263934017805 "
+    "0.8736761623915893\n"
+    "0.6096212788603153 0.30495981329261257 0.9898347379039775 "
+    "0.6726274549190787\n"
+    "0.565138448326189 0.16481564419775974 1.141369073136236 "
+    "0.7685831932050827\n"
+    "0.37992305654786884 0.4719729516589324 1.9355730590657505 "
+    "0.9989400163794685\n"
+    "0.8018890739341398 0.11339200993066623 0.4415699849688005 "
+    "0.23160965256998597\n"
+    "0.5916914190158242 0.17954302909372077 1.0495400633189307 "
+    "0.7123895774272389\n"
+    "0.515004793907436 0.3179399671371814 1.327158139607194 "
+    "0.8629723198952258\n"
+    "0.2630268086317944 0.28545360111332196 2.6709986360761806 "
+    "0.91175118442728\n"
+    "0.5070827927947803 0.7477159472844881 1.358161978649721 "
+    "0.8761729806798746\n"
+    "0.6511934294781503 0.004066202738829627 0.8578971084248298 "
+    "0.5765266671179504\n"
+    "0.40499111313533986 0.4905009869875385 1.8077803099841008 "
+    "0.9901734176415274\n"
+    "0.5135767051770326 0.5092015984348186 1.3327117671974402 "
+    "0.8653903951408961\n"
+    "0.5251992247459449 0.48123750221764827 1.287955225333295 "
+    "0.8452373037783651\n"
+    "0.31260466753289995 0.8281165548180616 2.3256318595579537 "
+    "0.9763416707505421\n"
+    "0.43599717476528976 0.13430134403040062 1.6602390311004436 "
+    "0.9679157613043361\n"
+    "0.6021183479457812 0.27009480274262443 1.014602523445572 "
+    "0.6894211007166537\n"
+    "0.19536576268886452 0.6404690421668189 3.2657635425233416 "
+    "0.7519610743359042\n"
+    "0.38523379359705334 0.2762827465835116 1.9078097458069674 "
+    "0.9978100028571476\n"
+    "0.2695680144320056 0.5075872990783694 2.6218690956264097 "
+    "0.9227577490428283\n"
+    "0.41487071133628106 0.25417049379019296 1.7595766924769973 "
+    "0.9843984602374541\n"
+    "0.5660282942442199 0.6366698715109775 1.138222424395254 "
+    "0.7667601424200364\n"
+    "0.5082902443920763 0.352077014301742 1.3534052946636865 "
+    "0.8741948899896174\n"
+    "0.5180053261419635 0.6369014813090432 1.3155395092963442 "
+    "0.857837869208456\n"
+    "0.35791653595579964 0.6121628617433148 2.054910919102022 "
+    "0.9992599909994713\n"
+    "0.5617059650068088 0.6437319093887 1.153553519880428 0.7755727500483635\n"
+    "0.749412273285281 0.3003361511698712 0.5769320305485979 "
+    "0.3453185251766748\n"
+    "0.6022019880678777 0.5851290658321981 1.0143247231968182 "
+    "0.6892350656623405\n"
+    "0.05103424462664763 0.02326234832521501 5.950516816641618 "
+    "0.17035768441720162\n"
+    "0.6619409445505551 0.34963054444670916 0.8251578693038524 "
+    "0.5511141409805672\n"
+    "0.4456465720723797 0.9429967369385728 1.616458160815328 "
+    "0.9586035860003438\n"
+    "0.39956473521551716 0.02182768309438199 1.8347589726268723 "
+    "0.9927989644798532\n"
+    "0.7611404955363008 0.09867559019254468 0.5458746370667105 "
+    "0.318892615221217\n"
+    "0.3069940548633223 0.9187235757316996 2.3618537936970005 "
+    "0.9711692492318981\n"
+    "0.4642127077278444 0.09044150551648356 1.5348248199436305 "
+    "0.9377361311357042\n"
+    "0.37033719811190524 0.3353838311883437 1.9866826842386642 "
+    "0.9999554654589111\n"
+    "0.5729339694638087 0.0522901608589601 1.1139696108909862 "
+    "0.7524624015771769\n"
+    "0.15608522924643387 0.5123988149010286 3.71470615919878 "
+    "0.6210141808611813\n"
+    "0.5090550042003579 0.2137566275042555 1.3503984100160564 "
+    "0.8729356508269261\n"
+    "0.19875197049674354 0.10434494696157381 3.2313952220956392 "
+    "0.761959723745466\n"
+    "0.2647110569055049 0.8787973310414183 2.6582327983226453 "
+    "0.9146588923180841\n"
+    "0.7822327764384978 0.053127397529491915 0.4912058293025173 "
+    "0.2727269247857796\n"
+    "0.494293685710806 0.3562752883883338 1.409250865910263 "
+    "0.8963460696080094\n"
+    "0.521418533852712 0.5770831400078908 1.302404463583367 "
+    "0.8519098754078459\n"
+    "0.8041437079105134 0.06151905914524214 0.43595456918648395 "
+    "0.22702766182659134\n"
+    "0.18672687253160447 0.3546161587228853 3.3562166090076384 "
+    "0.7255086314579048\n"
+    "0.052259153870150676 0.15363900580840073 5.903080419589489 "
+    "0.17579686241579878\n"
+    "0.6562356263196176 0.09445263204898136 0.8424707361344623 "
+    "0.5646225630376035\n"
+    "0.797158616127416 0.1282883870204825 0.4534032070440727 "
+    "0.24131684404289552\n"
+    "0.0882532152008042 0.2531763822958859 4.855090301924179 "
+    "0.33914441466720024\n"
+    "0.29414969295479154 0.8771321322229544 2.4473329630222067 "
+    "0.9573084463684818\n"
+    "0.35699640120170106 0.2712894576107576 2.0600591558416244 "
+    "0.9991162713911297\n"
+    "0.06387535037352987 0.09256808488266355 5.501643490346864 "
+    "0.2281289765352355\n"
+    "0.7298444792075147 0.10031322742658455 0.6298476194357921 "
+    "0.39035577735224425\n";
+
+}  // namespace
 
 // End of file

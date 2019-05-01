@@ -100,39 +100,10 @@ if (NOT DEFINED RANDOM123_ROOT)
   endif()
 
 endif()
-
-# add a local directory 'lib' to the include search path
-# # (This is for building ¬¬NuT unit tests)
-# include_directories(include)
-#
-# # recurse into the include subdirectory: this is to pick up the installation
-# add_subdirectory(include)
-#
+# 2. ---------- Library ----------
 add_subdirectory(lib)
 
-#------Cmake clean up-------------------------------
-# set(NuT_CMAKE_CLEAN_FILES CMakeCache.txt cmake_install.cmake Makefile Doxyfile CMakeFiles)
-# set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${NuT_CMAKE_CLEAN_FILES}")
-set(CMAKE_CLEAN_CMD COMMAND ${CMAKE_COMMAND} -E remove -f CMakeCache.txt cmake_install.cmake Makefile Doxyfile
-    COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles)
-
-if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
-   # in SRC build
-   # delete cmake created directory(ies)
-   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
-     COMMAND ${CMAKE_COMMAND} -E remove_directory doc/Doxygen)
-else()
-   # out of SRC build
-   # delete cmake created directories
-   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
-     COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/*)
-endif()
-
-add_custom_target(clean-cmake
-     ${CMAKE_CLEAN_CMD})
-
-
-#----------Google Tests------------------------------
+# 3. ---------- Unit Tests ------------
 # default behaviour is to build gtests
 if (NOT DEFINED build_gtests)
    set(build_gtests "yes")
@@ -147,6 +118,30 @@ if (${build_gtests} )
       message("Warning: Test dir ${NuT_GTEST_DIR} not found.")
    endif()
 endif()
+
+##------Cmake clean up-------------------------------
+## set(NuT_CMAKE_CLEAN_FILES CMakeCache.txt cmake_install.cmake Makefile Doxyfile CMakeFiles)
+## set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${NuT_CMAKE_CLEAN_FILES}")
+#set(CMAKE_CLEAN_CMD COMMAND ${CMAKE_COMMAND} -E remove -f CMakeCache.txt cmake_install.cmake Makefile Doxyfile
+#    COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles)
+#
+#if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
+#   # in SRC build
+#   # delete cmake created directory(ies)
+#   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
+#     COMMAND ${CMAKE_COMMAND} -E remove_directory doc/Doxygen)
+#else()
+#   # out of SRC build
+#   # delete cmake created directories
+#   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
+#     COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/*)
+#endif()
+#
+#add_custom_target(clean-cmake
+#     ${CMAKE_CLEAN_CMD})
+
+
+#----------Google Tests------------------------------
 
 
 

@@ -3,247 +3,225 @@
 // Jun 19, 2012
 // (c) Copyright 2012 LANSLLC, all rights reserved
 
-
 #ifndef PARTITION_HH
 #define PARTITION_HH
 
 #include "Assert.hh"
-#include "sourcery.hh"  // for src_stats_t
 #include "mpi_helpers.hh"
+#include "sourcery.hh"  // for src_stats_t
 #include "types.hh"     // for id_t
-#include <iterator>     // for distance
-#include <memory>
 #include <algorithm>
 #include <iostream>
+#include <iterator>  // for distance
+#include <memory>
 
 // functions for partitioning NuT across processes and threads.
-namespace nut
-{
-    /** The new way: match up with McPhD's new method for partitioning. Here,
-     * chunks are explicitly generated; chunks are explicitly scheduled onto
-     * different ranks via getChunks.
-     */
-    typedef uint32_t ChunkId;
+namespace nut {
+/** The new way: match up with McPhD's new method for partitioning. Here,
+ * chunks are explicitly generated; chunks are explicitly scheduled onto
+ * different ranks via getChunks.
+ */
+typedef uint32_t ChunkId;
 
-    typedef uint32_t PtclId;
+typedef uint32_t PtclId;
 
-    typedef std::vector<ChunkId> ChunkIdVec;
+typedef std::vector<ChunkId> ChunkIdVec;
 
-    template <typename Tally_t>
-    struct IdxTally
-    {
-        ChunkId cid;
-        Tally_t & t;
-    }; // IdxTally
+template <typename Tally_t>
+struct IdxTally {
+  ChunkId cid;
+  Tally_t & t;
+};  // IdxTally
 
-    struct Chunk
-    {
-        ChunkId cid;
-        PtclId pstart;
-        PtclId pend;
-        Chunk(ChunkId const c,PtclId const s, PtclId const e)
-            : cid(c),pstart(s),pend(e) {}
-        Chunk()
-            : cid(uint32_t(-1)),pstart(uint32_t(-1)),pend(uint32_t(-1)) {}
-    };
+struct Chunk {
+  ChunkId cid;
+  PtclId pstart;
+  PtclId pend;
+  Chunk(ChunkId const c, PtclId const s, PtclId const e)
+      : cid(c), pstart(s), pend(e)
+  {
+  }
+  Chunk() : cid(uint32_t(-1)), pstart(uint32_t(-1)), pend(uint32_t(-1)) {}
+};
 
-    /** Compute the chunks for which a rank is responsible, given
-     * the size of the communicator dividing work and the
-     * total number of chunks.*/
-    void getChunks(uint32_t const rank, uint32_t const commSz,
-                   uint32_t const nc, ChunkIdVec & chunks);
+/** Compute the chunks for which a rank is responsible, given
+ * the size of the communicator dividing work and the
+ * total number of chunks.*/
+void
+getChunks(uint32_t const rank,
+          uint32_t const commSz,
+          uint32_t const nc,
+          ChunkIdVec & chunks);
 
-    /** Split source statistics into chunks. Provides types via its *
-     * template parameter.                                          */
-    template <typename src_stats_t>
-    struct Chunker
-    {
-        typedef std::shared_ptr<src_stats_t> sp_stats;
-        typedef std::vector<sp_stats> StatsVec;
-        typedef std::vector<Chunk>   ChunkVec;
-        typedef src_stats_t src_stats;
-        typedef typename src_stats::fp_t fp_t;
-        typedef typename src_stats::sz_t sz_t;
-        typedef typename src_stats::vsz  vsz;
+/** Split source statistics into chunks. Provides types via its *
+ * template parameter.                                          */
+template <typename src_stats_t>
+struct Chunker {
+  typedef std::shared_ptr<src_stats_t> sp_stats;
+  typedef std::vector<sp_stats> StatsVec;
+  typedef std::vector<Chunk> ChunkVec;
+  typedef src_stats_t src_stats;
+  typedef typename src_stats::fp_t fp_t;
+  typedef typename src_stats::sz_t sz_t;
+  typedef typename src_stats::vsz vsz;
 
-        /** Make a vector of chunk objects, and a parallel vector of *
-         * chunked source statistics.                                */
-        static
-        void
-        chunks(uint32_t const chkSz,
-               src_stats const & statsIn,
-               ChunkVec & chunks,
-               StatsVec & statsVOut)
-        {
-            take_n_particles(chkSz, statsIn,statsVOut);
-            size_t const n_chks(statsVOut.size());
-            Check(n_chks > 0,"Chunker::chunks() Got 0 chunks??");
-            vsz ns(n_chks);
-            std::transform(statsVOut.begin(),statsVOut.end(),ns.begin(),
-                           &get_n_ps);
-            vsz cums(n_chks,0);
-            // if n_chks == 1, next line ok (&cums[1])
-            // b/c then ns.begin() == --ns.end()
-            std::partial_sum(ns.begin(),--(ns.end()),&cums[1]);
-            if(chunks.size() != n_chks)
-            {
-                chunks.resize(n_chks);
-            }
-            for(sz_t i = 0; i < chunks.size(); ++i)
-            {
-                mkChunk(i,cums[i],ns[i],chunks[i]);
-            }
-            return;
-        } // chunks
+  /** Make a vector of chunk objects, and a parallel vector of *
+   * chunked source statistics.                                */
+  static void chunks(uint32_t const chkSz,
+                     src_stats const & statsIn,
+                     ChunkVec & chunks,
+                     StatsVec & statsVOut)
+  {
+    take_n_particles(chkSz, statsIn, statsVOut);
+    size_t const n_chks(statsVOut.size());
+    Check(n_chks > 0, "Chunker::chunks() Got 0 chunks??");
+    vsz ns(n_chks);
+    std::transform(statsVOut.begin(), statsVOut.end(), ns.begin(), &get_n_ps);
+    vsz cums(n_chks, 0);
+    // if n_chks == 1, next line ok (&cums[1])
+    // b/c then ns.begin() == --ns.end()
+    std::partial_sum(ns.begin(), --(ns.end()), &cums[1]);
+    if(chunks.size() != n_chks) { chunks.resize(n_chks); }
+    for(sz_t i = 0; i < chunks.size(); ++i) {
+      mkChunk(i, cums[i], ns[i], chunks[i]);
+    }
+    return;
+  }  // chunks
 
-        static
-        sz_t get_n_ps(sp_stats const ss){return ss->n_particles();}
+  static sz_t get_n_ps(sp_stats const ss) { return ss->n_particles(); }
 
-        static
-        void
-        mkChunk( uint32_t const i,
-                 sz_t const pid,
-                 sz_t const chkSz,
-                 Chunk & chunk)
-        {
-            chunk.cid = i;
-            chunk.pstart = pid;
-            chunk.pend   = pid + chkSz - 1;
+  static void mkChunk(uint32_t const i,
+                      sz_t const pid,
+                      sz_t const chkSz,
+                      Chunk & chunk)
+  {
+    chunk.cid = i;
+    chunk.pstart = pid;
+    chunk.pend = pid + chkSz - 1;
+  }
+
+  /** Given source statistics and chunk size, define a set of chunks.*
+   * The last chunk will have fewer particles (unless n_particles is *
+   * a multiple of n_chunks).                                        */
+  static void take_n_particles(uint32_t const chkSz,
+                               src_stats const & statsIn,
+                               StatsVec & statsVOut)
+  {
+    GreaterThan(chkSz, 0u, "take_n_particles:chunk size");
+    sz_t const n_ps_tot(statsIn.n_particles());
+    uint32_t const nchks(n_ps_tot / chkSz + ((n_ps_tot % chkSz != 0) ? 1 : 0));
+    statsVOut.reserve(nchks);
+    statsVOut.resize(0);
+    // anticipate that chunk will be size chkSz
+    sp_stats chk(new src_stats_t(0));
+    chk->reserve(chkSz);
+    sz_t n_curr(0);  // # of particles in chunk
+    sz_t curr_chunk(0);
+    for(sz_t i = 0; i < statsIn.size(); ++i) {
+      sz_t const n = statsIn.ns[i];
+      sz_t const c = statsIn.cidxs[i];
+      fp_t const e = statsIn.es[i];
+      fp_t const ew = statsIn.ews[i];
+      sz_t n_rem(n), n_used(0);
+      while(n_rem > 0) {
+        sz_t const n_take(chkSz - n_curr);
+        if(n_rem < n_take) {
+          chk->push_back(n_rem, c, e, ew);
+          n_curr += n_rem;
+          n_used += n_rem;
+          n_rem = 0;
         }
+        else {
+          // finalize this chunk, start new one
+          chk->push_back(n_take, c, e, ew);
+          Check(chk->size() <= chkSz, "chunk took too many");
+          n_used += n_take;
+          n_rem -= n_take;
+          statsVOut.push_back(chk);
+          chk = sp_stats(new src_stats_t(0));
+          chk->reserve(chkSz);
+          n_curr = 0;
+          curr_chunk++;
+        }
+      }  // while(n_rem)
+      Check(n_used == n, "Failed loop inv n_used == n");
+    }                // loop over statistics / cells
+    if(n_curr != 0)  // particles in last chunk...
+    {
+      statsVOut.push_back(chk);  // ...so commit chunk
+    }
+    return;
+  }  // takeNParticle
 
+  /* Alternate implementation of take_n_particles.
+     Meh. Looks like this won't really be much savings. Could be
+     a bit better if we had better notation for dealing with
+     tuples and lists/vectors.
+   */
+  // // the information in the "head" of the input list. This changes as
+  // // we "transfer" particles from input to output.
+  // struct head
+  // {
+  //     sz_t n;
+  //     fp_t e,ew;
+  // };
+  // // pointers/indices into various data structures
+  // struct comm_ptr
+  // {
+  //     std::shared_ptr<head> ph;
+  //     size_t issIn; // index into src_stats_t arrays
+  //     src_stats const & ssIn;
+  //     StatsVec & ssOut;
+  //     comm_ptr(std::shared_ptr<head> phi,size_t issIni,
+  //              src_stats const & ssIni,StatsVec & ssOuti)
+  //         : ph(phi),issIn(issIni),ssIn(ssIni),ssOut(ssOuti)
+  //     {}
+  // };
 
-        /** Given source statistics and chunk size, define a set of chunks.*
-         * The last chunk will have fewer particles (unless n_particles is *
-         * a multiple of n_chunks).                                        */
-        static
-        void
-        take_n_particles(uint32_t const chkSz,
-                         src_stats const & statsIn,
-                         StatsVec & statsVOut)
-        {
-            GreaterThan(chkSz,0u,"take_n_particles:chunk size");
-            sz_t const n_ps_tot(statsIn.n_particles());
-            uint32_t const nchks(n_ps_tot / chkSz +
-                                 ((n_ps_tot % chkSz != 0) ? 1 : 0));
-            statsVOut.reserve(nchks);
-            statsVOut.resize(0);
-            // anticipate that chunk will be size chkSz
-            sp_stats chk(new src_stats_t(0));
-            chk -> reserve(chkSz);
-            sz_t n_curr(0); // # of particles in chunk
-            sz_t curr_chunk(0);
-            for(sz_t i = 0; i < statsIn.size(); ++i)
-            {
-                sz_t const n  = statsIn.ns[i];
-                sz_t const c  = statsIn.cidxs[i];
-                fp_t const e  = statsIn.es[i];
-                fp_t const ew = statsIn.ews[i];
-                sz_t n_rem(n),n_used(0);
-                while(n_rem > 0)
-                {
-                    sz_t const n_take(chkSz - n_curr);
-                    if(n_rem < n_take)
-                    {
-                        chk -> push_back(n_rem,c,e,ew);
-                        n_curr += n_rem;
-                        n_used += n_rem;
-                        n_rem = 0;
-                    }
-                    else
-                    {
-                        // finalize this chunk, start new one
-                        chk -> push_back(n_take,c,e,ew);
-                        Check(chk->size() <= chkSz,"chunk took too many");
-                        n_used += n_take;
-                        n_rem -= n_take;
-                        statsVOut.push_back(chk);
-                        chk = sp_stats(new src_stats_t(0));
-                        chk -> reserve(chkSz);
-                        n_curr = 0;
-                        curr_chunk++;
-                    }
-                } // while(n_rem)
-                Check(n_used == n,"Failed loop inv n_used == n");
-            } // loop over statistics / cells
-            if(n_curr != 0) // particles in last chunk...
-            {
-                statsVOut.push_back(chk);  // ...so commit chunk
-            }
-            return;
-        } // takeNParticle
+  // static
+  // void take_n_ps(uint32_t const chkSz,
+  //                src_stats const & statsIn,
+  //                StatsVec & statsVOut)
+  // {
+  //     std::shared_ptr<head> ph(new head);
+  //     ph->n=sz_t(0); ph->e=fp_t(0); ph->ew=fp_t(0);
+  //     comm_ptr cp(
 
+  // }
 
+  // static
+  // comm_ptr &
+  // take_n(n,comm_ptr & curr)
+  // {
+  //     if(0 == curr.ph -> n) // then move to next cell
+  //     {
+  //         curr.issIn++;
+  //         if(curr.ssIn.size() == curr.issIn)
+  //         {
+  //             return curr;
+  //         }
+  //         curr.ph->n = curr.ssIn.ns[issIn];
+  //         curr.ph->e = curr.ssIn.es[issIn];
+  //         curr.ph->ew = curr.ssIn.ews[issIn];
+  //     }
+  //     sz_t & nc(curr.ph->n);
+  //     if(n < nc)
+  //     {
+  //         ssOut.back()->push_back(n,e,ew);
+  //         nc -= n;
+  //         return curr;
+  //     }
+  //     else
+  //     {
+  //         ssOut.back()->push_back(nc,e,ew);
+  //         nc = 0;
+  //         return take_n(n - nc,curr);
+  //     }
+  // } // take_n
 
-        /* Alternate implementation of take_n_particles.
-           Meh. Looks like this won't really be much savings. Could be
-           a bit better if we had better notation for dealing with
-           tuples and lists/vectors.
-         */
-        // // the information in the "head" of the input list. This changes as
-        // // we "transfer" particles from input to output.
-        // struct head
-        // {
-        //     sz_t n;
-        //     fp_t e,ew;
-        // };
-        // // pointers/indices into various data structures
-        // struct comm_ptr
-        // {
-        //     std::shared_ptr<head> ph;
-        //     size_t issIn; // index into src_stats_t arrays
-        //     src_stats const & ssIn;
-        //     StatsVec & ssOut;
-        //     comm_ptr(std::shared_ptr<head> phi,size_t issIni,
-        //              src_stats const & ssIni,StatsVec & ssOuti)
-        //         : ph(phi),issIn(issIni),ssIn(ssIni),ssOut(ssOuti)
-        //     {}
-        // };
+};  // Chunker
 
-
-        // static
-        // void take_n_ps(uint32_t const chkSz,
-        //                src_stats const & statsIn,
-        //                StatsVec & statsVOut)
-        // {
-        //     std::shared_ptr<head> ph(new head);
-        //     ph->n=sz_t(0); ph->e=fp_t(0); ph->ew=fp_t(0);
-        //     comm_ptr cp(
-
-        // }
-
-        // static
-        // comm_ptr &
-        // take_n(n,comm_ptr & curr)
-        // {
-        //     if(0 == curr.ph -> n) // then move to next cell
-        //     {
-        //         curr.issIn++;
-        //         if(curr.ssIn.size() == curr.issIn)
-        //         {
-        //             return curr;
-        //         }
-        //         curr.ph->n = curr.ssIn.ns[issIn];
-        //         curr.ph->e = curr.ssIn.es[issIn];
-        //         curr.ph->ew = curr.ssIn.ews[issIn];
-        //     }
-        //     sz_t & nc(curr.ph->n);
-        //     if(n < nc)
-        //     {
-        //         ssOut.back()->push_back(n,e,ew);
-        //         nc -= n;
-        //         return curr;
-        //     }
-        //     else
-        //     {
-        //         ssOut.back()->push_back(nc,e,ew);
-        //         nc = 0;
-        //         return take_n(n - nc,curr);
-        //     }
-        // } // take_n
-
-    }; // Chunker
-
-} // :: nut
+}  // namespace nut
 
 // /** Parallel decomposition: divide up particles in each cell between
 //  * processors. Every rank gets nc / commSz particles, plus one extra iff
@@ -273,7 +251,6 @@ namespace nut
 //         return nbase + nextra;
 //     }
 
-
 //     /** renumber_stats: partitions particle numbers among ranks in *
 //      * domain replicated MC. Straightforward transcription of the  *
 //      * McPhD function renumberStats. The statsout array must be    *
@@ -293,7 +270,6 @@ namespace nut
 //         return;
 //     } // renumber_stats
 
-
 //     /** Compute a rank's offset in the global set of particle ids (per cell).
 //      *    offset = \sum_{i=0}^{i<r} ps_per_rank(i,c,n_cell) */
 //     template <typename sz_t>
@@ -310,7 +286,6 @@ namespace nut
 //         }
 //         return acc;
 //     }
-
 
 //     /** Generate particle ids for one cell, implementing id of kth particle
 //      * in cell j for rank r given by
@@ -375,7 +350,6 @@ namespace nut
 
 // } // nut::
 
-#endif // include guard
-
+#endif  // include guard
 
 // End of file
