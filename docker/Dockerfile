@@ -8,7 +8,7 @@ WORKDIR /app
 ADD . /app
 
 # Install any needed packages specified in requirements.txt
-RUN apt-get update && apt-get -y install googletest librandom123-dev
+RUN apt-get update && apt-get -y install googletest librandom123-dev docker.io
 
 #RUN tar xvf clang+llvm-8.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
 

@@ -1,6 +1,3 @@
-services:
-  - docker:dind
-
 test:debug:
   before_script:
     - export http_proxy="http://proxyout.lanl.gov:8080"
