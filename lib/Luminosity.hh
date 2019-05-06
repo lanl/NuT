@@ -5,37 +5,32 @@
 
 #include <vector>
 
-namespace nut
-{
-    template <typename fp_t>
-    struct Luminosity
-    {
-        typedef std::vector<fp_t> vf;
+namespace nut {
+template <typename fp_t>
+struct Luminosity {
+  typedef std::vector<fp_t> vf;
 
-        vf nue;
-        vf nueb;
-        vf nux;
+  vf nue;
+  vf nueb;
+  vf nux;
 
-        explicit Luminosity(size_t n)
-            : nue(n,fp_t(0))
-            , nueb(n,fp_t(0))
-            , nux(n,fp_t(0))
-            {}
+  explicit Luminosity(size_t n)
+      : nue(n, fp_t(0)), nueb(n, fp_t(0)), nux(n, fp_t(0))
+  {
+  }
 
-        size_t size() const {return nue.size();}
+  size_t size() const { return nue.size(); }
 
-    }; // Luminosity
+};  // Luminosity
 
-    template <typename fp_t>
-    struct lum_t
-    {
-        fp_t nue;
-        fp_t nueb;
-        fp_t nux;
-    }; // lum 
+template <typename fp_t>
+struct lum_t {
+  fp_t nue;
+  fp_t nueb;
+  fp_t nux;
+};  // lum
 
-} // nut::
-
+}  // namespace nut
 
 // version
 // $Id$

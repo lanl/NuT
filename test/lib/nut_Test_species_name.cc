@@ -1,60 +1,22 @@
-//T. M. Kelley (c) 2011 LANS LLC
+// T. M. Kelley (c) 2011 LANS LLC
 
-#include "nut_Test_species_name.hh"
+#include "copyright.hh"
+#include "gtest/gtest.h"
 #include "test_aux.hh"
 #include "types.hh"
-#include "copyright.hh"
 
-namespace Nut_Test
+TEST(species_name,nu_e)
 {
-    namespace species_name_tests
-    {
-        // target describes the code being tested
-        char target[] = "species_name";
+  bool passed(true);
 
-        // for each test of target, add a declaration and
-        // a description of the aspect being tested.
-        bool test_1();
-        char aspect1[] = "nu_e";
+  std::cout << nut::copyright() << std::endl;
 
-    }
+  std::string n = nut::species_name(nut::nu_e);
 
-    bool test_species_name()
-    {
-        using namespace species_name_tests;
-        using test_aux::test;
+  passed = n == "nu_e";
 
-        bool passed1 = test( target, aspect1, test_1);
-
-        // call additional tests here.
-
-        return passed1;
-    }
-
-    namespace species_name_tests
-    {
-        bool test_1()
-        {
-            bool passed(true);
-
-            std::cout << nut::copyright() << std::endl;
-
-            std::string n = nut::species_name(nut::nu_e);
-
-            passed = n == "nu_e";
-
-            return passed;
-        }
-
-        // define additional tests here.
-
-    } // species_name_tests::
-
-} // Nut_Test::
-
-
-
-// version
-// $Id$
+  EXPECT_TRUE(passed);
+  return;
+}
 
 // End of file

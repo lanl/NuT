@@ -6,42 +6,36 @@
 #include <queue>
 #include <string>
 
-namespace nut
-{
-    struct Std_Log
-    {
-        typedef std::string entry_t;
+namespace nut {
+struct Std_Log {
+  typedef std::string entry_t;
 
-        void operator()(entry_t const & entry){ 
-            std::cout << entry << std::endl;
-        }
+  void operator()(entry_t const & entry) { std::cout << entry << std::endl; }
 
-        bool isNull(){return false;}
-    };
+  bool isNull() { return false; }
+};
 
-    struct Queue_Log
-    {
-        typedef std::string entry_t;
-        typedef std::queue<entry_t> entries_t;
+struct Queue_Log {
+  typedef std::string entry_t;
+  typedef std::queue<entry_t> entries_t;
 
-        entries_t entries;
+  entries_t entries;
 
-        void operator()(entry_t const & entry){ entries.push(entry);}
+  void operator()(entry_t const & entry) { entries.push(entry); }
 
-        bool isNull(){return false;}
-    };
+  bool isNull() { return false; }
+};
 
-    struct Null_Log
-    {
-        typedef std::string entry_t;
-        typedef std::queue<entry_t> entries_t;
+struct Null_Log {
+  typedef std::string entry_t;
+  typedef std::queue<entry_t> entries_t;
 
-        void operator()(entry_t const &) {}
+  void operator()(entry_t const &) {}
 
-        bool isNull(){return true;}
-    };
+  bool isNull() { return true; }
+};
 
-} // nut::
+}  // namespace nut
 
 // version
 // $Id$
