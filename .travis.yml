@@ -1,0 +1,15 @@
+language: cpp
+
+sudo: required
+
+services:
+  - docker
+
+compiler:
+  - clang
+
+before_install:
+  - docker pull tkzdockerid/coarct-testenv:clang-8-0-A
+
+script:
+  - docker run -it tkzdockerid/coarct-testenv:clang-8-0-A /bin/bash test_nut.sh
