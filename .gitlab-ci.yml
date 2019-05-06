@@ -1,0 +1,9 @@
+test:debug:
+  before_script:
+    - export http_proxy="http://proxyout.lanl.gov:8080"
+    - export https_proxy="http://proxyout.lanl.gov:8080"
+    - docker pull tkzdockerid/nut-testenv:clang-8-0-A
+  script:
+    - docker run -it tkzdockerid/nut-testenv:clang-8-0-A /bin/bash test_nut.sh
+
+
