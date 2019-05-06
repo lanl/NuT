@@ -9,7 +9,7 @@ compiler:
   - clang
 
 before_install:
-  - docker pull tkzdockerid/coarct-testenv:clang-8-0-A
+  - docker pull tkzdockerid/nut-testenv:clang-8-0-A
 
 script:
-  - docker run -it tkzdockerid/coarct-testenv:clang-8-0-A /bin/bash test_nut.sh
+  - docker run -it tkzdockerid/nut-testenv:clang-8-0-A /bin/bash test_nut.sh
