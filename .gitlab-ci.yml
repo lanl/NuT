@@ -1,7 +1,7 @@
 image: tkzdockerid/nut-testenv:clang-8-0-A
 
-services:
-  - docker:dind
+# services:
+#   - docker:dind
 
 test:debug:
   before_script:
