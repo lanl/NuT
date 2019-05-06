@@ -66,7 +66,7 @@ struct StatsNSz {
   static StatsNSz arbitrary()
   {
     uint32_t const n_c_mx(4000u);
-    uint32_t const n_p_mx(1000000u);
+    uint32_t const n_p_mx(100000u);
 
     gen_t g(mkGen());
     uint32_t n_clls(choose<uint32_t>(1u, n_c_mx, g));
