@@ -1,7 +1,7 @@
-image: gitlab/dind
+image: docker/stable
 
-# services:
-#   - docker:dind
+services:
+  - docker:dind
 
 test:debug:
   before_script:
