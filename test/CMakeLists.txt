@@ -45,6 +45,6 @@ target_link_libraries(nut_unittests gtest_main gtest nut)
 add_definitions(-DREQUIRE_ON)
 
 # Add to CTest
-add_test(NAME "nut_unittests")
+add_test(COMMAND "nut_unittests")
 
 # End of file
