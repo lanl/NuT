@@ -44,4 +44,7 @@ target_link_libraries(nut_unittests gtest_main gtest nut)
 # Build our tests with DBC assertions turned on.
 add_definitions(-DREQUIRE_ON)
 
+# Add to CTest
+add_test(NAME "nut_unittests")
+
 # End of file
