@@ -1,6 +1,8 @@
 # Build directories
 build*
 
+*sublime-workspace
+
 # Compiled Object files
 *.slo
 *.lo
