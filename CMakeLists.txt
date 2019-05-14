@@ -38,6 +38,8 @@
 # ensure min cmake version, optional
 cmake_minimum_required (VERSION 3.0)
 
+# Enable CTest
+enable_testing()
 
 # set compiler, looking first to the environment, defaulting to
 # GNU if nothing better is found
