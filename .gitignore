@@ -15,3 +15,7 @@ build*
 *.lai
 *.la
 *.a
+
+# Sublime workspace files
+*.sublime-workspace
+

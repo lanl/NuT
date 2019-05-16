@@ -5,7 +5,7 @@
 #include "test_aux.hh"
 #include "types.hh"
 
-TEST(species_name,nu_e)
+TEST(species_name, nu_e)
 {
   bool passed(true);
 

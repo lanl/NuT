@@ -8,24 +8,26 @@
 #include <iostream>
 #include <sstream>
 
-namespace{
+namespace {
 std::string line(
     " 1  1.5000E-02  1.7348E+06  2.7438E+11  3.5650E+08"
     "  8.1058E+00  0.0000E+00  5.1030E+02  1.7185E+02  "
     "5.2054E+21  3.1954E+07  2.2382E+02  3.1954E+07  "
     "2.2248E+02  1.1083E+08  4.7589E+02  1.1083E+08  "
     "4.7589E+02  9.5198E+07  4.7589E+02");
-} // anonymous::
+}  // namespace
 
 using test_aux::expect;
 
 TEST(nut_fileio, line_to_struct_float)
 {
+  constexpr size_t dim = 1;
+
   bool passed(false);
   typedef float fp_t;
-  typedef nut::MatStateRowP<fp_t> row_t;
+  typedef nut::MatStateRowP<fp_t, dim> row_t;
 
-  row_t row = nut::line_to_struct<fp_t>(line);
+  row_t row = nut::line_to_struct<fp_t, dim>(line);
 
   row_t exp;
   exp.zone = 1;
@@ -83,11 +85,12 @@ TEST(nut_fileio, line_to_struct_float)
 
 TEST(nut_fileio, line_to_struct_double)
 {
+  constexpr size_t dim = 1;
   bool passed(false);
   typedef double fp_t;
-  typedef nut::MatStateRowP<fp_t> row_t;
+  typedef nut::MatStateRowP<fp_t, dim> row_t;
 
-  row_t row = nut::line_to_struct<fp_t>(line);
+  row_t row = nut::line_to_struct<fp_t, dim>(line);
 
   row_t exp;
   exp.zone = 1;
@@ -145,12 +148,13 @@ TEST(nut_fileio, line_to_struct_double)
 
 TEST(nut_fileio, read_mat_state_file_double)
 {
+  constexpr size_t dim = 1;
   bool passed(true);
   typedef double fp_t;
-  typedef nut::MatStateRowP<fp_t> row_t;
+  typedef nut::MatStateRowP<fp_t, dim> row_t;
 
   std::stringstream instr(line);
-  std::vector<row_t> rows(nut::read_mat_state_file<fp_t>(instr));
+  std::vector<row_t> rows(nut::read_mat_state_file<fp_t, dim>(instr));
 
   size_t const exp_sz(1u);
 

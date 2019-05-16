@@ -9,7 +9,7 @@
 // bh-3.cc further differs in attempting OpenMP & MPI execution, as well as
 // changing to the Philox CBRNG (Salmon et al, SC 2011).
 
-#include "Mesh.hh"
+#include "Mesh3DCar.hh"
 #include "RNG.hh"
 #include "constants.hh"
 #include "types.hh"
@@ -38,13 +38,17 @@
 #include <execinfo.h>
 // #include <omp.h>
 
+constexpr size_t dim = 3;
+
 using op_t = nut::Opacity<nut::geom_t>;
-constexpr size_t dim = 1;
 using Velocity_t = nut::Velocity<nut::geom_t, dim>;
 
 using Mesh_t =
-    nut::Sphere_1D<nut::cell_t, nut::geom_t, nut::bdy_types::descriptor>;
+    nut::Cartesian_3D<nut::cell_t, nut::geom_t, nut::bdy_types::descriptor>;
 using p_t = nut::Particle<nut::geom_t, nut::rng_t, Mesh_t::Vector>;
+
+// static
+
 using tally_t = nut::Tally<nut::geom_t, dim>;
 using census_t = nut::Census<p_t>;
 
@@ -334,8 +338,10 @@ get_mat_state(std::string const filename,
   // specified limits; also, get back the indices corresponding
   // to the limits.
   size_t llimitIdx(0), ulimitIdx(0);
-  Mesh_t mesh = nut::rows_to_mesh<nut::geom_t>(rows, llimit, ulimit, llimitIdx,
-                                               ulimitIdx);
+  Mesh_t mesh = nut::make_vacuum_bdy_c3();
+  // Mesh_t mesh = nut::rows_to_mesh<nut::geom_t>(rows, llimit, ulimit,
+  // llimitIdx,
+  //                                              ulimitIdx);
   Require(ulimitIdx >= llimitIdx, "invalid limits");
   size_t const nrows(ulimitIdx - llimitIdx);
   Require(mesh.n_cells() == nrows,

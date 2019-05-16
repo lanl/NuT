@@ -12,6 +12,7 @@
 #include <cmath>
 
 namespace nut {
+
 template <size_t dim>
 using EandOmega = std::pair<geom_t, vec_t<dim> >;
 
@@ -25,6 +26,46 @@ geom_t inline gamma(vec_t<dim> const v)
 {
   return 1.0 / std::sqrt(1 - dot(v, v) / (c * c));
 }
+
+namespace spec_3D_Cartesian {
+
+EandOmega<3> inline LT_to_comoving(vec_t<3> const & v_lab,
+                                   geom_t const & e_lab,
+                                   vec_t<3> const & omega_lab)
+{
+  EandOmega<3> res;
+  geom_t & e = res.first;
+  vec_t<3> & omega = res.second;
+  geom_t const vdo = dot(v_lab, omega_lab);
+  geom_t const gam = gamma(v_lab);
+  geom_t const goc = gam / c;
+  geom_t const fac = 1 - goc * vdo / (gam + 1);
+  e = gam * e_lab * (1 - vdo / c);
+  geom_t const eoec = e_lab / e;  // E_lab/E_comving
+  omega.v[0] = eoec * (omega_lab.v[0] - goc * v_lab.v[0] * fac);
+  omega.v[1] = eoec * (omega_lab.v[1] - goc * v_lab.v[1] * fac);
+  omega.v[2] = eoec * (omega_lab.v[2] - goc * v_lab.v[2] * fac);
+  return res;
+}  // LT_to_comoving
+
+EandOmega<3> inline LT_to_lab(vec_t<3> const & v_lab,
+                              geom_t const & e_com,
+                              vec_t<3> const & omega_com)
+{
+  EandOmega<3> res;
+  geom_t const vdo = dot(v_lab, omega_com);
+  geom_t const gam = gamma(v_lab);
+  geom_t const goc = gam / c;
+  geom_t const fac = 1 + goc * vdo / (gam + 1);
+  res.first = gam * e_com * (1 + vdo / c);
+  geom_t const eoec = e_com / res.first;  // E/E_com
+  res.second.v[0] = eoec * (omega_com.v[0] + goc * v_lab.v[0] * fac);
+  res.second.v[1] = eoec * (omega_com.v[1] + goc * v_lab.v[1] * fac);
+  res.second.v[2] = eoec * (omega_com.v[2] + goc * v_lab.v[2] * fac);
+  return res;
+}  // LT_to_lab
+
+}  // namespace spec_3D_Cartesian
 
 namespace spec_1D {
 
