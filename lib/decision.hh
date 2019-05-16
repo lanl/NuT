@@ -45,7 +45,7 @@ decide_event(particle_t & p,  // non-const b/c of RNG
              opacity_t const & opacity,
              velocity_t const & velocity)
 {
-  static const size_t dim(particle_t::dim);
+  constexpr size_t dim(particle_t::dim);
 
   typedef typename particle_t::fp_t fp_t;
   // Currently there are always  three top-level events considered.
@@ -122,7 +122,7 @@ decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
   using namespace bdy_types;
   using namespace events;
   Event event(null);
-  bdy_types::descriptor b_type(mesh.bdy_type(cell, face));
+  bdy_types::descriptor b_type(mesh.get_bdy_type(cell, face));
   switch(b_type) {
     case V: event = escape; break;
     case R: event = reflect; break;

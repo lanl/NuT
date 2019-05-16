@@ -9,7 +9,7 @@ using nut::Equal;
 using nut::geom_t;
 typedef uint64_t cell_t;
 typedef nut::Cartesian_3D<cell_t, double> mesh_t;
-typedef mesh_t::vbd vbd;
+typedef mesh_t::vec_bdy_descs vbd;
 using test_aux::expect;
 using test_aux::soft_expect;
 
@@ -31,7 +31,7 @@ test_2_core(cell_t const nx, cell_t const ny, cell_t const nz)
 {
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(1.0, nx, 1.0, ny, 1.0, nz, bds);
+  mesh_t mesh(nx, ny, nz, 1.0, 1.0, 1.0, bds);
   cell_t const n_cs(nx * ny * nz);
   bool passed = n_cs == mesh.n_cells();
   return passed;
@@ -60,7 +60,7 @@ test_3_core(geom_t const dx,
   bool passed(true);
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
   geom_t const exp_vol(dx * dy * dz);
   for(cell_t c = 0; c < mesh.n_cells(); ++c) {
     geom_t const volume = mesh.volume(c);
@@ -97,7 +97,7 @@ TEST(nut_mesh_3D, isBoundary_3_cell_line)
 
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
 
   {
     cell_t c(0);
@@ -149,7 +149,7 @@ TEST(nut_mesh_3D, isBoundary_6_cell_cluster)
 
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
 
   {
     cell_t c(0);  // (0,0,0)
@@ -233,7 +233,7 @@ TEST(nut_mesh_3D, cell_across_face_6_cell_cluster)
 
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
   auto f = [&mesh](cell_t c, mesh_t::face_t const f, cell_t const e,
                    const char * s) {
     return expect(mesh.cell_across_face(c, f), e, s);
@@ -260,42 +260,42 @@ TEST(nut_mesh_3D, cell_across_face_6_cell_cluster)
   }
   {
     cell_t c(2);
-    bool passedc2 = f(c, mesh_t::low_x, cell_t(2), "c1 low x") &&
-                    f(c, mesh_t::high_x, cell_t(2), "c1 high x") &&
-                    f(c, mesh_t::low_y, cell_t(1), "c1 low y") &&
-                    f(c, mesh_t::high_y, cell_t(2), "c1 high y") &&
-                    f(c, mesh_t::low_z, cell_t(2), "c1 low z") &&
-                    f(c, mesh_t::high_z, cell_t(5), "c1 high z");
+    bool passedc2 = f(c, mesh_t::low_x, cell_t(2), "c2 low x") &&
+                    f(c, mesh_t::high_x, cell_t(2), "c2 high x") &&
+                    f(c, mesh_t::low_y, cell_t(1), "c2 low y") &&
+                    f(c, mesh_t::high_y, cell_t(2), "c2 high y") &&
+                    f(c, mesh_t::low_z, cell_t(2), "c2 low z") &&
+                    f(c, mesh_t::high_z, cell_t(5), "c2 high z");
     EXPECT_TRUE(passedc2);
   }
   {
     cell_t c(3);
-    bool passedc3 = f(c, mesh_t::low_x, cell_t(3), "c1 low x") &&
-                    f(c, mesh_t::high_x, cell_t(3), "c1 high x") &&
-                    f(c, mesh_t::low_y, cell_t(3), "c1 low y") &&
-                    f(c, mesh_t::high_y, cell_t(4), "c1 high y") &&
-                    f(c, mesh_t::low_z, cell_t(0), "c1 low z") &&
-                    f(c, mesh_t::high_z, cell_t(3), "c1 high z");
+    bool passedc3 = f(c, mesh_t::low_x, cell_t(3), "c3 low x") &&
+                    f(c, mesh_t::high_x, cell_t(3), "c3 high x") &&
+                    f(c, mesh_t::low_y, cell_t(3), "c3 low y") &&
+                    f(c, mesh_t::high_y, cell_t(4), "c3 high y") &&
+                    f(c, mesh_t::low_z, cell_t(0), "c3 low z") &&
+                    f(c, mesh_t::high_z, cell_t(3), "c3 high z");
     EXPECT_TRUE(passedc3);
   }
   {
     cell_t c(4);
-    bool passedc4 = f(c, mesh_t::low_x, cell_t(4), "c1 low x") &&
-                    f(c, mesh_t::high_x, cell_t(4), "c1 high x") &&
-                    f(c, mesh_t::low_y, cell_t(3), "c1 low y") &&
-                    f(c, mesh_t::high_y, cell_t(5), "c1 high y") &&
-                    f(c, mesh_t::low_z, cell_t(1), "c1 low z") &&
-                    f(c, mesh_t::high_z, cell_t(4), "c1 high z");
+    bool passedc4 = f(c, mesh_t::low_x, cell_t(4), "c4 low x") &&
+                    f(c, mesh_t::high_x, cell_t(4), "c4 high x") &&
+                    f(c, mesh_t::low_y, cell_t(3), "c4 low y") &&
+                    f(c, mesh_t::high_y, cell_t(5), "c4 high y") &&
+                    f(c, mesh_t::low_z, cell_t(1), "c4 low z") &&
+                    f(c, mesh_t::high_z, cell_t(4), "c4 high z");
     EXPECT_TRUE(passedc4);
   }
   {
     cell_t c(5);
-    bool passedc5 = f(c, mesh_t::low_x, cell_t(5), "c1 low x") &&
-                    f(c, mesh_t::high_x, cell_t(5), "c1 high x") &&
-                    f(c, mesh_t::low_y, cell_t(4), "c1 low y") &&
-                    f(c, mesh_t::high_y, cell_t(5), "c1 high y") &&
-                    f(c, mesh_t::low_z, cell_t(2), "c1 low z") &&
-                    f(c, mesh_t::high_z, cell_t(5), "c1 high z");
+    bool passedc5 = f(c, mesh_t::low_x, cell_t(5), "c5 low x") &&
+                    f(c, mesh_t::high_x, cell_t(5), "c5 high x") &&
+                    f(c, mesh_t::low_y, cell_t(4), "c5 low y") &&
+                    f(c, mesh_t::high_y, cell_t(5), "c5 high y") &&
+                    f(c, mesh_t::low_z, cell_t(2), "c5 low z") &&
+                    f(c, mesh_t::high_z, cell_t(5), "c5 high z");
     EXPECT_TRUE(passedc5);
   }
   return;
@@ -317,11 +317,10 @@ TEST(nut_mesh_3D, sample_position_buffer_rng)
   cell_t const nz = 2;
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
 
-  mesh_t::coord_t newcrd = mesh.sample_position(rng, 0);
-  vec_t<3> x = newcrd.x;
-  vec_t<3> o = newcrd.omega;
+  mesh_t::Vector x = mesh.sample_position(rng, 0);
+  mesh_t::Vector o = mesh.sample_direction(rng);
 
   bool passed = expect(x.v[0], 1.0, "cell 0, x") &&
                 expect(x.v[1], 1.5, "cell 0, y") &&
@@ -349,7 +348,7 @@ TEST(nut_mesh_3D, distance_to_bdy)
   cell_t const nz = 2;
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(dx, nx, dy, ny, dz, nz, bds);
+  mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
 
   vec_t<3> x, o;
   x.v = {{0.8, 2.9, 4.9}};
@@ -358,9 +357,9 @@ TEST(nut_mesh_3D, distance_to_bdy)
   mesh_t::d_to_b_t d2b = mesh.distance_to_bdy(crd, cell_t(0));
 
   bool passed = expect(d2b.d, 1.2, "distance") &&
-      expect(d2b.face, mesh_t::high_x, "face");
+                expect(d2b.face, mesh_t::high_x, "face");
   EXPECT_TRUE(passed);
-  return ;
+  return;
 }  // test_8
 
 // End of file

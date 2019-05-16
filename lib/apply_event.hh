@@ -53,7 +53,7 @@ template <typename ParticleT,
           typename OpacityT,
           typename VelocityT,
           typename CensusT,
-          typename fp_t>
+          typename TallyT>
 void
 apply_event(ParticleT & p,
             events::Event const & event,
@@ -61,11 +61,12 @@ apply_event(ParticleT & p,
             MeshT const & mesh,
             OpacityT const & opacity,
             VelocityT const & velocity,
-            Tally<fp_t> & tally,
+            TallyT & tally,
             CensusT & census,
-            fp_t const alpha = fp_t(2.0))
+            typename TallyT::fp_t const alpha = typename TallyT::fp_t(2.0))
 {
   using namespace events;
+  using fp_t = typename TallyT::fp_t;
 
   cell_t const index = make_idx(p.cell, opacity.m_n_cells);
 
@@ -76,22 +77,22 @@ apply_event(ParticleT & p,
   switch(event) {
     case nucleon_abs: apply_nucleon_abs(p, tally); break;
     case nucleon_elastic_scatter:
-      apply_nucleon_elastic_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
+      apply_nucleon_elastic_scatter<ParticleT, TallyT, VelocityT, MeshT>(
           p, tally, velocity);
       break;
     case electron_scatter: {
       fp_t const ebar = opacity.m_T.T_e_minus[index];
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
-          p, tally, e_e, velocity);
+      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
+                                                                velocity);
     } break;
     case positron_scatter: {
       fp_t const ebar = opacity.m_T.T_e_plus[index];
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
-          p, tally, e_e, velocity);
+      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
+                                                                velocity);
     } break;
     // case nu_e_annhilation:
     //     break;

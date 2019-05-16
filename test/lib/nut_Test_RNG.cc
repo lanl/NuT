@@ -18,7 +18,7 @@ public:
   void dump_state(std::ostream & o) { return m_rng.dump_state(o); }
 };
 
-TEST(nut_RNG,init_inst_Buffer_RNG_float)
+TEST(nut_RNG, init_inst_Buffer_RNG_float)
 {
   bool passed(true);
 
@@ -32,7 +32,7 @@ TEST(nut_RNG,init_inst_Buffer_RNG_float)
   return;
 }  // test_1
 
-TEST(nut_RNG,use_Buffer_RNG_float)
+TEST(nut_RNG, use_Buffer_RNG_float)
 {
   bool passed(true);
 
@@ -53,7 +53,7 @@ TEST(nut_RNG,use_Buffer_RNG_float)
   return;
 }  // test_2
 
-TEST(nut_RNG,use_Buffer_RNG_double)
+TEST(nut_RNG, use_Buffer_RNG_double)
 {
   bool passed(true);
 
@@ -74,7 +74,7 @@ TEST(nut_RNG,use_Buffer_RNG_double)
   return;
 }  // test_3
 
-TEST(nut_RNG,Buffer_RNG_double_rolled_over)
+TEST(nut_RNG, Buffer_RNG_double_rolled_over)
 {
   bool passed(true);
 
@@ -97,7 +97,7 @@ TEST(nut_RNG,Buffer_RNG_double_rolled_over)
   return;
 }  // test_4
 
-TEST(nut_RNG,init_inst_LCG_RNG)
+TEST(nut_RNG, init_inst_LCG_RNG)
 {
   bool passed(true);
 
@@ -108,7 +108,7 @@ TEST(nut_RNG,init_inst_LCG_RNG)
   return;
 }  // test_5
 
-TEST(nut_RNG,use_LCG_RNG_print_a_few_values)
+TEST(nut_RNG, use_LCG_RNG_print_a_few_values)
 {
   bool passed(true);
 
@@ -158,7 +158,7 @@ checkPred(it_t first, it_t last, pred_t pred, std::string errstr)
 
 }  // namespace
 
-TEST(nut_RNG,use_LCG_RNG_draw_1e6_values_check_for_0_lt_x_lt_1)
+TEST(nut_RNG, use_LCG_RNG_draw_1e6_values_check_for_0_lt_x_lt_1)
 {
   bool passed(true);
 
@@ -183,7 +183,7 @@ TEST(nut_RNG,use_LCG_RNG_draw_1e6_values_check_for_0_lt_x_lt_1)
   return;
 }  // test_7
 
-TEST(nut_RNG,init_inst_MLCG)
+TEST(nut_RNG, init_inst_MLCG)
 {
   bool passed(true);
 
@@ -194,7 +194,7 @@ TEST(nut_RNG,init_inst_MLCG)
   return;
 }  // test_8
 
-TEST(nut_RNG,use_MLCG_print_a_few_values_seed_42)
+TEST(nut_RNG, use_MLCG_print_a_few_values_seed_42)
 {
   bool passed(true);
 
@@ -216,7 +216,7 @@ TEST(nut_RNG,use_MLCG_print_a_few_values_seed_42)
   return;
 }  // test_9
 
-TEST(nut_RNG,use_MLCG_draw_1e6_values_check_for_0_lt_x_lt_1)
+TEST(nut_RNG, use_MLCG_draw_1e6_values_check_for_0_lt_x_lt_1)
 {
   bool passed(true);
 
@@ -241,7 +241,7 @@ TEST(nut_RNG,use_MLCG_draw_1e6_values_check_for_0_lt_x_lt_1)
   return;
 }  // test_10
 
-TEST(nut_RNG,use_MLCG_test_splitting)
+TEST(nut_RNG, use_MLCG_test_splitting)
 {
   bool passed(true);
 
@@ -310,7 +310,7 @@ TEST(nut_RNG, init_inst_Philox4x32)
   return;
 }  // test_12
 
-TEST(nut_RNG,print_a_few_values)
+TEST(nut_RNG, print_a_few_values)
 {
   bool passed(true);
 
@@ -337,7 +337,7 @@ TEST(nut_RNG,print_a_few_values)
   return;
 }  // test_13
 
-TEST(nut_RNG,compatible_with_Haskell_McPhD_usage)
+TEST(nut_RNG, compatible_with_Haskell_McPhD_usage)
 {
   bool passed(true);
 

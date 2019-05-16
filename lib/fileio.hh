@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 namespace nut {
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 struct MatStateRowP {
   uint32_t zone;
   fp_t m_encl;
@@ -39,7 +39,7 @@ struct MatStateRowP {
   fp_t lnux_pair;
   fp_t enux_pair;
 
-  bool operator==(MatStateRowP<fp_t> const & a) const
+  bool operator==(MatStateRowP<fp_t, dim> const & a) const
   {
     return zone == a.zone && m_encl == a.m_encl && radius == a.radius &&
            density == a.density && velocity == a.velocity &&
@@ -61,12 +61,12 @@ struct MatStateRowP {
 /*!\brief read a material state file into a vector of structures,
  * one structure per line. Conversion from string to number is
  * performed, but that's it. */
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 std::vector<MatStateRowP<fp_t, dim> >
 read_mat_state_file(std::istream & i);
 
 /*!\brief convert a line (string) to a MatStateRowP */
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 MatStateRowP<fp_t, dim>
 line_to_struct(std::string const & l);
 
@@ -74,13 +74,13 @@ template <typename fp_t, size_t dim>
 std::vector<MatStateRowP<fp_t, dim> >
 read_mat_state_file(std::istream & i)
 {
-  std::vector<MatStateRowP<fp_t> > v;
+  std::vector<MatStateRowP<fp_t, dim> > v;
   v.reserve(2700);
   while(!i.eof()) {
     std::string line;
     std::getline(i, line);
     if(line != "") {
-      MatStateRowP<fp_t> row = line_to_struct<fp_t>(line);
+      MatStateRowP<fp_t, dim> row = line_to_struct<fp_t, dim>(line);
       v.push_back(row);
     }
   }

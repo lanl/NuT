@@ -22,15 +22,15 @@ using test_aux::check_same_verb;
 using test_aux::check_two_changed;
 using test_aux::comp_verb;
 
-typedef double fp_t;
-typedef nut::Buffer_RNG<fp_t> rng_t;
-typedef nut::Particle<fp_t, rng_t> p_t;
-typedef nut::Tally<fp_t> t_t;
-typedef nut::Census<p_t> c_t;
-typedef nut::Sphere_1D<cell_t, nut::geom_t, nut::bdy_types::descriptor> mesh_t;
+using fp_t = double;
+using rng_t = nut::Buffer_RNG<fp_t>;
+using p_t = nut::Particle<fp_t, rng_t, nut::Vec_T<fp_t, 1>>;
+constexpr size_t dim = 1;
+using tally_t = nut::Tally<fp_t, dim>;
+using c_t = nut::Census<p_t>;
+using mesh_t = nut::Sphere_1D<cell_t, nut::geom_t, nut::bdy_types::descriptor>;
 
-
-namespace{
+namespace {
 // bits for std particle
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
                     0.21932404923057958};
@@ -70,7 +70,7 @@ struct gen_bounds {
   cell_t ctr;
 };  // gen_bdy_types
 
-TEST(nut_transport,transport_1_particle)
+TEST(nutally_transport, transport_1_particle)
 {
   bool passed(true);
 
@@ -80,8 +80,8 @@ TEST(nut_transport,transport_1_particle)
   using nut::events::Event;
 
   using nut::decide_boundary_event;
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
   // generate uniform mesh
   cell_t n_cells(10);
   vb bounds(n_cells + 1);
@@ -95,7 +95,7 @@ TEST(nut_transport,transport_1_particle)
   // opacity
 
   // tally
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
 
   // census
   c_t c, c_ref;

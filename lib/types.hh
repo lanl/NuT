@@ -48,39 +48,39 @@ enum Event {
 };
 }  // namespace events
 
-typedef double geom_t; /*^ type for geometry calculations */
+using geom_t = double; /*^ type for geometry calculations */
 
 /** \brief Our type for geometric vectors */
 template <size_t dim>
 using vec_t = Vec_T<geom_t, dim>;
 
-typedef std::vector<geom_t> vg;
+using vg = std::vector<geom_t>;
 
-typedef std::pair<events::Event, geom_t> event_n_dist;
+using event_n_dist = std::pair<events::Event, geom_t>;
 
-typedef uint32_t cell_t; /*^ cell index. Use cell_t(-1) for null cell. */
+using cell_t = uint32_t; /*^ cell index. Use cell_t(-1) for null cell. */
 
-typedef uint32_t id_t; /*^ particle index */
+using id_t = uint32_t; /*^ particle index */
 
-typedef std::vector<id_t> vid;
+using vid = std::vector<id_t>;
 
-typedef uint32_t group_t;
+using group_t = uint32_t;
 
-typedef uint32_t cntr_t;
+using cntr_t = uint32_t;
 
-typedef std::invalid_argument arg_error;
+using arg_error = std::invalid_argument;
 
-typedef std::ostream_iterator<size_t> sz_o_it;
+using sz_o_it = std::ostream_iterator<size_t>;
 
-typedef std::ostream_iterator<geom_t> ge_o_it;
+using ge_o_it = std::ostream_iterator<geom_t>;
 
-typedef nut::Philox4x32_RNG rng_t;
+using rng_t = nut::Philox4x32_RNG;
 
-typedef rng_t::ctr_t ctr_t;
+using ctr_t = rng_t::ctr_t;
 
-typedef rng_t::key_t key_t;
+using key_t = rng_t::key_t;
 
-typedef rng_t::seed_t seed_t;
+using seed_t = rng_t::seed_t;
 
 /* Neutrino species */
 enum Species {

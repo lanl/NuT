@@ -15,13 +15,19 @@
 
 namespace nut {
 
-template <typename fpt, typename rngt, size_t Dim = 1>
+/**\class Particle
+ * \tparam fpt: floating point type
+ *\tparam rngt: random number generator type
+ *\tparam vectort: space vector type
+ */
+template <typename fpt, typename rngt, typename vectort>
 struct Particle {
   // types and class constants
-  static const uint32_t dim = Dim;
-  typedef fpt fp_t;
-  typedef rngt rng_t;
-  typedef nut::Vec_T<fp_t, dim> vec_t;
+  // static const uint32_t dim = Dim;
+  using fp_t = fpt;
+  using rng_t = rngt;
+  using vec_t = vectort;
+  static constexpr size_t dim = vectort::dim;
 
   vec_t x;
   vec_t omega;
