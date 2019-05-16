@@ -11,7 +11,7 @@ Nut is a C++ analog to the Haskell McPhD code. It currently has serial (master b
 
 This compact app captures many of the computational characteristics and challenges of Monte Carlo transport codes. Random number generation is handled by the Philox class of random number generators[1]. We use the Random123 implementation, [available from D. E. Shaw research](http://www.deshawresearch.com/downloads/download_random123.cgi/ "D. E. Shaw Research").
 
-Note that the 3D Cartesian mesh is currently less well-tested and used compared to the 1D Spherical mesh. We are working to bring the Cartesian mesh up to the same level of testing as the spherical. If you notice any flaws, please open an issue. Thanks!
+Note that the 3D Cartesian mesh is currently less well-tested and used compared to the 1D Spherical mesh. We are working to bring the Cartesian mesh up to the same level of testing as the spherical. If you notice any flaws, please open an issue. Also, we don't really have any 3D problems ready to go; thus the data input is lacking. If you would like to propose a problem, feel free to make a feature request. Thanks!
 
 NuT uses the [cmake build system](http://cmake.org/ "CMake").
 
