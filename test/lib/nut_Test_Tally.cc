@@ -16,15 +16,17 @@ using test_aux::comp_verb;
 using test_aux::comp_verb_iter;
 using test_aux::tallies_same;
 
+using fp_t = double;
+constexpr size_t dim = 1;
+using t_t = nut::Tally<fp_t, dim>;
+
 TEST(nut_Tally, inst_init)
 {
   bool passed(true);
 
-  typedef double fp_t;
-
   size_t n_cells(100);
 
-  nut::Tally<fp_t> tally(n_cells);
+  nut::Tally<fp_t, dim> tally(n_cells);
 
   EXPECT_TRUE(passed);
   return;
@@ -33,10 +35,10 @@ TEST(nut_Tally, inst_init)
 TEST(nut_Tally, deposit_inelastic_el_scat)
 {
   bool passed(true);
-  typedef double fp_t;
+
   size_t n_cells(100);
 
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  nut::Tally<fp_t, dim> tally(n_cells), ref(n_cells);
 
   fp_t const ei(2.0), ef(1.9);
   fp_t const omega_i(1.0), omega_f(-1.0);
@@ -59,11 +61,9 @@ TEST(nut_Tally, deposit_inelastic_el_scat)
 TEST(nut_Tally, deposit_energy)
 {
   bool passed(true);
-  typedef double fp_t;
-  typedef std::vector<fp_t> vf;
-  size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
+  using vf = std::vector<fp_t>;
+  size_t n_cells(100);
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -86,12 +86,11 @@ TEST(nut_Tally, deposit_energy)
 TEST(nut_Tally, deposit_momentum_elastic)
 {
   bool passed(true);
-  typedef double fp_t;
-  // typedef std::vector<fp_t> vf;
+
+  // using vf = std::vector<fp_t>;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vv vv;
+  using vv = t_t::vv;
 
   static const size_t dim = t_t::dim;
 
@@ -120,11 +119,10 @@ TEST(nut_Tally, deposit_momentum_elastic)
 TEST(nut_Tally, count_electron_scatter_nu_e_)
 {
   bool passed(true);
-  typedef double fp_t;
+
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -149,11 +147,10 @@ TEST(nut_Tally, count_electron_scatter_nu_e_)
 TEST(nut_Tally, count_electron_scatter_nu_e_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
+
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -180,11 +177,9 @@ TEST(nut_Tally, count_electron_scatter_nu_e_bar_)
 TEST(nut_Tally, count_electron_scatter_nu_mu_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -209,11 +204,9 @@ TEST(nut_Tally, count_electron_scatter_nu_mu_)
 TEST(nut_Tally, count_electron_scatter_nu_mu_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -240,11 +233,9 @@ TEST(nut_Tally, count_electron_scatter_nu_mu_bar_)
 TEST(nut_Tally, count_electron_scatter_nu_tau_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -269,11 +260,9 @@ TEST(nut_Tally, count_electron_scatter_nu_tau_)
 TEST(nut_Tally, count_electron_scatter_nu_tau_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -300,10 +289,7 @@ TEST(nut_Tally, count_electron_scatter_nu_tau_bar_)
 TEST(nut_Tally, count_nucleon_abs_nu_e_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -329,10 +315,7 @@ TEST(nut_Tally, count_nucleon_abs_nu_e_)
 TEST(nut_Tally, count_nucleon_abs_nu_e_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -360,11 +343,9 @@ TEST(nut_Tally, count_nucleon_abs_nu_e_bar_)
 TEST(nut_Tally, count_nucleon_elastic_scatter)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -388,10 +369,7 @@ TEST(nut_Tally, count_nucleon_elastic_scatter)
 TEST(nut_Tally, count_escape)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -421,10 +399,7 @@ TEST(nut_Tally, count_escape)
 TEST(nut_Tally, count_reflect)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -448,11 +423,9 @@ TEST(nut_Tally, count_reflect)
 TEST(nut_Tally, count_cell_bdy)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -474,11 +447,9 @@ TEST(nut_Tally, count_cell_bdy)
 TEST(nut_Tally, count_cutoff)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
 
-  typedef nut::Tally<fp_t> t_t;
-  typedef t_t::vc vc;
+  using vc = t_t::vc;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -500,10 +471,7 @@ TEST(nut_Tally, count_cutoff)
 TEST(nut_Tally, count_census_nu_e_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -531,10 +499,7 @@ TEST(nut_Tally, count_census_nu_e_)
 TEST(nut_Tally, count_census_nu_e_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -564,10 +529,7 @@ TEST(nut_Tally, count_census_nu_e_bar_)
 TEST(nut_Tally, count_census_nu_mu_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -595,10 +557,7 @@ TEST(nut_Tally, count_census_nu_mu_)
 TEST(nut_Tally, count_census_nu_mu_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -628,10 +587,7 @@ TEST(nut_Tally, count_census_nu_mu_bar_)
 TEST(nut_Tally, count_census_nu_tau_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -659,10 +615,7 @@ TEST(nut_Tally, count_census_nu_tau_)
 TEST(nut_Tally, count_census_nu_tau_bar_)
 {
   bool passed(true);
-  typedef double fp_t;
   size_t n_cells(100);
-
-  typedef nut::Tally<fp_t> t_t;
 
   t_t tally(n_cells), ref(n_cells);
 
@@ -693,7 +646,7 @@ TEST(nut_Tally, merge)
 {
   size_t const n_cells(3);
 
-  typedef nut::Tally<double> tally_t;
+  using tally_t = nut::Tally<double, dim>;
   tally_t t1(n_cells);
   tally_t t2(n_cells);
   tally_t ref(n_cells);

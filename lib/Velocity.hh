@@ -46,7 +46,7 @@ private:
 
 };  // Velocity
 
-template <size_t dim = 1>
+template <size_t dim>
 struct vel_t {
   vec_t<dim> v;
 };

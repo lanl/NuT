@@ -29,6 +29,7 @@ public:
   static const size_t dim = 1;
 
   typedef geometry_t geom_t;
+  using Vector = Vec_T<geom_t, 1>;
   typedef bdy_descriptor_t bdy_desc_t;
   typedef std::vector<geom_t> vb;
   typedef std::vector<bdy_desc_t> vbd;
@@ -92,14 +93,15 @@ public:
     return result;
   }  // cell_across_face
 
-  geom_t sample_position(geom_t const urd, cell_t const cell) const
+  template <typename rng_t>
+  geom_t sample_position(rng_t & rng, cell_t const cell) const
   {
     extents_t extents = this->cell_extents(cell);
     geom_t const lo = extents.first;
     geom_t const hi = extents.second;
     geom_t const lo3 = lo * lo * lo;
     geom_t const hi3 = hi * hi * hi;
-    geom_t const r = std::pow(lo3 + (hi3 - lo3) * urd, 1.0 / 3.0);
+    geom_t const r = std::pow(lo3 + (hi3 - lo3) * rng.random(), 1.0 / 3.0);
     return r;
   }
 
@@ -111,7 +113,7 @@ public:
   }
 
   /*!\brief type of cell boundary */
-  bdy_desc_t bdy_type(cell_t const c, cell_t const face) const
+  bdy_desc_t get_bdy_type(cell_t const c, cell_t const face) const
   {
     cell_t const idx = make_idx(c, m_ncells);
     cell_t const fidx = face_to_index(face);
@@ -246,16 +248,16 @@ public:
     return d2b;
   }  // dist_to_bdy_impl
 
-  static inline EandOmega<1> LT_to_comoving(vec_t<1> const v_lab,
-                                            geom_t const & e_lab,
-                                            vec_t<1> const & omega_lab)
+  static EandOmega<1> LT_to_comoving(vec_t<1> const v_lab,
+                                     geom_t const & e_lab,
+                                     vec_t<1> const & omega_lab)
   {
     return spec_1D::LT_to_comoving_sphere1D(v_lab.v[0], e_lab, omega_lab);
   }  // LT_to_comoving
 
-  static EandOmega<1> inline LT_to_lab(vec_t<1> const v_lab,
-                                       geom_t const & e_com,
-                                       vec_t<1> const & omega_com)
+  static EandOmega<1> LT_to_lab(vec_t<1> const v_lab,
+                                geom_t const & e_com,
+                                vec_t<1> const & omega_com)
   {
     return spec_1D::LT_to_lab_sphere1D(v_lab.v[0], e_com, omega_com);
   }
@@ -272,6 +274,8 @@ public:
   }
 
 };  // Sphere_1D
+
+using Spherical_1D_Mesh = Sphere_1D<cell_t, geom_t, bdy_types::descriptor>;
 
 }  // namespace nut
 

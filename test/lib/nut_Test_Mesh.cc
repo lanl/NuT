@@ -270,14 +270,18 @@ TEST(nut_test, Sphere_1D_sample_position_in_cell)
 
   Sp1D mesh(bdys, bdy_types);
 
-  geom_t position = mesh.sample_position(0.1, 2);
+  geom_t rns[] = {0.1};
+  bool const silent{true};
+  nut::Buffer_RNG<geom_t> rng(rns, 1, silent);
+
+  geom_t position = mesh.sample_position(rng, 2);
 
   EXPECT_TRUE(soft_expect(position, 1.193483191927337, "sampled position"));
   return;
 }  // test_10
 
 /* Distance to boundary test cases generated in Mathematica: */
-namespace{
+namespace {
 std::string const spherical_d_to_b_tests_cxx =
     "874.2153502626182 -0.03033663375173612 777.8031650087146 "
     "909.9127641144195 280.2767555431319 2\n"
