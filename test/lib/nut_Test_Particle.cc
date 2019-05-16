@@ -2,6 +2,7 @@
 
 #include "Particle.hh"
 #include "RNG.hh"
+#include "Vec3D.hh"
 #include "gtest/gtest.h"
 
 TEST(nut_Particle, instantiation)
@@ -10,7 +11,10 @@ TEST(nut_Particle, instantiation)
   typedef uint32_t rng_t;
   typedef double fp_t;
 
-  typedef nut::Particle<fp_t, rng_t, 1> part_t;
+  constexpr size_t dim = 1;
+  using Vector = nut::Vec_T<double, dim>;
+
+  typedef nut::Particle<fp_t, rng_t, Vector> part_t;
 
   fp_t x(1.0);
   fp_t omega(1.0);
@@ -24,7 +28,7 @@ TEST(nut_Particle, instantiation)
 
   part_t particle({x}, {omega}, e, t, wt, cell, rng, s);
   EXPECT_TRUE(true);
-  return ;
+  return;
 }
 
 // End of file

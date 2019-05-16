@@ -12,12 +12,14 @@
 #include <stdint.h>
 
 namespace nut {
-template <typename fp_t, size_t dim>
+template <typename fp_t, size_t dimn>
 struct Vec_T {
   typedef fp_t const & gcr;
   typedef fp_t value_type;
   typedef fp_t * iterator;
   typedef fp_t const * const_iterator;
+
+  static constexpr size_t dim = dimn;
 
   typedef Vec_T<fp_t, dim> vec_t;
 
@@ -30,7 +32,7 @@ struct Vec_T {
 
   std::array<fp_t, dim> v;
 
-  size_t size() const { return size_t(3); }
+  constexpr size_t size() const { return size_t(3); }
 
   // Vec_T(gcr v1,gcr v2, gcr v3): v{v1,v2,v3}{}
 

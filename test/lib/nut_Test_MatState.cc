@@ -18,25 +18,27 @@ std::string line(
 using nut::MatState;
 using test_aux::expect;
 
-TEST(MatState, instantiation_and_initialization)
+TEST(MatState, 1D_instantiation_and_initialization)
 {
   // cf nut_Test_fileio.cc, test_3:
+  constexpr size_t dim{1};
   typedef double fp_t;
-  typedef nut::MatStateRowP<fp_t> row_t;
+  typedef nut::MatStateRowP<fp_t, dim> row_t;
   typedef std::vector<row_t> vecrow;
 
   std::stringstream instr(line);
-  vecrow rows(nut::read_mat_state_file<fp_t>(instr));
+  vecrow rows(nut::read_mat_state_file<fp_t, 1>(instr));
 
-  MatState<fp_t> state(rows);
+  MatState<fp_t, 1> state(rows);
 
   // check mat state
   // sizes of everything:
   size_t const exp_sz(1u);
-  bool sizes_ok = expect(state.density.size(), exp_sz, "density size") and
-           expect(state.luminosity.size(), exp_sz, "luminosity size") and
-           expect(state.temperature.size(), exp_sz, "temperature size") and
-           expect(state.velocity.size(), exp_sz, "velocity size");
+  bool sizes_ok =
+      expect(state.density.size(), exp_sz, "density size") and
+      expect(state.luminosity.size(), exp_sz, "luminosity size") and
+      expect(state.temperature.size(), exp_sz, "temperature size") and
+      expect(state.velocity.size(), exp_sz, "velocity size");
   EXPECT_TRUE(sizes_ok);
   // values
 
@@ -52,9 +54,10 @@ TEST(MatState, instantiation_and_initialization)
   EXPECT_TRUE(density_passed);
 
   // luminosity
-  bool luminosity_passed = expect(state.luminosity.nue[0], 1.42784e+59, "nue") and
-           expect(state.luminosity.nueb[0], 1.42784e+59, "nuebar") and
-           expect(state.luminosity.nux[0], 9.5198000000000001e+58, "nux");
+  bool luminosity_passed =
+      expect(state.luminosity.nue[0], 1.42784e+59, "nue") and
+      expect(state.luminosity.nueb[0], 1.42784e+59, "nuebar") and
+      expect(state.luminosity.nux[0], 9.5198000000000001e+58, "nux");
   EXPECT_TRUE(luminosity_passed);
 
   // temperature

@@ -25,16 +25,16 @@ using nut::Species;
 using nut::vec_t;
 using nut::bdy_types::descriptor;
 
-typedef double fp_t;
-typedef std::vector<fp_t> vf;
-typedef std::vector<vec_t<1>> vec_vec;
-typedef nut::Density<fp_t> rho_t;
-typedef nut::Temperature<fp_t> T_t;
-typedef nut::Buffer_RNG<fp_t> BRNG;
-typedef nut::Opacity<fp_t> OpB;
-typedef nut::Particle<fp_t, BRNG> p_t;
-typedef nut::Sphere_1D<cell_t, geom_t, descriptor> mesh_t;
-typedef nut::Velocity<fp_t, 1> v_t;
+using fp_t = double;
+using vf = std::vector<fp_t>;
+using vec_vec = std::vector<vec_t<1>>;
+using rho_t = nut::Density<fp_t>;
+using T_t = nut::Temperature<fp_t>;
+using BRNG = nut::Buffer_RNG<fp_t>;
+using OpB = nut::Opacity<fp_t>;
+using p_t = nut::Particle<fp_t, BRNG, nut::Vec_T<fp_t, 1>>;
+using mesh_t = nut::Sphere_1D<cell_t, geom_t, descriptor>;
+using v_t = nut::Velocity<fp_t, 1>;
 size_t ncells(10);
 vf nullv(ncells, fp_t(0));
 
@@ -114,8 +114,8 @@ TEST(nut_decide_event, decide_boundary_event)
   using nut::events::Event;
 
   using nut::decide_boundary_event;
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
   // generate uniform mesh
   cell_t n_cells(10);
   vb bounds(n_cells + 1);
@@ -168,8 +168,8 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
 {
   bool passed(true);
 
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
 
   using nut::decide_scatter_event;
   using nut::events::Event;
@@ -216,8 +216,8 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
 {
   bool passed(true);
 
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
 
   using nut::decide_scatter_event;
   using nut::events::Event;
@@ -357,8 +357,8 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
 
   using namespace nut::events;
 
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
   // generate uniform mesh
   cell_t n_cells(10);
   vb bounds(n_cells + 1);
@@ -425,8 +425,8 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
 
   using namespace nut::events;
 
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
   // generate uniform mesh
   cell_t n_cells(10);
   vb bounds(n_cells + 1);
@@ -482,8 +482,8 @@ TEST(nut_decide_event, decide_event_electron_scatter)
 
   using namespace nut::events;
 
-  typedef mesh_t::vb vb;
-  typedef mesh_t::vbd vbd;
+  using vb = mesh_t::vb;
+  using vbd = mesh_t::vbd;
   // generate uniform mesh
   cell_t n_cells(10);
   vb bounds(n_cells + 1);

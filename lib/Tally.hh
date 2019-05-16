@@ -22,20 +22,20 @@ namespace nut {
 /*! \brief arrays to keep track of tally in each mesh cell
  * \tparam <fp_t> {floating point type}
  */
-template <typename fp_t, size_t Dim = 1>
+template <typename fpt, size_t Dim>
 struct Tally {
   static const size_t dim = Dim;
 
-  typedef uint32_t cntr_t;  // counter type
-  typedef fp_t FP_T;
-  // typedef vec_t<Dim> vec_t;
-  typedef vec_t<dim> const & vec_cr;
-  typedef std::vector<cntr_t> vc;
-  typedef std::vector<fp_t> vf;
-  typedef std::vector<vec_t<dim>> vv;
-  typedef fp_t const & fp_cr;
-  typedef std::pair<fp_t, fp_t> esc;
-  typedef std::vector<esc> vesc;
+  using cntr_t = uint32_t;  // counter type
+  using fp_t = fpt;
+  using FP_T = fp_t;
+  using vec_cr = vec_t<dim> const &;
+  using vc = std::vector<cntr_t>;
+  using vf = std::vector<fp_t>;
+  using vv = std::vector<vec_t<dim>>;
+  using fp_cr = fp_t const &;
+  using esc = std::pair<fp_t, fp_t>;
+  using vesc = std::vector<esc>;
 
   vf energy;
   vv momentum;
@@ -186,7 +186,7 @@ struct Tally {
     return;
   }
 
-  void merge(Tally<fp_t> const & other)
+  void merge(Tally<fp_t, dim> const & other)
   {
     Require(other.n_cells() == this->n_cells(),
             "Cannot merge tallies with different sizes");

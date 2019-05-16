@@ -126,12 +126,13 @@ gen_init_particle(mesh_t const & mesh,
   // Mean energy of Fermionic Planckian is 7 pi^4/(180 zeta(3) * (k_B T).
   // Prefactor ~3.15137
   geom_t const ebar = 3.15137 * T;
-  geom_t const urd = rng.random();
-  geom_t const r = mesh.sample_position(urd, cell);
+  // geom_t const urd = rng.random();
+  typename mesh_t::Vector const r = mesh.sample_position(rng, cell);
+  typename mesh_t::Vector const oc = mesh.sample_direction(rng);
 
-  geom_t const osd = rng.random();
+  // geom_t const osd = rng.random();
+  // geom_t const oc = 2.0 * osd - 1.0;
 
-  geom_t const oc = 2.0 * osd - 1.0;
   geom_t const ec = gen_power_law_energy(alpha, ebar, rng);
   EandOmega<dim> enol = mesh_t::LT_to_lab(v, ec, oc);
   geom_t const e = enol.first;

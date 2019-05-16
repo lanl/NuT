@@ -11,6 +11,8 @@ Nut is a C++ analog to the Haskell McPhD code. It currently has serial (master b
 
 This compact app captures many of the computational characteristics and challenges of Monte Carlo transport codes. Random number generation is handled by the Philox class of random number generators[1]. We use the Random123 implementation, [available from D. E. Shaw research](http://www.deshawresearch.com/downloads/download_random123.cgi/ "D. E. Shaw Research").
 
+Note that the 3D Cartesian mesh is currently less well-tested and used compared to the 1D Spherical mesh. We are working to bring the Cartesian mesh up to the same level of testing as the spherical. If you notice any flaws, please open an issue. Thanks!
+
 NuT uses the [cmake build system](http://cmake.org/ "CMake").
 
 Los Alamos National Security, LLC (LANS) owns the copyright to NuT, which it identifies internally as LA-CC-11-087. The license is BSD 3-Clause.
@@ -24,7 +26,7 @@ Random123 is implemented entirely in header files, so installation is minimal.
 1. Specify environment variables GTEST_DIR, RANDOM123_DIR, CC, and CXX. RANDOM123_DIR
 should point to the root of the installation. For example,
 
-   export GTEST_DIR=/path/to/gtest 
+   export GTEST_DIR=/path/to/gtest
 
    export RANDOM123_DIR=/home/me/downloads/deshaw/Random123-1.08
 
