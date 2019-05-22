@@ -20,7 +20,7 @@ TEST(nut_mesh_3D, instantiate)
   cell_t const nz = 1;
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
-  mesh_t mesh(1.0, nx, 1.0, ny, 1.0, nz, bds);
+  mesh_t mesh(nx, ny, nz, 1.0, 1.0, 1.0, bds);
   EXPECT_TRUE(true);
   return;
 }
