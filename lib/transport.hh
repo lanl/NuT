@@ -70,7 +70,6 @@ transport(PContainer & p_source,
           typename TallyT::fp_t const alpha)
 {
   typedef typename PContainer::value_type p_t;
-  using fp_t = typename TallyT::fp_t;
   using namespace std::placeholders;
 
   if(p_sink.size() != p_source.size()) { p_sink.resize(p_source.size()); }
