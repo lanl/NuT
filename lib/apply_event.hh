@@ -18,6 +18,11 @@
 #include <sstream>
 #include <stdexcept>
 
+/* unknown_event and underresolved_event are not used in all translation units,
+ * leading to unexciting warnings. Suppress those. */
+#pragma clang diagnostic push
+#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
+
 namespace nut {
 namespace {
 void
@@ -260,10 +265,8 @@ unknown_event(nut::events::Event const & event)
 
 }  // namespace nut
 
+#pragma clang diagnostic pop
+
 #endif  // include guard
 
 // End of file
-
-/*
-"collision","nucleon_abs","nucleon_elastic_scatter","electron_scatter","positron_scatter","nu_e_annhilation","nu_x_annhilation","boundary","cell_low_x_boundary","cell_high_x_boundary","escape","reflect","step_end"
-*/

@@ -18,6 +18,11 @@
 #include <utility>  // pair
 // #include <iomanip>
 
+/* unresolved_event is not used in all translation units,
+ * leading to unexciting warnings. Suppress those. */
+#pragma clang diagnostic push
+#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
+
 namespace nut {
 
 namespace {
@@ -189,9 +194,8 @@ unresolved_event(size_t lineno, std::string const & eventstr)
 
 }  // namespace nut
 
-#endif  // include guard
+#pragma clang diagnostic pop
 
-// version
-// $Id$
+#endif  // include guard
 
 // End of file
