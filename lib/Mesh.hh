@@ -18,6 +18,14 @@
 #include <vector>
 
 namespace nut {
+
+namespace Sphere_1D_Faces{
+enum Faces{
+  LOW = 0,
+  HIGH = 1
+};
+}
+
 /*!\brief Mesh functions for 1D spherical geometry.
  * \tparam <cell_t> {cell index type}
  * \tparam <boundary_t> {geometry (numerical) type}
@@ -35,6 +43,8 @@ public:
   typedef std::vector<bdy_desc_t> vbd;
   typedef std::pair<geom_t, geom_t> extents_t;
 
+  using Face = Sphere_1D_Faces::Faces;
+
   struct coord_t {
     vec_t<dim> x;
     vec_t<dim> omega;
@@ -43,6 +53,10 @@ public:
     geom_t d;    /** distance to boundary */
     cell_t face; /** which face will be intersected: 0 (low) or 1 (high) */
   };
+
+  static const cell_t null_cell_;
+
+  static cell_t null_cell() { return null_cell_; }
 
   // ctor
   Sphere_1D(vb const & bdys_, vbd const & descs_)
@@ -66,31 +80,42 @@ public:
     return vol;
   }  // volume
 
-  /*!\brief which cell is across a face. Computed.
+  /*!\brief which cell is across a face. Note this just tells what the next
+   * cell is, no account is taken of the boundary type.
    *
    * \param cell: 0 < cell <= n_cells
    * \param face: 0 (left) or 1 (right)
    */
-  cell_t cell_across_face(cell_t const cell, cell_t face) const
+  cell_t cell_across(cell_t const cell, cell_t face) const
   {
     cellOK(cell);
-    LessThan(face, cell_t(2), "face");
-    // compute index into descriptors
-    cell_t idx = cell - 1;
-    idx += face;
-    bdy_desc_t const & btype = m_descs[idx];
-    cell_t result(-1);
-    switch(btype) {
-      case bdy_types::T: result = cell - 1 + 2 * face; break;
-      case bdy_types::R: result = cell; break;
-      case bdy_types::V: result = cell_t(0); break;
-      default:
-        std::stringstream errstr;
-        errstr << "Sphere_1D::cell_across_face" << __LINE__
-               << " unknown boundary type: " << btype;
-        Require(false, errstr.str().c_str());
+    // LessThan(face, cell_t(2), "face");
+    if(cell == 1 && face == Sphere_1D_Faces::LOW){
+      return null_cell_;
     }
-    return result;
+    else if(cell == m_ncells && face == Sphere_1D_Faces::HIGH){
+      return null_cell_;
+    }
+    if(face == Sphere_1D_Faces::LOW){
+      return cell - 1;
+    }
+    return cell + 1;
+    // // compute index into descriptors
+    // cell_t idx = cell - 1;
+    // idx += face;
+    // bdy_desc_t const & btype = m_descs[idx];
+    // cell_t result(-1);
+    // switch(btype) {
+    //   case bdy_types::CELL: result = cell - 1 + 2 * face; break;
+    //   case bdy_types::REFLECTIVE: result = cell; break;
+    //   case bdy_types::VACUUM: result = null_cell_; break;
+    //   default:
+    //     std::stringstream errstr;
+    //     errstr << "Sphere_1D::cell_across_face" << __LINE__
+    //            << " unknown boundary type: " << btype;
+    //     Require(false, errstr.str().c_str());
+    // }
+    // return result;
   }  // cell_across_face
 
   template <typename rng_t>
@@ -276,6 +301,9 @@ public:
 };  // Sphere_1D
 
 using Spherical_1D_Mesh = Sphere_1D<cell_t, geom_t, bdy_types::descriptor>;
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+const cell_t Sphere_1D<cell_t,geometry_t,bdy_descriptor_t>::null_cell_ = 0xFFFFFFFF;
 
 }  // namespace nut
 

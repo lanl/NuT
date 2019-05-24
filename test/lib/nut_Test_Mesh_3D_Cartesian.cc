@@ -248,7 +248,7 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
     return expect(mesh.cell_across(c, f, p), e, s);
   };
 
-  Cell_T const null_cell = Mesh_T::null_cell;
+  Cell_T const null_cell = Mesh_T::null_cell();
 
   {
     Cell_T c(0);  // (0,0,0)

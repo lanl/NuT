@@ -136,7 +136,7 @@ Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::sample_position(
 
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 cell_t
-Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::cell_across_face(
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::cell_across(
     cell_t const cell,
     face_t face) const
 {
@@ -150,17 +150,7 @@ Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::cell_across_face(
     result = toIndex(updd);
   }
   else {
-    // otherwise, consult boundary condition
-    bdy_desc_t const bd = this->getBC(face, cell);
-    switch(bd) {
-      case nut::bdy_types::R: result = cell; break;
-      case nut::bdy_types::V: result = vac_cell; break;
-      default:
-        std::stringstream errstr;
-        errstr << "Mesh3DCar::cell_across_face: "
-               << "unexpected boundary descriptor " << bd;
-        printf("%s:%i %s\n", __FUNCTION__, __LINE__, errstr.str().c_str());
-    }
+    result = null_cell_;
   }
   return result;
 }  // cell_across_face

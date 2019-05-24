@@ -13,6 +13,14 @@ typedef mesh_t::vec_bdy_descs vbd;
 using test_aux::expect;
 using test_aux::soft_expect;
 
+using Face = mesh_t::Face;
+Face const f_l_x{mesh_t::low_x};
+Face const f_l_y{mesh_t::low_y};
+Face const f_l_z{mesh_t::low_z};
+Face const f_h_x{mesh_t::high_x};
+Face const f_h_y{mesh_t::high_y};
+Face const f_h_z{mesh_t::high_z};
+
 TEST(nut_mesh_3D, instantiate)
 {
   cell_t const nx = 1;
@@ -220,7 +228,7 @@ TEST(nut_mesh_3D, isBoundary_6_cell_cluster)
   return;
 }  // test_5
 
-TEST(nut_mesh_3D, cell_across_face_6_cell_cluster)
+TEST(nut_mesh_3D, cell_across_6_cell_cluster)
 {
   using nut::ijk_t;
   geom_t const dx(2.0);
@@ -236,68 +244,120 @@ TEST(nut_mesh_3D, cell_across_face_6_cell_cluster)
   mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
   auto f = [&mesh](cell_t c, mesh_t::face_t const f, cell_t const e,
                    const char * s) {
-    return expect(mesh.cell_across_face(c, f), e, s);
+    return expect(mesh.cell_across(c, f), e, s);
   };
+  cell_t const null_cell = mesh_t::null_cell();
   {
     cell_t c(0);  // (0,0,0)
-    bool passedc0 = f(c, mesh_t::low_x, cell_t(0), "c0 low x") &&
-                    f(c, mesh_t::high_x, cell_t(0), "c0 high x") &&
-                    f(c, mesh_t::low_y, cell_t(0), "c0 low y") &&
-                    f(c, mesh_t::high_y, cell_t(1), "c0 high y") &&
-                    f(c, mesh_t::low_z, cell_t(0), "c0 low z") &&
-                    f(c, mesh_t::high_z, cell_t(3), "c0 high z");
-    EXPECT_TRUE(passedc0);
+    bool passedc01 = f(c, f_l_x, null_cell, "c0 low x");
+    bool passedc02 = f(c, f_h_x, null_cell, "c0 high x");
+    bool passedc03 = f(c, f_l_y, null_cell, "c0 low y");
+    bool passedc04 = f(c, f_h_y, cell_t(1), "c0 high y");
+    bool passedc05 = f(c, f_l_z, null_cell, "c0 low z");
+    bool passedc06 = f(c, f_h_z, cell_t(3), "c0 high z");
+    EXPECT_TRUE(passedc01);
+    EXPECT_TRUE(passedc02);
+    EXPECT_TRUE(passedc03);
+    EXPECT_TRUE(passedc04);
+    EXPECT_TRUE(passedc05);
+    EXPECT_TRUE(passedc06);
   }
   {
     cell_t c(1);
-    bool passedc1 = f(c, mesh_t::low_x, cell_t(1), "c1 low x") &&
-                    f(c, mesh_t::high_x, cell_t(1), "c1 high x") &&
-                    f(c, mesh_t::low_y, cell_t(0), "c1 low y") &&
-                    f(c, mesh_t::high_y, cell_t(2), "c1 high y") &&
-                    f(c, mesh_t::low_z, cell_t(1), "c1 low z") &&
-                    f(c, mesh_t::high_z, cell_t(4), "c1 high z");
-    EXPECT_TRUE(passedc1);
+    bool passedc11 = f(c, f_l_x, null_cell, "c1 low x");
+    bool passedc12 = f(c, f_h_x, null_cell, "c1 high x");
+    bool passedc13 = f(c, f_l_y, cell_t(0), "c1 low y");
+    bool passedc14 = f(c, f_h_y, cell_t(2), "c1 high y");
+    bool passedc15 = f(c, f_l_z, null_cell, "c1 low z");
+    bool passedc16 = f(c, f_h_z, cell_t(4), "c1 high z");
+    EXPECT_TRUE(passedc11);
+    EXPECT_TRUE(passedc12);
+    EXPECT_TRUE(passedc13);
+    EXPECT_TRUE(passedc14);
+    EXPECT_TRUE(passedc15);
+    EXPECT_TRUE(passedc16);
   }
   {
     cell_t c(2);
-    bool passedc2 = f(c, mesh_t::low_x, cell_t(2), "c2 low x") &&
-                    f(c, mesh_t::high_x, cell_t(2), "c2 high x") &&
-                    f(c, mesh_t::low_y, cell_t(1), "c2 low y") &&
-                    f(c, mesh_t::high_y, cell_t(2), "c2 high y") &&
-                    f(c, mesh_t::low_z, cell_t(2), "c2 low z") &&
-                    f(c, mesh_t::high_z, cell_t(5), "c2 high z");
-    EXPECT_TRUE(passedc2);
+    bool passedc21 = f(c, f_l_x, null_cell, "c2 low x");
+    bool passedc22 = f(c, f_h_x, null_cell, "c2 high x");
+    bool passedc23 = f(c, f_l_y, cell_t(1), "c2 low y");
+    bool passedc24 = f(c, f_h_y, null_cell, "c2 high y");
+    bool passedc25 = f(c, f_l_z, null_cell, "c2 low z");
+    bool passedc26 = f(c, f_h_z, cell_t(5), "c2 high z");
+    EXPECT_TRUE(passedc21);
+    EXPECT_TRUE(passedc22);
+    EXPECT_TRUE(passedc23);
+    EXPECT_TRUE(passedc24);
+    EXPECT_TRUE(passedc25);
+    EXPECT_TRUE(passedc26);
   }
   {
     cell_t c(3);
-    bool passedc3 = f(c, mesh_t::low_x, cell_t(3), "c3 low x") &&
-                    f(c, mesh_t::high_x, cell_t(3), "c3 high x") &&
-                    f(c, mesh_t::low_y, cell_t(3), "c3 low y") &&
-                    f(c, mesh_t::high_y, cell_t(4), "c3 high y") &&
-                    f(c, mesh_t::low_z, cell_t(0), "c3 low z") &&
-                    f(c, mesh_t::high_z, cell_t(3), "c3 high z");
-    EXPECT_TRUE(passedc3);
+    bool passedc31 = f(c, f_l_x, null_cell, "c3 low x");
+    bool passedc32 = f(c, f_h_x, null_cell, "c3 high x");
+    bool passedc33 = f(c, f_l_y, null_cell, "c3 low y");
+    bool passedc34 = f(c, f_h_y, cell_t(4), "c3 high y");
+    bool passedc35 = f(c, f_l_z, cell_t(0), "c3 low z");
+    bool passedc36 = f(c, f_h_z, null_cell, "c3 high z");
+    EXPECT_TRUE(passedc31);
+    EXPECT_TRUE(passedc32);
+    EXPECT_TRUE(passedc33);
+    EXPECT_TRUE(passedc34);
+    EXPECT_TRUE(passedc35);
+    EXPECT_TRUE(passedc36);
   }
   {
     cell_t c(4);
-    bool passedc4 = f(c, mesh_t::low_x, cell_t(4), "c4 low x") &&
-                    f(c, mesh_t::high_x, cell_t(4), "c4 high x") &&
-                    f(c, mesh_t::low_y, cell_t(3), "c4 low y") &&
-                    f(c, mesh_t::high_y, cell_t(5), "c4 high y") &&
-                    f(c, mesh_t::low_z, cell_t(1), "c4 low z") &&
-                    f(c, mesh_t::high_z, cell_t(4), "c4 high z");
-    EXPECT_TRUE(passedc4);
+    bool passedc41 = f(c, f_l_x, null_cell, "c4 low x");
+    bool passedc42 = f(c, f_h_x, null_cell, "c4 high x");
+    bool passedc43 = f(c, f_l_y, cell_t(3), "c4 low y");
+    bool passedc44 = f(c, f_h_y, cell_t(5), "c4 high y");
+    bool passedc45 = f(c, f_l_z, cell_t(1), "c4 low z");
+    bool passedc46 = f(c, f_h_z, null_cell, "c4 high z");
+    EXPECT_TRUE(passedc41);
+    EXPECT_TRUE(passedc42);
+    EXPECT_TRUE(passedc43);
+    EXPECT_TRUE(passedc44);
+    EXPECT_TRUE(passedc45);
+    EXPECT_TRUE(passedc46);
   }
   {
     cell_t c(5);
-    bool passedc5 = f(c, mesh_t::low_x, cell_t(5), "c5 low x") &&
-                    f(c, mesh_t::high_x, cell_t(5), "c5 high x") &&
-                    f(c, mesh_t::low_y, cell_t(4), "c5 low y") &&
-                    f(c, mesh_t::high_y, cell_t(5), "c5 high y") &&
-                    f(c, mesh_t::low_z, cell_t(2), "c5 low z") &&
-                    f(c, mesh_t::high_z, cell_t(5), "c5 high z");
-    EXPECT_TRUE(passedc5);
+    bool passedc51 = f(c, f_l_x, null_cell, "c5 low x");
+    bool passedc52 = f(c, f_h_x, null_cell, "c5 high x");
+    bool passedc53 = f(c, f_l_y, cell_t(4), "c5 low y");
+    bool passedc54 = f(c, f_h_y, null_cell, "c5 high y");
+    bool passedc55 = f(c, f_l_z, cell_t{2}, "c5 low z");
+    bool passedc56 = f(c, f_h_z, null_cell, "c5 high z");
+    EXPECT_TRUE(passedc51);
+    EXPECT_TRUE(passedc52);
+    EXPECT_TRUE(passedc53);
+    EXPECT_TRUE(passedc54);
+    EXPECT_TRUE(passedc55);
+    EXPECT_TRUE(passedc56);
   }
+
+  // {
+  //   cell_t c(4);
+  //   bool passedc4 = f(c, mesh_t::low_x, cell_t(4), "c4 low x") &&
+  //                   f(c, mesh_t::high_x, cell_t(4), "c4 high x") &&
+  //                   f(c, mesh_t::low_y, cell_t(3), "c4 low y") &&
+  //                   f(c, mesh_t::high_y, cell_t(5), "c4 high y") &&
+  //                   f(c, mesh_t::low_z, cell_t(1), "c4 low z") &&
+  //                   f(c, mesh_t::high_z, cell_t(4), "c4 high z");
+  //   EXPECT_TRUE(passedc4);
+  // }
+  // {
+  //   cell_t c(5);
+  //   bool passedc5 = f(c, mesh_t::low_x, cell_t(5), "c5 low x") &&
+  //                   f(c, mesh_t::high_x, cell_t(5), "c5 high x") &&
+  //                   f(c, mesh_t::low_y, cell_t(4), "c5 low y") &&
+  //                   f(c, mesh_t::high_y, cell_t(5), "c5 high y") &&
+  //                   f(c, mesh_t::low_z, cell_t(2), "c5 low z") &&
+  //                   f(c, mesh_t::high_z, cell_t(5), "c5 high z");
+  //   EXPECT_TRUE(passedc5);
+  // }
   return;
 }  // test_6
 

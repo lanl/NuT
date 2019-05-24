@@ -10,6 +10,7 @@
 #include "Temperature.hh"
 #include "Velocity.hh"
 #include "decision.hh"
+#include "events.hh"
 #include "gtest/gtest.h"
 #include "soft_equiv.hh"
 #include "test_aux.hh"
@@ -91,9 +92,9 @@ TEST(nut_decide_event, decide_scatter_event_nucleon_abs)
 struct gen_bdy_types {
   nut::bdy_types::descriptor operator()()
   {
-    if(ctr++ == 0) return nut::bdy_types::R;
-    if(ctr == nbdy) return nut::bdy_types::V;
-    return nut::bdy_types::T;
+    if(ctr++ == 0) return nut::bdy_types::REFLECTIVE;
+    if(ctr == nbdy) return nut::bdy_types::VACUUM;
+    return nut::bdy_types::CELL;
   }
   explicit gen_bdy_types(cell_t const nbdy_) : ctr(0), nbdy(nbdy_) {}
   cell_t ctr;
@@ -110,7 +111,6 @@ struct gen_bounds {
 
 TEST(nut_decide_event, decide_boundary_event)
 {
-  bool passed(true);
   using nut::events::Event;
 
   using nut::decide_boundary_event;
@@ -128,38 +128,37 @@ TEST(nut_decide_event, decide_boundary_event)
   cell_t const c1(1);
   cell_t const f1(0);
   Event const exp_ev1(reflect);
-  Event ev1 = decide_boundary_event(mesh, c1, f1);
-  passed = exp_ev1 == ev1 and passed;
+  Event ev1_in = decide_boundary_event(mesh, c1, f1);
+  auto [ev1, f] = nut::events::decode_face<uint32_t>(ev1_in);
+  EXPECT_EQ(exp_ev1, ev1);
   // transmit: high face of cell 1
   cell_t const c2(1);
   cell_t const f2(1);
-  Event const exp_ev2(cell_high_x_boundary);
-  Event ev2 = decide_boundary_event(mesh, c2, f2);
-  passed = exp_ev2 == ev2 and passed;
-  if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
+  Event const exp_ev2(cell_boundary);
+  Event ev2_in = decide_boundary_event(mesh, c2, f2);
+  auto [ev2, fc2] = nut::events::decode_face<uint32_t>(ev2_in);
+  EXPECT_EQ(exp_ev2, ev2);
   // transmit: low face of cell 2
   cell_t const c3(2);
   cell_t const f3(0);
-  Event const exp_ev3(cell_low_x_boundary);
-  Event ev3 = decide_boundary_event(mesh, c3, f3);
-  passed = exp_ev3 == ev3 and passed;
-  if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
+  Event const exp_ev3(cell_boundary);
+  Event ev3_in = decide_boundary_event(mesh, c3, f3);
+  auto [ev3, fc3] = nut::events::decode_face<uint32_t>(ev3_in);
+  EXPECT_EQ(exp_ev3, ev3);
   // transmit: low face of cell 10
   cell_t const c4(10);
   cell_t const f4(0);
-  Event const exp_ev4(cell_low_x_boundary);
-  Event ev4 = decide_boundary_event(mesh, c4, f4);
-  passed = exp_ev4 == ev4 and passed;
-  if(!passed) std::cout << "FAILED: " << __LINE__ << std::endl;
+  Event const exp_ev4(cell_boundary);
+  Event ev4_in = decide_boundary_event(mesh, c4, f4);
+  auto [ev4, fc4] = nut::events::decode_face<uint32_t>(ev4_in);
+  EXPECT_EQ(exp_ev4, ev4);
   // escape: high face of cell 10
   cell_t const c5(10);
   cell_t const f5(1);
   Event const exp_ev5(escape);
-  Event ev5 = decide_boundary_event(mesh, c5, f5);
-  passed = exp_ev5 == ev5 and passed;
-  if(!passed) std::cout << "FAILED: " << ev5 << ":" << __LINE__ << std::endl;
-
-  EXPECT_TRUE(passed);
+  Event ev5_in = decide_boundary_event(mesh, c5, f5);
+  auto [ev5, fc5] = nut::events::decode_face<uint32_t>(ev5_in);
+  EXPECT_EQ(exp_ev5, ev5);
   return;
 }  // test_2
 
@@ -200,8 +199,8 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
 
   nut::event_n_dist e_n_d = decide_event(p, mesh, op, vel0s);
 
-  Event const event_exp = cell_high_x_boundary;
-  Event const event = e_n_d.first;
+  Event const event_exp = cell_boundary;
+  auto [event, fc_out] = nut::events::decode_face<uint32_t>(e_n_d.first);
   passed = event == event_exp;
   if(!passed) {
     std::cout << "event was " << event << ", should have been "

@@ -7,8 +7,8 @@
 #define APPLY_EVENT_HH
 
 /**\file apply events to particles */
+#include "events.hh"
 #include "Planck.hh"
-
 #include "Tally.hh"
 #include "Velocity.hh"
 #include "constants.hh"
@@ -61,7 +61,7 @@ template <typename ParticleT,
           typename TallyT>
 void
 apply_event(ParticleT & p,
-            events::Event const & event,
+            events::Event const & event_in,
             geom_t const distance,
             MeshT const & mesh,
             OpacityT const & opacity,
@@ -78,6 +78,11 @@ apply_event(ParticleT & p,
   stream_particle(p, distance, mesh);
 
   tally.accum_pl(distance);
+
+  // recover the face, if any, from the event. Also cleans up the event.
+  auto [event, faceu] = decode_face<uint32_t>(event_in);
+
+  typename MeshT::Face face = static_cast<typename MeshT::Face>(faceu);
 
   switch(event) {
     case nucleon_abs: apply_nucleon_abs(p, tally); break;
@@ -103,8 +108,8 @@ apply_event(ParticleT & p,
     //     break;
     // case nu_x_annhilation:
     //     break;
-    case cell_low_x_boundary: apply_low_x_boundary(p, tally); break;
-    case cell_high_x_boundary: apply_hi_x_boundary(p, tally); break;
+    case cell_boundary: apply_cell_boundary(mesh, face, p, tally); break;
+    // case cell_boundary: apply_hi_x_boundary(p, tally); break;
     case escape: apply_escape(p, tally); break;
     case reflect: apply_reflect(p, tally); break;
     case step_end: apply_step_end(p, tally, census); break;
@@ -198,21 +203,13 @@ apply_lepton_scatter(p_t & p,
   return;
 }  // apply_lepton_scatter
 
-template <typename p_t, typename tally_t>
+template <typename p_t, typename tally_t, typename mesh_t, typename face_t>
 void
-apply_low_x_boundary(p_t & p, tally_t & t)
+apply_cell_boundary(mesh_t const & m, face_t const & face, p_t & p, tally_t & t)
 {
   t.count_cell_bdy(p.cell);
-  p.cell -= 1;
-  return;
-}
-
-template <typename p_t, typename tally_t>
-void
-apply_hi_x_boundary(p_t & p, tally_t & t)
-{
-  t.count_cell_bdy(p.cell);
-  p.cell += 1;
+  p.cell = m.cell_across(p.cell, face);
+  Require(p.cell != m.null_cell(), "invalid cell from cell boundary");
   return;
 }
 

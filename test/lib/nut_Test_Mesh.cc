@@ -29,8 +29,8 @@ make_mesh()
   size_t constexpr n_bdys(n_cells + 1);
   geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
   nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
-      nut::bdy_types::R, nut::bdy_types::T, nut::bdy_types::T,
-      nut::bdy_types::V};
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
   Sp1D::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
   Sp1D::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
 
@@ -77,24 +77,25 @@ TEST(nut_test, Sphere_1D_volume)
   return;
 }  // test_3
 
-TEST(nut_test, Sphere_1D_cell_across_face)
+TEST(nut_test, Sphere_1D_cell_across)
 {
   Sp1D mesh{make_mesh()};
 
-  cell_t const cells_a_exp[] = {1, 2, 1, 3, 2, 0};
+  cell_t const null{mesh.null_cell()};
+  cell_t const cells_a_exp[] = {null, 2, 1, 3, 2, null};
   std::vector<cell_t> cells_across(mesh.n_cells() * 2);
-  cells_across[0] = mesh.cell_across_face(1, 0);
-  cells_across[1] = mesh.cell_across_face(1, 1);
-  cells_across[2] = mesh.cell_across_face(2, 0);
-  cells_across[3] = mesh.cell_across_face(2, 1);
-  cells_across[4] = mesh.cell_across_face(3, 0);
-  cells_across[5] = mesh.cell_across_face(3, 1);
+  cells_across[0] = mesh.cell_across(1, 0);
+  cells_across[1] = mesh.cell_across(1, 1);
+  cells_across[2] = mesh.cell_across(2, 0);
+  cells_across[3] = mesh.cell_across(2, 1);
+  cells_across[4] = mesh.cell_across(3, 0);
+  cells_across[5] = mesh.cell_across(3, 1);
 
   bool passed =
       std::equal(cells_across.begin(), cells_across.end(), &cells_a_exp[0]);
   EXPECT_TRUE(passed);
   if(!passed) {
-    std::cout << std::setprecision(16) << std::scientific << "cells across: ";
+    std::cout << std::setprecision(16) << std::scientific << "cells across:";
     std::copy(cells_across.begin(), cells_across.end(),
               std::ostream_iterator<cell_t>(std::cout, ","));
     std::cout << std::endl << "expected: ";
@@ -262,8 +263,8 @@ TEST(nut_test, Sphere_1D_sample_position_in_cell)
 
   geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 3.0};
   nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
-      nut::bdy_types::R, nut::bdy_types::T, nut::bdy_types::T,
-      nut::bdy_types::V};
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
 
   Sp1D::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
   Sp1D::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);

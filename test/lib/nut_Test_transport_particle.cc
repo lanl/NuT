@@ -52,10 +52,10 @@ make_std_particle()
 struct gen_bdy_types {
   nut::bdy_types::descriptor operator()()
   {
-    if(ctr++ == 0) return nut::bdy_types::R;
-    if(ctr == nbdy) return nut::bdy_types::V;
+    if(ctr++ == 0) return nut::bdy_types::REFLECTIVE;
+    if(ctr == nbdy) return nut::bdy_types::VACUUM;
     nut::Insist(ctr <= nbdy, "called gen_bdy_types too often");
-    return nut::bdy_types::T;
+    return nut::bdy_types::CELL;
   }
   explicit gen_bdy_types(cell_t const nbdy_) : ctr(0), nbdy(nbdy_) {}
   cell_t ctr;

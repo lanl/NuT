@@ -7,6 +7,7 @@
 #define DECISION_HH
 
 #include "constants.hh"
+#include "events.hh"
 #include "lorentz.hh"
 #include "types.hh"
 #include <algorithm>
@@ -82,15 +83,18 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   fp_t const random_dev = p.rng.random();
   /* fp_t const ignored    =*/p.rng.random();  // to keep pace with McPhD
 
+  // collision distance
   geom_t const d_coll =
       (sig_coll != fp_t(0)) ? -std::log(random_dev) / sig_coll : huge;
 
   e_n_ds[0] = event_n_dist(events::collision, d_coll);
 
+  // boundary distance
   d_to_b_t dnf = mesh.distance_to_bdy(x, oli, cell);
   geom_t const d_bdy = dnf.d;
   e_n_ds[1] = event_n_dist(events::boundary, d_bdy);
 
+  // time step end distance
   geom_t const d_step_end = c * tleft;
   e_n_ds[2] = event_n_dist(events::step_end, d_step_end);
 
@@ -120,6 +124,10 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   return closest;
 }  // decide_event
 
+/**\brief Examine the cell & face, and determine what kind of boundary this is.
+ * \remark If it is a cell boundary, the face will be encoded in the event.
+ * Decode via events::decode_event.
+ */
 template <typename MeshT>
 events::Event
 decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
@@ -129,13 +137,18 @@ decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
   Event event(null);
   bdy_types::descriptor b_type(mesh.get_bdy_type(cell, face));
   switch(b_type) {
-    case V: event = escape; break;
-    case R: event = reflect; break;
-    case T:
-      // 1D specific
-      event = face == 0 ? cell_low_x_boundary : cell_high_x_boundary;
+    case VACUUM: event = escape; break;
+    case REFLECTIVE: event = reflect; break;
+    case NONE:
+      event = cell_boundary;
+      event = events::encode_face(event, face);
       break;
-    default: unresolved_event(__LINE__, "decide_boundary_event");
+    case PERIODIC:
+    case PROCESSOR:
+    default:
+      std::stringstream errstr;
+      errstr << "decide_boundary_event: untreated boundary " << b_type;
+      unresolved_event(__LINE__, errstr.str());
   };
   return event;
 }  // decide_boundary_event

@@ -49,8 +49,17 @@ cell_t const cell = 1;
 Species const s(nut::nu_e);
 
 p_t
-make_std_particle()
+make_std_particle_c1()
 {
+  p_t p({x}, {omega}, e, t, wt, cell, rng, s);
+  return p;
+}
+
+p_t
+make_std_particle_c2()
+{
+  vec_t x{1.5};
+  cell_t cell{2};
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
   return p;
 }
@@ -61,7 +70,7 @@ TEST(nut_apply_event, apply_nucleon_abs)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
@@ -94,7 +103,7 @@ TEST(nut_apply_event, apply_nucleon_elastic_scatter)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
   std::vector<nut::vec_t<1>> vs(n_cells);
@@ -134,7 +143,7 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
@@ -173,7 +182,7 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
   p.species = nut::nu_e_bar;
 
   size_t const n_cells(100);
@@ -207,67 +216,82 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
   return;
 }  // test_4
 
-TEST(nut_apply_event, apply_low_x_boundary)
+TEST(nut_apply_event, apply_cell_boundary)
 {
-  bool passed(false);
+  size_t constexpr n_cells(3);
+  size_t constexpr n_bdys(n_cells + 1);
+  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
+  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
 
-  p_t p(make_std_particle());
+  mesh_t mesh(bdys, bdy_types);
 
-  size_t const n_cells(100);
-  tally_t tally(n_cells), ref(n_cells);
+  {
+    bool passed(false);
 
-  cell_t const idx = cell - 1;
-  ref.n_cell_bdy[idx] = 1;
+    p_t p(make_std_particle_c2());
 
-  nut::apply_low_x_boundary<p_t, tally_t>(p, tally);
+    size_t const n_cells(100);
+    tally_t tally(n_cells), ref(n_cells);
 
-  // check tally energy deposition, momentum deposition, and counts.
-  bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
-                        check_one_changed(tally, ref, &tally.n_cell_bdy);
-  if(!t_passed) {
-    cerr << "did not tally correctly, line " << __LINE__ << endl;
+    cell_t const idx = 1;  // cell 2, index is 1
+    ref.n_cell_bdy[idx] = 1;
+
+    mesh_t::Face f_low{nut::Sphere_1D_Faces::LOW};
+    nut::apply_cell_boundary<p_t, tally_t, mesh_t, mesh_t::Face>(mesh, f_low, p,
+                                                                 tally);
+
+    // check tally energy deposition, momentum deposition, and counts.
+    bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
+                          check_one_changed(tally, ref, &tally.n_cell_bdy);
+    if(!t_passed) {
+      cerr << "did not tally correctly, line " << __LINE__ << endl;
+    }
+    // check particle status
+    bool const p_passed = p.cell == 1;
+    if(!p_passed) {
+      cerr << __LINE__ << ": incorrect cell: " << p.cell << endl;
+    }
+    passed = t_passed && p_passed;
+    EXPECT_TRUE(passed);
   }
-  // check particle status
-  bool const p_passed = p.cell == cell - 1;
-  if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
-  passed = t_passed && p_passed;
-  EXPECT_TRUE(passed);
+  {
+    bool passed(false);
+
+    p_t p(make_std_particle_c1());
+
+    size_t const n_cells(100);
+    tally_t tally(n_cells), ref(n_cells);
+
+    cell_t const idx = cell - 1;
+    ref.n_cell_bdy[idx] = 1;
+
+    mesh_t::Face f_high{nut::Sphere_1D_Faces::HIGH};
+    nut::apply_cell_boundary<p_t, tally_t>(mesh, f_high, p, tally);
+
+    // check tally energy deposition, momentum deposition, and counts.
+    bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
+                          check_one_changed(tally, ref, &tally.n_cell_bdy);
+    if(!t_passed) {
+      cerr << "did not tally correctly, line " << __LINE__ << endl;
+    }
+    // check particle status
+    bool const p_passed = p.cell == cell + 1;
+    if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
+    passed = t_passed && p_passed;
+    EXPECT_TRUE(passed);
+  }
   return;
 }  // test_5
-
-TEST(nut_apply_event, apply_hi_x_boundary)
-{
-  bool passed(false);
-
-  p_t p(make_std_particle());
-
-  size_t const n_cells(100);
-  tally_t tally(n_cells), ref(n_cells);
-
-  cell_t const idx = cell - 1;
-  ref.n_cell_bdy[idx] = 1;
-
-  nut::apply_hi_x_boundary<p_t, tally_t>(p, tally);
-
-  // check tally energy deposition, momentum deposition, and counts.
-  bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
-                        check_one_changed(tally, ref, &tally.n_cell_bdy);
-  if(!t_passed) {
-    cerr << "did not tally correctly, line " << __LINE__ << endl;
-  }
-  // check particle status
-  bool const p_passed = p.cell == cell + 1;
-  if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
-  passed = t_passed && p_passed;
-  EXPECT_TRUE(passed);
-  return;
-}  // test_6
 
 TEST(nut_apply_event, apply_escape)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
@@ -300,7 +324,7 @@ TEST(nut_apply_event, apply_reflect)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
@@ -331,8 +355,8 @@ TEST(nut_apply_event, apply_census)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
-  p_t p_ref(make_std_particle());
+  p_t p(make_std_particle_c1());
+  p_t p_ref(make_std_particle_c1());
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);

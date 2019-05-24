@@ -155,9 +155,9 @@ Spherical_1D_Mesh rows_to_mesh(std::vector<MatStateRowP<fp_t, 1> > const & rows,
   std::vector<typename mesh_t::bdy_desc_t> descs(ncells + 1);
 
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
-  descs[0] = bdy_types::R;
-  descs[ncells] = bdy_types::V;
-  for(size_t i = 1; i < ncells; ++i) { descs[i] = bdy_types::T; }
+  descs[0] = bdy_types::REFLECTIVE;
+  descs[ncells] = bdy_types::VACUUM;
+  for(size_t i = 1; i < ncells; ++i) { descs[i] = bdy_types::NONE; }
   return mesh_t(bounds, descs);
 }  // rows_to_mesh
 

@@ -39,7 +39,7 @@ file(GLOB NUT_UNITTESTS
 add_executable(nut_unittests ${NUT_UNITTESTS} )
 
 # target_link_libraries(nut_unittests gtest_main)
-target_link_libraries(nut_unittests gtest_main gtest nut)
+target_link_libraries(nut_unittests gtest_main gtest nut ${Murmeln_LIB})
 
 # Build our tests with DBC assertions turned on.
 add_definitions(-DREQUIRE_ON)

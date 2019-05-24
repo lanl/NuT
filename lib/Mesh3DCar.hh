@@ -55,6 +55,10 @@ public:
   static const cell_t vac_cell = cell_t(-1);
   static constexpr geom_t huge = 1e300;
 
+  static const cell_t null_cell_{0xFFFFFFFF};
+
+  static cell_t null_cell() { return null_cell_; }
+
   /**\brief Position & direction */
   struct coord_t {
     vec_t<3> x;
@@ -69,6 +73,8 @@ public:
     high_y,    /* x-z plane */
     high_z     /* x-y plane */
   };
+
+  using Face = face_t;
 
   enum dir_t { X = 0, Y, Z };
 
@@ -108,7 +114,7 @@ public:
    * \param cell: 0 < cell <= n_cells
    * \param face: enum instances
    */
-  inline cell_t cell_across_face(cell_t const cell, face_t face) const;
+  inline cell_t cell_across(cell_t const cell, face_t face) const;
 
   /** \brief Sample a position in a cell. */
   template <typename RNG_T>
@@ -294,6 +300,10 @@ public:
   }  // getBCOffset
 };   // struct Cartesian_3D
 
+// template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+// const cell_t Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::null_cell_ =
+//     0xFFFFFFFF;
+
 /** \brief Make a plane's worth of reflecting b.c.'s; helper for mkReflectBCs.
  */
 template <typename cell_t,
@@ -326,7 +336,7 @@ mkReflectBCs(std::vector<bdy_descriptor_t> & bds,
              cell_t const nz)
 {
   cell_t const n_bs = 2 * nx * ny + 2 * nx * nz + 2 * ny * nz;
-  bdy_descriptor_t const reflect(nut::bdy_types::R);
+  bdy_descriptor_t const reflect{nut::bdy_types::REFLECTIVE};
   if(n_bs != bds.size()) { bds.resize(n_bs, reflect); }
   cell_t offset(0);
   // low x bounds
@@ -369,9 +379,9 @@ mkLowRefHighVacBounds(std::vector<nut::bdy_types::descriptor> & bds,
                       cell_t const nz)
 {
   cell_t const n_bs = 2 * nx * ny + 2 * nx * nz + 2 * ny * nz;
-  nut::bdy_types::descriptor ref(nut::bdy_types::R);
-  nut::bdy_types::descriptor vac(nut::bdy_types::V);
-  nut::bdy_types::descriptor trn(nut::bdy_types::T);
+  nut::bdy_types::descriptor ref(nut::bdy_types::REFLECTIVE);
+  nut::bdy_types::descriptor vac(nut::bdy_types::VACUUM);
+  nut::bdy_types::descriptor trn(nut::bdy_types::CELL);
 
   if(n_bs != bds.size()) { bds.resize(n_bs); }
   bds.assign(bds.size(), trn);
