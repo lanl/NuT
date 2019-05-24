@@ -3,16 +3,10 @@
 #include "Mesh_3D_Cartesian.hh"
 #include "expect.hh"
 #include "gtest/gtest.h"
-// #include "types.hh"
 
-// using nut::Equal;
-// using nut::Geom_T;
-// typedef uint64_t Cell_T;
-// typedef nut::Cartesian_3D<Cell_T, double> Mesh_T;
-// typedef Mesh_T::vec_bdy_descs vbd;
+#ifdef HAVE_MURMELN
+
 using test_aux::expect;
-// using test_aux::soft_expect;
-
 using Mesh_Iface_T = murmeln::Cartesian_Mesh_Interface;
 using Mesh_T = Mesh_Iface_T::Mesh;
 using Cell_T = Mesh_T::Cell;
@@ -403,5 +397,7 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
 //   EXPECT_TRUE(passed);
 //   return;
 // }  // test_8
+
+#endif  // HAVE_MURMELN
 
 // End of file

@@ -6,10 +6,8 @@
 
 #pragma once
 
+#ifdef HAVE_MURMELN
 #include "murmeln/mesh_adaptors/Cartesian_Mesh_Interface.h"
-
-namespace nut{
-
-} // nut::
+#endif
 
 // End of file

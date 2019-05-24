@@ -100,9 +100,13 @@ if(DEFINED ENV{MURMELN_DIR})
     NAMES libMurmeln libMurmeln.dylib
     HINTS  ${MURMELN_LIB_DIR})
 
+  add_definitions(-DHAVE_MURMELN)
+
 else()
 
-  message(ERROR "You must set MURMELN_DIR environment variable")
+  set(Murmeln_LIB "")
+
+  message(STATUS "Skipping Murmeln; if you wanted to use that, you must set MURMELN_DIR environment variable")
 
 endif() # if(DEFINED ENV{MURMELN_DIR})
 

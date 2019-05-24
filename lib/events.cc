@@ -20,19 +20,15 @@ event_name(Event const & e)
     case electron_scatter: name = "Electron_scatter"; break;
     case positron_scatter: name = "Positron_scatter"; break;
     case nu_e_annhilation: name = "Nu_e_annhilation"; break;
-    case nu_x_annhilation:
-      name = "Nu_x_annhilation";
-      break;
-      ;  // # compute events
+    case nu_x_annhilation: name = "Nu_x_annhilation"; break;
     case boundary: name = "boundary"; break;
     case cell_boundary: name = "Cell_boundary"; break;
     case escape: name = "Escape"; break;
     case reflect: name = "Reflect"; break;
     case step_end: name = "Step_end"; break;
-    case weight_cutoff:
-      name = "Weight_cutoff";
-      break;
-      ;  // testing only
+    case weight_cutoff: name = "Weight_cutoff"; break;
+    case face_start: name = "face_start (?? not expected)"; break;
+    case face_mask: name = "face_mask (?? not expected)"; break;
     case null: name = "Null"; break;
   };
   return name;
