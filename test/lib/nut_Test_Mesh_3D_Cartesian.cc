@@ -1,6 +1,7 @@
 // T. M. Kelley (c) 2011 LANS LLC
 
 #include "Mesh_3D_Cartesian.hh"
+#include "RNG.hh"
 #include "expect.hh"
 #include "gtest/gtest.h"
 
@@ -339,36 +340,35 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
   return;
 }  // test_6
 
-// TEST(nut_mesh_3D_Cartesian, sample_position_buffer_rng)
-// {
-//   using nut::vec_t;
-//   typedef nut::Buffer_RNG<double> rng_t;
-//   size_t const szRns(5);
-//   double rns[szRns] = {0.5, 0.5, 0.5, 0.5, 0.5};
-//   rng_t rng(rns, szRns);
+TEST(nut_mesh_3D_Cartesian, sample_position_buffer_rng)
+{
+  using test_aux::soft_expect;
+  typedef nut::Buffer_RNG<double> rng_t;
+  size_t const szRns(5);
+  double rns[szRns] = {0.5, 0.5, 0.5, 0.5, 0.5};
+  rng_t rng(rns, szRns);
 
-//   Geom_T const dx(2.0);
-//   Geom_T const dy(3.0);
-//   Geom_T const dz(5.0);
-//   Index_T const nx = 1;
-//   Index_T const ny = 3;
-//   Index_T const nz = 2;
-//   vbd bds;
-//   nut::mkReflectBCs<Mesh_Iface_T, Cell_T>(bds, nx, ny, nz);
-//   Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz, bds);
+  Geom_T const dx(2.0);
+  Geom_T const dy(3.0);
+  Geom_T const dz(5.0);
+  Index_T const nx = 1;
+  Index_T const ny = 3;
+  Index_T const nz = 2;
+  Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz);
 
-//   Mesh_Iface_T::Vector x = mesh.sample_position(rng, 0);
-//   Mesh_Iface_T::Vector o = mesh.sample_direction(rng);
+  Cell_T c0{0};
+  Mesh_Iface_T::Vector x = mesh.sample_position(rng, c0);
+  Mesh_Iface_T::Vector o = mesh.sample_direction_isotropic(rng);
 
-//   bool passed = expect(x.v[0], 1.0, "cell 0, x") &&
-//                 expect(x.v[1], 1.5, "cell 0, y") &&
-//                 expect(x.v[2], 2.5, "cell 0, z") &&
-//                 soft_expect(o.v[0], -1.0, "cell 0, omega_x") &&
-//                 soft_expect(o.v[1], 0.0, "cell 0, omega_y") &&
-//                 soft_expect(o.v[2], 0.0, "cell 0, omega_z");
-//   EXPECT_TRUE(passed);
-//   return;
-// }  // test_7
+  bool passed = expect(x[0], 1.0, "cell 0, x") &&
+                expect(x[1], 1.5, "cell 0, y") &&
+                expect(x[2], 2.5, "cell 0, z") &&
+                soft_expect(o[0], -1.0, "cell 0, omega_x") &&
+                soft_expect(o[1], 0.0, "cell 0, omega_y") &&
+                soft_expect(o[2], 0.0, "cell 0, omega_z");
+  EXPECT_TRUE(passed);
+  return;
+}  // test_7
 
 // TEST(nut_mesh_3D_Cartesian, distance_to_bdy)
 // {
