@@ -9,11 +9,12 @@
 using test_aux::expect;
 using Mesh_Iface_T = murmeln::Cartesian_Mesh_Interface;
 using Mesh_T = Mesh_Iface_T::Mesh;
-using Cell_T = Mesh_T::Cell;
-using Index_T = Mesh_T::Index;
+using Cell_T = Mesh_Iface_T::Cell;
+using Index_T = Mesh_Iface_T::Index_T;
 using Geom_T = Mesh_Iface_T::Geom_T;
-using Point = Mesh_T::Point;
+using Point = Mesh_Iface_T::Point;
 
+// These are specific to Cartesian_Mesh
 using Face = Mesh_Iface_T::Face;
 Face const f_l_x{Mesh_T::LOW_X};
 Face const f_l_y{Mesh_T::LOW_Y};
@@ -22,6 +23,7 @@ Face const f_h_x{Mesh_T::HIGH_X};
 Face const f_h_y{Mesh_T::HIGH_Y};
 Face const f_h_z{Mesh_T::HIGH_Z};
 
+// helper function
 namespace std {
 std::ostream &
 operator<<(std::ostream & s, Cell_T const & c)
@@ -49,7 +51,7 @@ test_2_core(Index_T const nx, Index_T const ny, Index_T const nz)
 {
   // vbd bds;
   // nut::mkReflectBCs<Mesh_T, Cell_T>(bds, nx, ny, nz);
-  Mesh_T mesh(nx, ny, nz, 1.0, 1.0, 1.0);
+  Mesh_Iface_T mesh(nx, ny, nz, 1.0, 1.0, 1.0);
   Index_T const n_cs(nx * ny * nz);
   bool passed = n_cs == mesh.num_cells();
   return passed;
@@ -112,7 +114,7 @@ TEST(nut_mesh_3D_Cartesian, is_boundary_3_cell_line)
   Index_T const ny = 1;
   Index_T const nz = 1;
 
-  Mesh_T mesh(nx, ny, nz, dx, dy, dz);
+  Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz);
 
   {
     Cell_T c(0);
@@ -158,7 +160,7 @@ TEST(nut_mesh_3D_Cartesian, is_boundary_6_cell_cluster)
   Index_T const ny = 3;
   Index_T const nz = 2;
 
-  Mesh_T mesh(nx, ny, nz, dx, dy, dz);
+  Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz);
 
   {
     Cell_T c(0);  // (0,0,0)
@@ -235,14 +237,14 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
   Index_T const ny = 3;
   Index_T const nz = 2;
 
-  Mesh_T mesh(nx, ny, nz, dx, dy, dz);
+  Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz);
   Point p{0.0, 0.0, 0.0};
 
   auto f = [&mesh, &p](Cell_T c, Face const f, Cell_T const e, const char * s) {
     return expect(mesh.cell_across(c, f, p), e, s);
   };
 
-  Cell_T const null_cell = Mesh_T::null_cell();
+  Cell_T const null_cell = mesh.null_cell();
 
   {
     Cell_T c(0);  // (0,0,0)
@@ -352,11 +354,11 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
 //   Index_T const ny = 3;
 //   Index_T const nz = 2;
 //   vbd bds;
-//   nut::mkReflectBCs<Mesh_T, Cell_T>(bds, nx, ny, nz);
-//   Mesh_T mesh(nx, ny, nz, dx, dy, dz, bds);
+//   nut::mkReflectBCs<Mesh_Iface_T, Cell_T>(bds, nx, ny, nz);
+//   Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz, bds);
 
-//   Mesh_T::Vector x = mesh.sample_position(rng, 0);
-//   Mesh_T::Vector o = mesh.sample_direction(rng);
+//   Mesh_Iface_T::Vector x = mesh.sample_position(rng, 0);
+//   Mesh_Iface_T::Vector o = mesh.sample_direction(rng);
 
 //   bool passed = expect(x.v[0], 1.0, "cell 0, x") &&
 //                 expect(x.v[1], 1.5, "cell 0, y") &&
@@ -383,14 +385,14 @@ TEST(nut_mesh_3D_Cartesian, cell_across_face_6_cell_cluster)
 //   Index_T const ny = 3;
 //   Index_T const nz = 2;
 //   vbd bds;
-//   nut::mkReflectBCs<Mesh_T, Cell_T>(bds, nx, ny, nz);
-//   Mesh_T mesh(nx, ny, nz, dx, dy, dz, bds);
+//   nut::mkReflectBCs<Mesh_Iface_T, Cell_T>(bds, nx, ny, nz);
+//   Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz, bds);
 
 //   vec_t<3> x, o;
 //   x.v = {{0.8, 2.9, 4.9}};
 //   o.v = {{1.0, 0.0, 0.0}};
-//   Mesh_T::coord_t crd = {x, o};
-//   Mesh_T::d_to_b_t d2b = mesh.distance_to_bdy(crd, Cell_T(0));
+//   Mesh_Iface_T::coord_t crd = {x, o};
+//   Mesh_Iface_T::d_to_b_t d2b = mesh.distance_to_bdy(crd, Cell_T(0));
 
 //   bool passed = expect(d2b.d, 1.2, "distance") &&
 //                 expect(d2b.face, f_h_x, "face");
