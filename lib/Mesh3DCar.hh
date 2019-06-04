@@ -85,6 +85,14 @@ public:
     d_to_b_t(geom_t const d_, face_t const f_) : d(d_), face(f_) {}
   };
 
+  using Ray = coord_t;
+
+  using Intersection = d_to_b_t;
+
+  static geom_t get_distance(Intersection const & i) { return i.d; }
+
+  static Face get_face(Intersection const & i) { return i.face; }
+
 public:
   // Interface
 
@@ -134,6 +142,8 @@ public:
   coord_t new_coordinate(vec_t<3> const & oldx,
                          vec_t<3> const & oldomega,
                          geom_t const distance) const;
+
+  inline Intersection intersection(Ray const & r, cell_t const c) const;
 
   /** Distance-to-boundary. This is possibly not the most elegant
    * or efficient or vectorizable implementation. */

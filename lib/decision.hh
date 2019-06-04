@@ -57,7 +57,6 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   // Currently there are always  three top-level events considered.
   // Changing vector to std::array
   typedef std::array<event_n_dist, 3> vend_t;
-  typedef typename mesh_t::d_to_b_t d_to_b_t;
 
   vend_t e_n_ds;
 
@@ -90,8 +89,9 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   e_n_ds[0] = event_n_dist(events::collision, d_coll);
 
   // boundary distance
-  d_to_b_t dnf = mesh.distance_to_bdy(x, oli, cell);
-  geom_t const d_bdy = dnf.d;
+  typename mesh_t::Intersection dnf = mesh.distance_to_bdy(x, oli, cell);
+  geom_t const d_bdy = mesh.get_distance(dnf);
+  typename mesh_t::Face face = mesh.get_face(dnf);
   e_n_ds[1] = event_n_dist(events::boundary, d_bdy);
 
   // time step end distance
@@ -116,7 +116,7 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   }
   else {
     if(closest.first == events::boundary) {
-      closest.first = decide_boundary_event(mesh, cell, dnf.face);
+      closest.first = decide_boundary_event(mesh, cell, face);
     }
     // compensate RNG if decide_scatter_event not called
     p.rng.random();

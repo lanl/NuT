@@ -24,6 +24,17 @@ Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::get_bdy_type(
 }
 
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+typename Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::Intersection
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::intersection(
+    Ray const & r,
+    cell_t const c) const
+{
+  vec_t<dim> & x{r.position()};
+  vec_t<dim> & o{r.direction()};
+  return this->distance_to_bdy(x, o, c);
+}
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 typename Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::d_to_b_t
     Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::distance_to_bdy(
         vec_t<3> const & x,

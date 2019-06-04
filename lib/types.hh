@@ -7,7 +7,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "Mesh_3D_Cartesian.hh"
+#include "Mesh_3D_Cartesian.hh" // TO DO this is very likely circular.
+                                // likely solution: include murmeln header directly
 #include "RNG.hh"
 #include "Vec3D.hh"
 #include <iterator>

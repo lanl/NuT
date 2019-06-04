@@ -19,11 +19,8 @@
 
 namespace nut {
 
-namespace Sphere_1D_Faces{
-enum Faces{
-  LOW = 0,
-  HIGH = 1
-};
+namespace Sphere_1D_Faces {
+enum Faces { LOW = 0, HIGH = 1 };
 }
 
 /*!\brief Mesh functions for 1D spherical geometry.
@@ -53,6 +50,17 @@ public:
     geom_t d;    /** distance to boundary */
     cell_t face; /** which face will be intersected: 0 (low) or 1 (high) */
   };
+
+  using Intersection = d_to_b_t;
+  using Ray = coord_t;
+
+  static geom_t get_distance(Intersection const & i) { return i.d; }
+
+  static Face get_face(Intersection const & i) {
+    auto fidx = i.face;
+    Require(fidx == Face::LOW || fidx == Face::HIGH, "Invalid face encontered");
+    return static_cast<Face>(fidx);
+  }
 
   static const cell_t null_cell_;
 
@@ -90,15 +98,11 @@ public:
   {
     cellOK(cell);
     // LessThan(face, cell_t(2), "face");
-    if(cell == 1 && face == Sphere_1D_Faces::LOW){
+    if(cell == 1 && face == Sphere_1D_Faces::LOW) { return null_cell_; }
+    else if(cell == m_ncells && face == Sphere_1D_Faces::HIGH) {
       return null_cell_;
     }
-    else if(cell == m_ncells && face == Sphere_1D_Faces::HIGH){
-      return null_cell_;
-    }
-    if(face == Sphere_1D_Faces::LOW){
-      return cell - 1;
-    }
+    if(face == Sphere_1D_Faces::LOW) { return cell - 1; }
     return cell + 1;
     // // compute index into descriptors
     // cell_t idx = cell - 1;
@@ -175,6 +179,13 @@ public:
     coord.x.v[0] = new_r;
     coord.omega.v[0] = std::cos(theta - std::asin(distance / new_r * s));
     return std::move(coord);
+  }
+
+  Intersection intersection(Ray const & r, cell_t const c) const
+  {
+    vec_t<dim> & x{r.position()};
+    vec_t<dim> & o{r.direction()};
+    return this->distance_to_bdy(x, o, c);
   }
 
   d_to_b_t distance_to_bdy(vec_t<dim> const x,
@@ -303,7 +314,8 @@ public:
 using Spherical_1D_Mesh = Sphere_1D<cell_t, geom_t, bdy_types::descriptor>;
 
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
-const cell_t Sphere_1D<cell_t,geometry_t,bdy_descriptor_t>::null_cell_ = 0xFFFFFFFF;
+const cell_t Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::null_cell_ =
+    0xFFFFFFFF;
 
 }  // namespace nut
 

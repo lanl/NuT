@@ -370,35 +370,31 @@ TEST(nut_mesh_3D_Cartesian, sample_position_buffer_rng)
   return;
 }  // test_7
 
-// TEST(nut_mesh_3D_Cartesian, distance_to_bdy)
-// {
-//   using nut::vec_t;
-//   typedef nut::Buffer_RNG<double> rng_t;
-//   size_t const szRns(5);
-//   double rns[szRns] = {0.5, 0.5, 0.5, 0.5, 0.5};
-//   rng_t rng(rns, szRns);
+TEST(nut_mesh_3D_Cartesian, intersection)
+{
+  Geom_T const dx(2.0);
+  Geom_T const dy(3.0);
+  Geom_T const dz(5.0);
+  Index_T const nx = 1;
+  Index_T const ny = 3;
+  Index_T const nz = 2;
+  Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz);
 
-//   Geom_T const dx(2.0);
-//   Geom_T const dy(3.0);
-//   Geom_T const dz(5.0);
-//   Index_T const nx = 1;
-//   Index_T const ny = 3;
-//   Index_T const nz = 2;
-//   vbd bds;
-//   nut::mkReflectBCs<Mesh_Iface_T, Cell_T>(bds, nx, ny, nz);
-//   Mesh_Iface_T mesh(nx, ny, nz, dx, dy, dz, bds);
+  Mesh_Iface_T::Vector x, o;
+  x = {{0.8, 2.9, 4.9}};
+  o = {{1.0, 0.0, 0.0}};
 
-//   vec_t<3> x, o;
-//   x.v = {{0.8, 2.9, 4.9}};
-//   o.v = {{1.0, 0.0, 0.0}};
-//   Mesh_Iface_T::coord_t crd = {x, o};
-//   Mesh_Iface_T::d_to_b_t d2b = mesh.distance_to_bdy(crd, Cell_T(0));
+  Mesh_Iface_T::Ray r{x, o};
+  Mesh_Iface_T::Intersection d2b = mesh.intersection(r, Cell_T(0));
 
-//   bool passed = expect(d2b.d, 1.2, "distance") &&
-//                 expect(d2b.face, f_h_x, "face");
-//   EXPECT_TRUE(passed);
-//   return;
-// }  // test_8
+  Mesh_Iface_T::Geom_T dist = mesh.get_distance(d2b);
+  Mesh_Iface_T::Face face = mesh.get_face(d2b);
+
+  bool passed =
+      expect(dist, 1.2, "distance") && expect(face.id(), f_h_x.id(), "face");
+  EXPECT_TRUE(passed);
+  return;
+}  // test_8
 
 #endif  // HAVE_MURMELN
 
