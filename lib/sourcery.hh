@@ -112,31 +112,29 @@ calc_src_stats_lum(std::vector<fp_t> const & lums,
 template <typename mesh_t, typename geom_t, typename rng_t, typename part_t>
 part_t
 gen_init_particle(mesh_t const & mesh,
-                  cell_t const cell,
+                  cell_t cell,
                   geom_t const dt,
                   geom_t const alpha,
                   Species const s,
                   geom_t const ew,  // e wt
                   geom_t const T,   // temp/cell
-                  vec_t<part_t::dim> const v,
+                  typename mesh_t::Vector const v,
                   rng_t & rng)
 {
-  uint32_t const dim = part_t::dim;
+  using vector_t = typename mesh_t::Vector;
 
   // Mean energy of Fermionic Planckian is 7 pi^4/(180 zeta(3) * (k_B T).
   // Prefactor ~3.15137
   geom_t const ebar = 3.15137 * T;
   // geom_t const urd = rng.random();
-  typename mesh_t::Vector const r = mesh.sample_position(rng, cell);
-  typename mesh_t::Vector const oc = mesh.sample_direction(rng);
-
-  // geom_t const osd = rng.random();
-  // geom_t const oc = 2.0 * osd - 1.0;
+  typename mesh_t::Cell mesh_cell{cell};
+  vector_t const r = mesh.sample_position(rng, mesh_cell);
+  vector_t const oc = mesh.sample_direction_isotropic(rng);
 
   geom_t const ec = gen_power_law_energy(alpha, ebar, rng);
-  EandOmega<dim> enol = mesh_t::LT_to_lab(v, ec, oc);
+  typename mesh_t::EandOmega_T enol = mesh_t::LT_to_lab(v, ec, oc);
   geom_t const e = enol.first;
-  vec_t<dim> const o = enol.second;
+  typename mesh_t::Vector const o = enol.second;
 
   return part_t(r, o, e, dt, ew, cell, rng, s);
 }  // gen_init_particle

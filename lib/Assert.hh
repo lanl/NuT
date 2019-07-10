@@ -4,10 +4,8 @@
 // Header for Assert
 // (c) Copyright 2011 LANSLLC all rights reserved.
 
-#ifndef ASSERT_H
-#define ASSERT_H
+#pragma once
 
-#include "types.hh"
 #include <sstream>
 #include <stdexcept>
 
@@ -200,13 +198,6 @@ GreaterEqual(gt_t const &, gt_t const &, char const * const)
 {
 }
 
-#endif
+#endif /* #ifdef REQUIRE_ON */
 
 }  // namespace nut
-
-#endif
-
-// version
-// $Id$
-
-// End of file

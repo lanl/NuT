@@ -7,11 +7,11 @@
 #define APPLY_EVENT_HH
 
 /**\file apply events to particles */
-#include "events.hh"
 #include "Planck.hh"
 #include "Tally.hh"
 #include "Velocity.hh"
 #include "constants.hh"
+#include "events.hh"
 #include "lorentz.hh"
 #include "types.hh"
 #include <iomanip>
@@ -46,9 +46,9 @@ template <typename Mesh_T, typename Particle_T, typename fp_t>
 void
 stream_particle(Particle_T & p, fp_t const d, Mesh_T const & mesh)
 {
-  typename Mesh_T::coord_t newcoord = mesh.new_coordinate(p.x, p.omega, d);
-  p.x = newcoord.x;
-  p.omega = newcoord.omega;
+  typename Mesh_T::Ray newcoord = mesh.advance_point(p.x, p.omega, d);
+  p.x = newcoord.position();
+  p.omega = newcoord.direction();
   p.t = p.t - d / c;
   return;
 }  // stream_particle
@@ -61,8 +61,7 @@ template <typename ParticleT,
           typename TallyT>
 void
 apply_event(ParticleT & p,
-            events::Event const & event_in,
-            geom_t const distance,
+            event_data<typename MeshT::Face> const & event_data,
             MeshT const & mesh,
             OpacityT const & opacity,
             VelocityT const & velocity,
@@ -75,14 +74,14 @@ apply_event(ParticleT & p,
 
   cell_t const index = make_idx(p.cell, opacity.m_n_cells);
 
+  Event const & event = events::get_event(event_data);
+  geom_t distance = events::get_distance(event_data);
+  typename MeshT::Face face = events::get_face(event_data);
+  typename MeshT::Vector face_normal = mesh.get_normal(face);
+
   stream_particle(p, distance, mesh);
 
   tally.accum_pl(distance);
-
-  // recover the face, if any, from the event. Also cleans up the event.
-  auto [event, faceu] = decode_face<uint32_t>(event_in);
-
-  typename MeshT::Face face = static_cast<typename MeshT::Face>(faceu);
 
   switch(event) {
     case nucleon_abs: apply_nucleon_abs(p, tally); break;
@@ -111,7 +110,7 @@ apply_event(ParticleT & p,
     case cell_boundary: apply_cell_boundary(mesh, face, p, tally); break;
     // case cell_boundary: apply_hi_x_boundary(p, tally); break;
     case escape: apply_escape(p, tally); break;
-    case reflect: apply_reflect(p, tally); break;
+    case reflect: apply_reflect(p, tally, face_normal); break;
     case step_end: apply_step_end(p, tally, census); break;
     // error if we get to an unresolved collision or boundary
     case boundary:  // fall through to next
@@ -140,24 +139,25 @@ template <typename p_t, typename tally_t, typename vel_t, typename Mesh_T>
 void
 apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel)
 {
-  // typedef typename tally_t::FP_T fp_t;
-  size_t const dim(tally_t::dim);
+  using Vector = typename Mesh_T::Vector;
+  using EandOmega_T = typename Mesh_T::EandOmega_T;
+  // size_t const dim(tally_t::dim);
   cell_t const cell = p.cell;
-  vec_t<dim> const v = vel.v(cell);
+  Vector const v = vel.v(cell);
   geom_t const eli = p.e;
-  vec_t<dim> const oli = p.omega;
+  Vector const oli = p.omega;
   // LT to comoving frame (need init comoving e to compute
   // final lab e).
 
-  EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
+  EandOmega_T eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
   geom_t const eci = eno_cmi.first;
   // scatter: sample a new direction
-  vec_t<dim> ocf = Mesh_T::sample_direction(p.rng);
+  Vector ocf = Mesh_T::sample_direction_isotropic(p.rng);
 
   // LT comoving -> lab
-  EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(v, eci, ocf);
+  EandOmega_T const eno_lf = Mesh_T::LT_to_lab(v, eci, ocf);
   geom_t const elf = eno_lf.first;
-  vec_t<dim> const olf = eno_lf.second;
+  Vector const olf = eno_lf.second;
   // tally
   t.count_nucleon_elastic_scatter(p.cell);
   t.deposit_inelastic_scat(cell, eli, elf, oli, olf, p.weight, p.species);
@@ -175,25 +175,26 @@ apply_lepton_scatter(p_t & p,
                      typename tally_t::FP_T const e_lep,
                      velocity_t const & vel)
 {
-  typedef typename tally_t::FP_T fp_t;
-  uint32_t const dim(p_t::dim);
+  using EandOmega_T = typename Mesh_T::EandOmega_T;
+  using Vector = typename Mesh_T::Vector;
+  using fp_t = typename tally_t::FP_T;
   cell_t const cell = p.cell;
-  vec_t<dim> const v = vel.v(cell);
+  Vector const v = vel.v(cell);
   geom_t const eli = p.e;
-  vec_t<dim> const oli = p.omega;
+  Vector const oli = p.omega;
 
   // LT to comoving frame (need init comoving e to compute
   // final lab e).
-  EandOmega<dim> eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
+  EandOmega_T eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
   geom_t const eci = eno_cmi.first;
   // scatter
-  vec_t<dim> ocf = Mesh_T::sample_direction(p.rng);
+  Vector ocf = Mesh_T::sample_direction_isotropic(p.rng);
   fp_t const de = (eci - e_lep) / 4.;
   fp_t const ecf = eci - de;
   // LT comoving -> lab
-  EandOmega<dim> const eno_lf = Mesh_T::LT_to_lab(v, ecf, ocf);
+  EandOmega_T const eno_lf = Mesh_T::LT_to_lab(v, ecf, ocf);
   geom_t const elf = eno_lf.first;
-  vec_t<dim> const olf = eno_lf.second;
+  Vector const olf = eno_lf.second;
   // tally
   t.count_lepton_scatter(p.cell, p.species);
   t.deposit_inelastic_scat(cell, eli, elf, oli, olf, p.weight, p.species);
@@ -208,8 +209,16 @@ void
 apply_cell_boundary(mesh_t const & m, face_t const & face, p_t & p, tally_t & t)
 {
   t.count_cell_bdy(p.cell);
-  p.cell = m.cell_across(p.cell, face);
-  Require(p.cell != m.null_cell(), "invalid cell from cell boundary");
+  typename mesh_t::Cell mcell{p.cell};
+  if constexpr(std::is_class<decltype(
+                   m.cell_across(mcell, face, p.x))>::value) {
+    auto new_mcell = m.cell_across(mcell, face, p.x);
+    p.cell = new_mcell.id();
+  }
+  else {
+    p.cell = m.cell_across(mcell, face, p.x);
+  }
+  // Require(new_mcell != m.null_cell(), "invalid cell from cell boundary");
   return;
 }
 
@@ -222,12 +231,13 @@ apply_escape(p_t & p, tally_t & t)
   return;
 }
 
-template <typename p_t, typename tally_t>
+template <typename p_t, typename tally_t, typename vector_t>
 void
-apply_reflect(p_t & p, tally_t & t)
+apply_reflect(p_t & p, tally_t & t, vector_t const & face_normal)
 {
   t.count_reflect(p.cell);
-  p.omega = -p.omega;
+  vector_t reflected = p.omega.reflect(face_normal);
+  p.omega = reflected;
   return;
 }
 

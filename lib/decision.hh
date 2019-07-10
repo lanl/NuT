@@ -34,47 +34,79 @@ unresolved_event(size_t lineno, std::string const & eventstr);
 /** Compare std::pairs on the second element. */
 template <typename pair>
 bool
-pair_min_2nd(pair const & p1, pair const & p2)
+tuple_min_2nd(pair const & p1, pair const & p2)
 {
-  return p1.second < p2.second;
+  return std::get<1>(p1) < std::get<1>(p2);
 }
 
 }  // namespace
+
+/**\brief Examine the cell & face, and determine what kind of boundary this is.
+ * \remark If it is a cell boundary, the face will be encoded in the event.
+ * Decode via events::decode_event.
+ */
+template <typename MeshT, typename Face_T>
+events::Event
+decide_boundary_event(MeshT const & mesh, cell_t const cell, Face_T const face)
+{
+  // using namespace bdy_types;
+  using namespace events;
+  Event event(null);
+  typename MeshT::Cell mcell{cell};
+  auto b_type(mesh.get_boundary_type(mcell, face));
+  switch(b_type) {
+    case MeshT::Boundary::VACUUM: event = escape; break;
+    case MeshT::Boundary::REFLECTIVE: event = reflect; break;
+    case MeshT::Boundary::NONE:
+      event = cell_boundary;
+      // event = events::encode_face(event, face.id());
+      break;
+    case MeshT::Boundary::PERIODIC:
+    case MeshT::Boundary::PROCESSOR:
+    default:
+      std::stringstream errstr;
+      errstr << "decide_boundary_event: untreated boundary " << b_type;
+      unresolved_event(__LINE__, errstr.str());
+  };
+  return event;
+}  // decide_boundary_event
 
 template <typename particle_t,
           typename mesh_t,
           typename opacity_t,
           typename velocity_t>
-event_n_dist
+event_data<typename mesh_t::Face>
 decide_event(particle_t & p,  // non-const b/c of RNG
              mesh_t const & mesh,
              opacity_t const & opacity,
              velocity_t const & velocity)
 {
-  constexpr size_t dim(particle_t::dim);
+  using vector_t = typename mesh_t::Vector;
 
-  typedef typename particle_t::fp_t fp_t;
+  using fp_t = typename particle_t::fp_t;
   // Currently there are always  three top-level events considered.
   // Changing vector to std::array
-  typedef std::array<event_n_dist, 3> vend_t;
+  using event_data = event_data<typename mesh_t::Face>;
+  using vend_t =  std::array<event_data, 3>;
+  using EandOmega_T = typename mesh_t::EandOmega_T;
 
   vend_t e_n_ds;
 
-  cell_t const cell = p.cell;
+  cell_t const cell{p.cell};
   fp_t const tleft = p.t;
-  vec_t<dim> const x = p.x;
+  vector_t const x = p.x;
   Species const species = p.species;
 
   // compute distance to events, push onto vector
   // compute cross-section in comoving frame
 
-  vec_t<dim> v = velocity.v(cell);
+  vector_t v = velocity.v(cell);
   // TO DO vector velocity
-  vec_t<dim> vtmp(v);
+  vector_t vtmp(v);
   geom_t const eli = p.e;
-  vec_t<dim> const oli = p.omega;
+  vector_t const oli = p.omega;
   // LT to comoving frame (compute interaction comoving).
-  EandOmega<dim> eno_cmi = mesh_t::LT_to_comoving(vtmp, eli, oli);
+  EandOmega_T eno_cmi = mesh_t::LT_to_comoving(vtmp, eli, oli);
   geom_t const eci = eno_cmi.first;
 
   fp_t const sig_coll = opacity.sigma_collide(cell, eci, species);
@@ -86,72 +118,44 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   geom_t const d_coll =
       (sig_coll != fp_t(0)) ? -std::log(random_dev) / sig_coll : huge;
 
-  e_n_ds[0] = event_n_dist(events::collision, d_coll);
+  e_n_ds[0] = event_data(events::collision, d_coll, mesh_t::null_face());
 
   // boundary distance
-  typename mesh_t::Intersection dnf = mesh.distance_to_bdy(x, oli, cell);
+  typename mesh_t::Intersection dnf = mesh.intersection({x, oli},
+    typename mesh_t::Cell{cell});
   geom_t const d_bdy = mesh.get_distance(dnf);
   typename mesh_t::Face face = mesh.get_face(dnf);
-  e_n_ds[1] = event_n_dist(events::boundary, d_bdy);
+  e_n_ds[1] = event_data(events::boundary, d_bdy, face);
 
   // time step end distance
   geom_t const d_step_end = c * tleft;
-  e_n_ds[2] = event_n_dist(events::step_end, d_step_end);
+  e_n_ds[2] = event_data(events::step_end, d_step_end, mesh_t::null_face());
 
   // pick (event,dist) pair with shortest distance
-  event_n_dist closest = *(std::min_element(e_n_ds.begin(), e_n_ds.end(),
-                                            pair_min_2nd<event_n_dist>));
-
+  event_data closest = *(std::min_element(e_n_ds.begin(), e_n_ds.end(),
+                                            tuple_min_2nd<event_data>));
+  events::Event & closest_event = events::get_event(closest);
   // if needed, further resolve events
-  if(closest.first == events::collision) {
+  if(closest_event == events::collision) {
     // need to compute the comoving energy at the scattering site,
     // in order to compute the different cross sections there.
 
-    typename mesh_t::coord_t const scat_site(
-        mesh.new_coordinate(x, oli, d_coll));
-    vec_t<dim> const o_sct = scat_site.omega;
-    EandOmega<dim> const eno_scat = mesh_t::LT_to_comoving(vtmp, eli, o_sct);
+    typename mesh_t::Ray const scat_site(
+        mesh.advance_point(x, oli, d_coll));
+    auto const& o_sct = scat_site.direction();
+    EandOmega_T const eno_scat = mesh_t::LT_to_comoving(vtmp, eli, o_sct);
     fp_t const ecscat = eno_scat.first;
-    closest.first = decide_scatter_event(p.rng, ecscat, cell, opacity, species);
+    closest_event = decide_scatter_event(p.rng, ecscat, cell, opacity, species);
   }
   else {
-    if(closest.first == events::boundary) {
-      closest.first = decide_boundary_event(mesh, cell, face);
+    if(closest_event == events::boundary) {
+      closest_event = decide_boundary_event(mesh, cell, face);
     }
     // compensate RNG if decide_scatter_event not called
     p.rng.random();
   }
   return closest;
 }  // decide_event
-
-/**\brief Examine the cell & face, and determine what kind of boundary this is.
- * \remark If it is a cell boundary, the face will be encoded in the event.
- * Decode via events::decode_event.
- */
-template <typename MeshT>
-events::Event
-decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
-{
-  using namespace bdy_types;
-  using namespace events;
-  Event event(null);
-  bdy_types::descriptor b_type(mesh.get_bdy_type(cell, face));
-  switch(b_type) {
-    case VACUUM: event = escape; break;
-    case REFLECTIVE: event = reflect; break;
-    case NONE:
-      event = cell_boundary;
-      event = events::encode_face(event, face);
-      break;
-    case PERIODIC:
-    case PROCESSOR:
-    default:
-      std::stringstream errstr;
-      errstr << "decide_boundary_event: untreated boundary " << b_type;
-      unresolved_event(__LINE__, errstr.str());
-  };
-  return event;
-}  // decide_boundary_event
 
 template <typename rng_t, typename fp_t, typename opacity_t>
 events::Event

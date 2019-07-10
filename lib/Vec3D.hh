@@ -6,12 +6,15 @@
 #ifndef VEC3D_HH
 #define VEC3D_HH
 
+#include "Assert.hh"
 #include <array>
+#include <cmath>
 #include <iostream>  // for operator >>, <<, istream, ostream.
 #include <numeric>
 #include <stdint.h>
 
 namespace nut {
+
 template <typename fp_t, size_t dimn>
 struct Vec_T {
   typedef fp_t const & gcr;
@@ -39,6 +42,20 @@ struct Vec_T {
   Vec_T() { std::fill(v.begin(), v.end(), fp_t(0.0)); }
 
   Vec_T(fp_t const i) { std::fill(v.begin(), v.end(), i); }
+
+  /**\brief subscript operator, const access */
+  double const & operator[](size_t i) const
+  {
+    nut::LessThan(i, dim, "index", "dimension");
+    return v[i];
+  }
+
+  /**\brief subscript operator */
+  double & operator[](size_t i)
+  {
+    nut::LessThan(i, dim, "index", "dimension");
+    return v[i];
+  }
 
   Vec_T div_by(fp_t const div) const
   {
@@ -72,6 +89,35 @@ struct Vec_T {
   {
     for(uint32_t d = 0; d < dim; ++d) { v[d] -= rhs.v[d]; }
     return *this;
+  }
+
+  /**\brief Length of this vector */
+  fp_t norm() const { return std::sqrt(this->dot(*this)); }
+
+  /**\brief Length of this vector */
+  fp_t dot(vec_t const & o) const
+  {
+    fp_t init(0.0);
+    return std::inner_product(v.begin(), v.end(), o.v.begin(), init);
+  }
+
+  /**\brief Compute part of this vector parallel to u */
+  vec_t parallel(vec_t const &u) const {
+    double u_sq{u.dot(u)};
+    if(0.0 == u_sq){
+      return vec_t(0.0);
+    }
+    return u * (this->dot(u) / u_sq);
+  }
+
+  /**\brief Compute part of this vector parallel to u */
+  vec_t perpendicular(vec_t const &u) const {
+    return *this - this->parallel(u);
+  }
+
+  /**\brief Compute this vector reflected in face with normal vector n */
+  vec_t reflect(vec_t const &n){
+    return this->perpendicular(n) - this->parallel(n);
   }
 
   friend std::ostream & operator<<(std::ostream & s, Vec_T const & v)

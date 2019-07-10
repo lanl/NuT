@@ -4,11 +4,10 @@
 // Header for types
 // (c) Copyright 2011 LANSLLC all rights reserved.
 
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
-#include "Mesh_3D_Cartesian.hh" // TO DO this is very likely circular.
-                                // likely solution: include murmeln header directly
+#include "Mesh_3D_Cartesian.hh"  // TO DO this is very likely circular.
+                                 // likely solution: include murmeln header directly
 #include "RNG.hh"
 #include "Vec3D.hh"
 #include <iterator>
@@ -24,14 +23,17 @@ namespace nut {
 namespace bdy_types {
 
 #ifdef HAVE_MURMELN
-enum descriptor {
-  NONE = murmeln::Cartesian_Mesh_Interface::Boundary::NONE,
-  CELL = murmeln::Cartesian_Mesh_Interface::Boundary::CELL,
-  VACUUM = murmeln::Cartesian_Mesh_Interface::Boundary::VACUUM,
-  REFLECTIVE = murmeln::Cartesian_Mesh_Interface::Boundary::REFLECTIVE,
-  PERIODIC = murmeln::Cartesian_Mesh_Interface::Boundary::PERIODIC,
-  PROCESSOR = murmeln::Cartesian_Mesh_Interface::Boundary::PROCESSOR,
-};
+using namespace murmeln_mesh::boundary;
+using descriptor = BDY_TYPE;
+// using descriptor = murmeln::Cartesian_Mesh_Interface::Boundary;
+// enum descriptor {
+//   NONE = murmeln::Cartesian_Mesh_Interface::Boundary::NONE,
+//   CELL = murmeln::Cartesian_Mesh_Interface::Boundary::CELL,
+//   VACUUM = murmeln::Cartesian_Mesh_Interface::Boundary::VACUUM,
+//   REFLECTIVE = murmeln::Cartesian_Mesh_Interface::Boundary::REFLECTIVE,
+//   PERIODIC = murmeln::Cartesian_Mesh_Interface::Boundary::PERIODIC,
+//   PROCESSOR = murmeln::Cartesian_Mesh_Interface::Boundary::PROCESSOR,
+// };
 #else
 enum descriptor {
   NONE = 0,
@@ -98,10 +100,5 @@ seed_t
 species_seed(Species const s);
 
 }  // namespace nut
-
-#endif
-
-// version
-// $Id$
 
 // End of file

@@ -112,13 +112,12 @@ transport_particle(ParticleT const & in_p,
                    LogT & log,
                    typename TallyT::fp_t const alpha)
 {
+  using event_data = event_data<typename MeshT::Face>;
   ParticleT particle = in_p;
   cntr_t i = 1;
   while(particle.t >= 0.0 && particle.alive == true) {
-    event_n_dist e_n_d = decide_event(particle, mesh, opacity, vel);
-    events::Event const event = e_n_d.first;
-    geom_t const dist = e_n_d.second;
-    apply_event(particle, event, dist, mesh, opacity, vel, tally, census,
+    event_data evt_data = decide_event(particle, mesh, opacity, vel);
+    apply_event(particle, evt_data, mesh, opacity, vel, tally, census,
                 alpha);
     i++;
   }
@@ -140,12 +139,11 @@ transport_particle_no_log(ParticleT const & in_p,
                           CensusT & census,
                           typename TallyT::fp_t const alpha)
 {
+  using event_data = event_data<typename MeshT::Face>;
   ParticleT particle = in_p;
   while(particle.t >= 0.0 && particle.alive == true) {
-    event_n_dist e_n_d = decide_event(particle, mesh, opacity, vel);
-    events::Event const event = e_n_d.first;
-    geom_t const dist = e_n_d.second;
-    apply_event(particle, event, dist, mesh, opacity, vel, tally, census,
+    event_data evt_data = decide_event(particle, mesh, opacity, vel);
+    apply_event(particle, evt_data, mesh, opacity, vel, tally, census,
                 alpha);
   }
   return particle;

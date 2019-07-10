@@ -242,9 +242,10 @@ TEST(nut_mesh_3D, cell_across_6_cell_cluster)
   vbd bds;
   nut::mkReflectBCs<mesh_t, cell_t>(bds, nx, ny, nz);
   mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
-  auto f = [&mesh](cell_t c, mesh_t::face_t const f, cell_t const e,
-                   const char * s) {
-    return expect(mesh.cell_across(c, f), e, s);
+  mesh_t::Vector unused{0.0};
+  auto f = [&mesh, &unused](cell_t c, mesh_t::face_t const f, cell_t const e,
+                            const char * s) {
+    return expect(mesh.cell_across(c, f, unused), e, s);
   };
   cell_t const null_cell = mesh_t::null_cell();
   {
@@ -380,7 +381,7 @@ TEST(nut_mesh_3D, sample_position_buffer_rng)
   mesh_t mesh(nx, ny, nz, dx, dy, dz, bds);
 
   mesh_t::Vector x = mesh.sample_position(rng, 0);
-  mesh_t::Vector o = mesh.sample_direction(rng);
+  mesh_t::Vector o = mesh.sample_direction_isotropic(rng);
 
   bool passed = expect(x.v[0], 1.0, "cell 0, x") &&
                 expect(x.v[1], 1.5, "cell 0, y") &&

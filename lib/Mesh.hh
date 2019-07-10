@@ -20,7 +20,7 @@
 namespace nut {
 
 namespace Sphere_1D_Faces {
-enum Faces { LOW = 0, HIGH = 1 };
+enum Faces { LOW = 0, HIGH = 1, NULL_FACE };
 }
 
 /*!\brief Mesh functions for 1D spherical geometry.
@@ -41,10 +41,16 @@ public:
   typedef std::pair<geom_t, geom_t> extents_t;
 
   using Face = Sphere_1D_Faces::Faces;
+  using Cell = cell_t;
+  using EandOmega_T = spec_1D_Spherical::EandOmega_T<geom_t, Vector>;
 
   struct coord_t {
-    vec_t<dim> x;
-    vec_t<dim> omega;
+    Vector x;
+    Vector omega;
+
+    Vector const & position() const { return x; }
+
+    Vector const & direction() const { return omega; }
   };
   struct d_to_b_t {
     geom_t d;    /** distance to boundary */
@@ -54,9 +60,12 @@ public:
   using Intersection = d_to_b_t;
   using Ray = coord_t;
 
+  using Boundary = bdy_descriptor_t;
+
   static geom_t get_distance(Intersection const & i) { return i.d; }
 
-  static Face get_face(Intersection const & i) {
+  static Face get_face(Intersection const & i)
+  {
     auto fidx = i.face;
     Require(fidx == Face::LOW || fidx == Face::HIGH, "Invalid face encontered");
     return static_cast<Face>(fidx);
@@ -65,6 +74,10 @@ public:
   static const cell_t null_cell_;
 
   static cell_t null_cell() { return null_cell_; }
+
+  static const Face null_face_;
+
+  static Face null_face() { return null_face_; }
 
   // ctor
   Sphere_1D(vb const & bdys_, vbd const & descs_)
@@ -88,13 +101,28 @@ public:
     return vol;
   }  // volume
 
+  /**\brief Compute normal to face */
+  static inline Vector get_normal(Face const &f){
+    if(Sphere_1D_Faces::LOW == f){
+      return Vector{1.0};
+    }
+    return Vector{-1.0};
+  }
+
+  /**\brief Reflection in spherical just reverses the direction cosine.*/
+  static inline Vector reflect(Face const & /*f*/, Vector const &direction) {
+    return Vector{-1.0 * direction[0]};
+  }
+
   /*!\brief which cell is across a face. Note this just tells what the next
    * cell is, no account is taken of the boundary type.
    *
    * \param cell: 0 < cell <= n_cells
    * \param face: 0 (left) or 1 (right)
    */
-  cell_t cell_across(cell_t const cell, cell_t face) const
+  cell_t cell_across(cell_t const cell,
+                     cell_t face,
+                     Vector const & /*p*/) const
   {
     cellOK(cell);
     // LessThan(face, cell_t(2), "face");
@@ -104,22 +132,6 @@ public:
     }
     if(face == Sphere_1D_Faces::LOW) { return cell - 1; }
     return cell + 1;
-    // // compute index into descriptors
-    // cell_t idx = cell - 1;
-    // idx += face;
-    // bdy_desc_t const & btype = m_descs[idx];
-    // cell_t result(-1);
-    // switch(btype) {
-    //   case bdy_types::CELL: result = cell - 1 + 2 * face; break;
-    //   case bdy_types::REFLECTIVE: result = cell; break;
-    //   case bdy_types::VACUUM: result = null_cell_; break;
-    //   default:
-    //     std::stringstream errstr;
-    //     errstr << "Sphere_1D::cell_across_face" << __LINE__
-    //            << " unknown boundary type: " << btype;
-    //     Require(false, errstr.str().c_str());
-    // }
-    // return result;
   }  // cell_across_face
 
   template <typename rng_t>
@@ -135,14 +147,14 @@ public:
   }
 
   template <typename RNG_T>
-  vec_t<dim> static sample_direction(RNG_T & rng)
+  vec_t<dim> static sample_direction_isotropic(RNG_T & rng)
   {
     geom_t const ctheta = geom_t(2) * rng.random() - geom_t(1);
     return ctheta;
   }
 
   /*!\brief type of cell boundary */
-  bdy_desc_t get_bdy_type(cell_t const c, cell_t const face) const
+  bdy_desc_t get_boundary_type(cell_t const c, cell_t const face) const
   {
     cell_t const idx = make_idx(c, m_ncells);
     cell_t const fidx = face_to_index(face);
@@ -164,11 +176,17 @@ public:
     return f;
   }
 
+  Ray advance_point(Vector const x,
+                    Vector const omega,
+                    geom_t const distance) const
+  {
+    return this->new_coordinate(x, omega, distance);
+  }
   /*!\brief calculate new coordinate and new direction cosine at a given
    *        distance along direction cosine omega.  */
-  coord_t new_coordinate(vec_t<dim> const x,
-                         vec_t<dim> const omega,
-                         geom_t const distance) const
+  Ray new_coordinate(Vector const x,
+                     Vector const omega,
+                     geom_t const distance) const
   {
     geom_t const theta = std::acos(omega.v[0]);
     geom_t const s = std::sin(theta);
@@ -178,18 +196,18 @@ public:
     coord_t coord;
     coord.x.v[0] = new_r;
     coord.omega.v[0] = std::cos(theta - std::asin(distance / new_r * s));
-    return std::move(coord);
+    return coord;
   }
 
   Intersection intersection(Ray const & r, cell_t const c) const
   {
-    vec_t<dim> & x{r.position()};
-    vec_t<dim> & o{r.direction()};
+    Vector const & x{r.position()};
+    Vector const & o{r.direction()};
     return this->distance_to_bdy(x, o, c);
   }
 
-  d_to_b_t distance_to_bdy(vec_t<dim> const x,
-                           vec_t<dim> const omega,
+  d_to_b_t distance_to_bdy(Vector const x,
+                           Vector const omega,
                            cell_t const cell) const
   {
     cellOK(cell);
@@ -284,18 +302,18 @@ public:
     return d2b;
   }  // dist_to_bdy_impl
 
-  static EandOmega<1> LT_to_comoving(vec_t<1> const v_lab,
-                                     geom_t const & e_lab,
-                                     vec_t<1> const & omega_lab)
+  static EandOmega_T LT_to_comoving(Vector const v_lab,
+                                    geom_t const & e_lab,
+                                    Vector const & omega_lab)
   {
-    return spec_1D::LT_to_comoving_sphere1D(v_lab.v[0], e_lab, omega_lab);
+    return spec_1D_Spherical::LT_to_comoving_sphere1D(v_lab, e_lab, omega_lab);
   }  // LT_to_comoving
 
-  static EandOmega<1> LT_to_lab(vec_t<1> const v_lab,
-                                geom_t const & e_com,
-                                vec_t<1> const & omega_com)
+  static EandOmega_T LT_to_lab(Vector const v_lab,
+                               geom_t const & e_com,
+                               Vector const & omega_com)
   {
-    return spec_1D::LT_to_lab_sphere1D(v_lab.v[0], e_com, omega_com);
+    return spec_1D_Spherical::LT_to_lab_sphere1D(v_lab, e_com, omega_com);
   }
 
   vb const m_bdys;
@@ -316,6 +334,12 @@ using Spherical_1D_Mesh = Sphere_1D<cell_t, geom_t, bdy_types::descriptor>;
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 const cell_t Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::null_cell_ =
     0xFFFFFFFF;
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+const typename Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::Face
+    Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::null_face_ = static_cast<
+        typename Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::Face>(
+        0xFFFFFFFF);
 
 }  // namespace nut
 

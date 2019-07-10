@@ -41,7 +41,7 @@ TEST(nut_Tally, deposit_inelastic_el_scat)
   nut::Tally<fp_t, dim> tally(n_cells), ref(n_cells);
 
   fp_t const ei(2.0), ef(1.9);
-  fp_t const omega_i(1.0), omega_f(-1.0);
+  nut::Vec_T<fp_t, 1> const omega_i{1.0}, omega_f{-1.0};
   fp_t const wt(0.5);
   nut::Species const s(nut::nu_e);
   nut::cell_t const c(21);
@@ -96,7 +96,7 @@ TEST(nut_Tally, deposit_momentum_elastic)
 
   t_t tally(n_cells), ref(n_cells);
 
-  fp_t const o = 0.3;
+  nut::Vec_T<fp_t, 1> const o = {0.3};
   fp_t const wt = 0.2;
   fp_t const e = 4.0;
   nut::cell_t const c(21);

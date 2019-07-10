@@ -9,7 +9,7 @@
 // bh-3.cc further differs in attempting OpenMP & MPI execution, as well as
 // changing to the Philox CBRNG (Salmon et al, SC 2011).
 
-#include "Mesh3DCar.hh"
+#include "Mesh_3D_Cartesian.hh"
 #include "RNG.hh"
 #include "constants.hh"
 #include "types.hh"
@@ -41,10 +41,10 @@
 constexpr size_t dim = 3;
 
 using op_t = nut::Opacity<nut::geom_t>;
-using Velocity_t = nut::Velocity<nut::geom_t, dim>;
 
-using Mesh_t =
-    nut::Cartesian_3D<nut::cell_t, nut::geom_t, nut::bdy_types::descriptor>;
+using Mesh_t = murmeln::Cartesian_Mesh_Interface;
+using vector_t = Mesh_t::Vector;
+using Velocity_t = nut::Velocity<nut::geom_t, vector_t>;
 using p_t = nut::Particle<nut::geom_t, nut::rng_t, Mesh_t::Vector>;
 
 // static
@@ -57,7 +57,7 @@ using vec_vec = tally_t::vv;
 using vsz = std::vector<size_t>;
 using log_t = nut::Null_Log;
 // using log_t = nut::Std_Log        ;
-using MatState_t = nut::MatState<nut::geom_t, dim>;
+using MatState_t = nut::MatState<nut::geom_t, vector_t>;
 
 using state_t = std::pair<MatState_t, Mesh_t>;
 using src_stat_t = nut::src_stats_t<nut::geom_t, nut::id_t>;
@@ -89,9 +89,7 @@ run_cycle(src_stat_t const & stats,
   using nut::Require;
   using nut::vec_t;
 
-  static const size_t dim = tally_t::dim;
-
-  cell_t const n_cells = mesh.n_cells();
+  cell_t const n_cells = mesh.num_cells();
 
   Require(stats.ns.size() == n_cells && stats.es.size() == n_cells &&
               stats.ews.size() == n_cells,
@@ -175,9 +173,11 @@ run_cycle(src_stat_t const & stats,
 
   // fix up momenta
   // vec_vec new_momenta(n_cells);
-  std::transform(tally.momentum.begin(), tally.momentum.end(),
-                 tally.momentum.begin(),
-                 [&](vec_t<dim> & v) { return v.div_by(nut::c); });
+  for(auto & m : tally.momentum) { m.div_by(nut::c); }
+
+  // std::transform(tally.momentum.begin(), tally.momentum.end(),
+  //                tally.momentum.begin(),
+  //                [&](vector_t & v) { return v.div_by(nut::c); });
 
   // std::transform(tally.momentum.begin(),tally.momentum.end(),tally.momentum.begin(),
   //                nut::div_by<geom_t>(nut::c) );
@@ -211,9 +211,7 @@ run_cycle_buffer(src_stat_t const & stats,
   using nut::Require;
   using nut::vec_t;
 
-  static const size_t dim = tally_t::dim;
-
-  cell_t const n_cells = mesh.n_cells();
+  cell_t const n_cells = mesh.num_cells();
 
   Require(stats.ns.size() == n_cells && stats.es.size() == n_cells &&
               stats.ews.size() == n_cells,
@@ -310,9 +308,10 @@ run_cycle_buffer(src_stat_t const & stats,
   // std::cout << "run_cycle: Transport complete\n";
 
   // fix up momenta--divide all by c to derive momentum.
-  std::transform(tally.momentum.begin(), tally.momentum.end(),
-                 tally.momentum.begin(),
-                 [&](vec_t<dim> & v) { return v.div_by(nut::c); });
+  for(auto & m : tally.momentum) { m.div_by(nut::c); }
+  // std::transform(tally.momentum.begin(), tally.momentum.end(),
+  //                tally.momentum.begin(),
+  //                [&](vector_t & v) { return v.div_by(nut::c); });
   return;
 }  // run_cycle_buffered
 
@@ -324,27 +323,27 @@ get_mat_state(std::string const filename,
               nut::geom_t const ulimit)
 {
   using nut::Require;
-  using vecrows = std::vector<nut::MatStateRowP<nut::geom_t, dim> >;
+  using vecrows = std::vector<nut::MatStateRowP<nut::geom_t, vector_t> >;
   std::ifstream infile(filename.c_str());
   if(!infile) {
     std::stringstream errstr;
     errstr << "Unable to open file \"" << filename << "\"";
     throw(std::runtime_error(errstr.str()));
   }
-  vecrows rows(nut::read_mat_state_file<nut::geom_t, dim>(infile));
+  vecrows rows(nut::read_mat_state_file<nut::geom_t, vector_t>(infile));
   infile.close();
 
   // get a mesh that includes only those cells within the
   // specified limits; also, get back the indices corresponding
   // to the limits.
   size_t llimitIdx(0), ulimitIdx(0);
-  Mesh_t mesh = nut::make_vacuum_bdy_c3();
+  Mesh_t mesh = nut::make_cartesian_mesh_interface();
   // Mesh_t mesh = nut::rows_to_mesh<nut::geom_t>(rows, llimit, ulimit,
   // llimitIdx,
   //                                              ulimitIdx);
   Require(ulimitIdx >= llimitIdx, "invalid limits");
   size_t const nrows(ulimitIdx - llimitIdx);
-  Require(mesh.n_cells() == nrows,
+  Require(mesh.num_cells() == nrows,
           "get_mat_state: mesh size and nrows disagree");
   // get the subset of rows within the limits
   vecrows limitedRows(nrows);
@@ -368,10 +367,10 @@ run_one_species(nut::Species const spec,
   MatState_t::Velocity_T const & v(mat.velocity);
   op_t const op(d, t);
 
-  size_t const ncells(mesh.n_cells());
+  size_t const ncells(mesh.num_cells());
   size_t const ncen(0);
 
-  std::vector<nut::cell_t> cidxs(mesh.n_cells());
+  std::vector<nut::cell_t> cidxs(mesh.num_cells());
   for(size_t i = 0; i < cidxs.size(); ++i) { cidxs[i] = i + 1; }
   Check(cidxs.size() == v.size(), "Cell indexes size != velocity size");
 

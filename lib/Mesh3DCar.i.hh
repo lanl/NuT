@@ -14,8 +14,34 @@
 namespace nut {
 
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+typename Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::Vector
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::get_normal(Face const & f)
+{
+  Vector n;
+  switch(f.id()) {
+    case low_x: n = Vector{1.0, 0.0, 0.0}; break;
+    case low_y: n = Vector{0.0, 1.0, 0.0}; break;
+    case low_z: n = Vector{0.0, 0.0, 1.0}; break;
+    case high_x: n = Vector{-1.0, 0.0, 0.0}; break;
+    case high_y: n = Vector{0.0, -1.0, 0.0}; break;
+    case high_z: n = Vector{0.0, 0.0, -1.0}; break;
+  }
+  return n;
+}  // get_normal
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+typename Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::Vector
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::reflect(Face const & f,
+                                                            Vector const & v)
+{
+  Vector normal{get_normal(f)};
+  Vector reflected = v.reflect(normal);
+  return reflected;
+}
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 bdy_descriptor_t
-Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::get_bdy_type(
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::get_boundary_type(
     cell_t const c,
     cell_t const face) const
 {
@@ -113,7 +139,7 @@ Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::cell_extents(
 template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 template <typename RNG_T>
 typename Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::Vector
-Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::sample_direction(
+Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::sample_direction_isotropic(
     RNG_T & rng)
 {
   geom_t const ctheta = geom_t(2) * rng.random() - geom_t(1);
@@ -149,7 +175,8 @@ template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
 cell_t
 Cartesian_3D<cell_t, geometry_t, bdy_descriptor_t>::cell_across(
     cell_t const cell,
-    face_t face) const
+    face_t face,
+    Vector const & /* p*/) const
 {
   // convert to i,j,k
   ijk_T const ijkIn(mkIJK(cell));

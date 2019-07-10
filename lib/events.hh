@@ -5,15 +5,12 @@
 #pragma once
 
 #include "Assert.hh"
+#include "types.hh"
 #include <utility>  // make_pair
 
 namespace nut {
 
 namespace events {
-
-constexpr uint32_t face_bits{10};
-
-constexpr uint32_t max_num_faces{0xFF};
 
 enum Event : uint32_t {
   // physics events
@@ -32,56 +29,44 @@ enum Event : uint32_t {
   step_end = 115,
   weight_cutoff = 120,
 
-  // Reserve bytes 5&6 for encoding face
-  face_start = (1 << face_bits),
-  face_mask = (max_num_faces << face_bits),
-
   // testing only
   null = 0xFFFF'FFFF
 };
-
-/**\brief Encode a face id into an Event.
- * \tparam Face_id: the face id type, must be integral.
- * \return New Event, with Face_id encode.
- */
-template <typename Face_id>
-Event
-encode_face(Event const & e, Face_id const f)
-{
-  static_assert(std::is_integral<Face_id>::value,
-                "Face_id must be integral type");
-  Require(f >= 0 && f < max_num_faces, "encode_face: invalid face");
-  uint32_t const f_in_place{f << face_bits};
-  uint32_t const new_e = f_in_place | static_cast<uint32_t>(e);
-  return static_cast<Event>(new_e);
-}  // encode_face
-
-/**\brief Decode a face id from an Event.
- * \tparam Face_id: the face id type, must be integral.
- * \return pair<Event,Face_id> (event w/out face_id, and the face_id)
- */
-template <typename Face_id>
-std::pair<Event, Face_id>
-decode_face(Event const & e)
-{
-  static_assert(std::is_integral<Face_id>::value,
-                "Face_id must be integral type");
-  // project the face id out, and shift it back to normal
-  uint32_t const f_in_place{e & face_mask};
-  uint32_t f{f_in_place >> face_bits};
-  LessThan(f, max_num_faces, "decode_face: face_id");
-  uint32_t const new_eu = e & ~face_mask;
-  Event new_e{static_cast<Event>(new_eu)};
-  auto p = std::make_pair<Event, Face_id>(std::move(new_e), std::move(f));
-  return p;
-}  // encode_face
 
 std::string
 event_name(Event const & e);
 
 }  // namespace events
 
-using event_n_dist = std::pair<events::Event, geom_t>;
+template <typename Face_T>
+using event_data = std::tuple<events::Event, geom_t, Face_T>;
+
+namespace events {
+template <typename Face_T>
+Event &
+get_event(event_data<Face_T> & e)
+{
+  return std::get<0>(e);
+}
+template <typename Face_T>
+Event const &
+get_event(event_data<Face_T> const & e)
+{
+  return std::get<0>(e);
+}
+template <typename Face_T>
+geom_t
+get_distance(event_data<Face_T> const & e)
+{
+  return std::get<1>(e);
+}
+template <typename Face_T>
+Face_T
+get_face(event_data<Face_T> const & e)
+{
+  return std::get<2>(e);
+}
+}  // namespace events
 
 }  // namespace nut
 

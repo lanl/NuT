@@ -51,6 +51,7 @@ public:
   using vec_bdy_descs = std::vector<bdy_desc_t>;
   using extents_t = std::pair<geom_t, geom_t>;
   using ijk_T = ijk_t<cell_t>;
+  using EandOmega_T = spec_3D_Cartesian::EandOmega_T<geom_t, Vector>;
 
   static const cell_t vac_cell = cell_t(-1);
   static constexpr geom_t huge = 1e300;
@@ -74,6 +75,7 @@ public:
     high_z     /* x-y plane */
   };
 
+  using Cell = cell_t;
   using Face = face_t;
 
   enum dir_t { X = 0, Y, Z };
@@ -122,7 +124,9 @@ public:
    * \param cell: 0 < cell <= n_cells
    * \param face: enum instances
    */
-  inline cell_t cell_across(cell_t const cell, face_t face) const;
+  inline cell_t cell_across(cell_t const cell,
+                            face_t face,
+                            Vector const & /* p*/) const;
 
   /** \brief Sample a position in a cell. */
   template <typename RNG_T>
@@ -130,7 +134,7 @@ public:
 
   /** Sample a direction uniformly on the unit sphere. */
   template <typename RNG_T>
-  static Vector sample_direction(RNG_T & rng);
+  static Vector sample_direction_isotropic(RNG_T & rng);
 
   /*!\brief get the lower and upper bounds of a cell in the direction indicated
    * by the face. For example, passing low or high x gives the x direction. *
@@ -171,14 +175,20 @@ public:
   inline bdy_desc_t getBC(face_t const face, cell_t const cidx) const;
 
   /*!\brief type of cell boundary */
-  inline bdy_desc_t get_bdy_type(cell_t const c, cell_t const face) const;
+  inline bdy_desc_t get_boundary_type(cell_t const c, cell_t const face) const;
+
+  /**\brief Get normal to indicated face */
+  static inline Vector get_normal(Face const & f);
+
+  /**\brief Compute reflection of vector in face */
+  static inline Vector reflect(Face const & f, Vector const & v);
 
   /** Transform energy and momentum to the frame that is moving with
    * velocity v in the lab frame. v is the velocity of the co-moving
    * frame in the lab frame. */
-  static EandOmega<3> LT_to_comoving(vec_t<3> const & v_lab,
-                                     geom_t const & e_lab,
-                                     vec_t<3> const & omega_lab)
+  static EandOmega_T LT_to_comoving(vec_t<3> const & v_lab,
+                                    geom_t const & e_lab,
+                                    vec_t<3> const & omega_lab)
   {
     return spec_3D_Cartesian::LT_to_comoving(v_lab, e_lab, omega_lab);
   }  // LT_to_comoving
@@ -188,9 +198,9 @@ public:
       frame in the lab frame (not the velocity of the lab frame in c-m.
       This accomodates storing all the material velocities in the
       lab frame. */
-  static EandOmega<3> LT_to_lab(vec_t<3> const & v_lab,
-                                geom_t const & e_com,
-                                vec_t<3> const & omega_com)
+  static EandOmega_T LT_to_lab(vec_t<3> const & v_lab,
+                               geom_t const & e_com,
+                               vec_t<3> const & omega_com)
   {
     return spec_3D_Cartesian::LT_to_comoving(v_lab, e_com, omega_com);
   }  // LT_to_comoving

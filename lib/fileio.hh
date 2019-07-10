@@ -13,13 +13,13 @@
 #include <stdint.h>
 
 namespace nut {
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 struct MatStateRowP {
   uint32_t zone;
   fp_t m_encl;
   fp_t radius;
   fp_t density;
-  vec_t<dim> velocity;
+  vector_t velocity;
 
   fp_t ye;
   fp_t eta;
@@ -39,7 +39,7 @@ struct MatStateRowP {
   fp_t lnux_pair;
   fp_t enux_pair;
 
-  bool operator==(MatStateRowP<fp_t, dim> const & a) const
+  bool operator==(MatStateRowP<fp_t, vector_t> const & a) const
   {
     return zone == a.zone && m_encl == a.m_encl && radius == a.radius &&
            density == a.density && velocity == a.velocity &&
@@ -61,40 +61,41 @@ struct MatStateRowP {
 /*!\brief read a material state file into a vector of structures,
  * one structure per line. Conversion from string to number is
  * performed, but that's it. */
-template <typename fp_t, size_t dim>
-std::vector<MatStateRowP<fp_t, dim> >
+template <typename fp_t, typename vector_t >
+std::vector<MatStateRowP<fp_t, vector_t>  >
 read_mat_state_file(std::istream & i);
 
 /*!\brief convert a line (string) to a MatStateRowP */
-template <typename fp_t, size_t dim>
-MatStateRowP<fp_t, dim>
+template <typename fp_t, typename vector_t >
+MatStateRowP<fp_t, vector_t>
 line_to_struct(std::string const & l);
 
-template <typename fp_t, size_t dim>
-std::vector<MatStateRowP<fp_t, dim> >
+template <typename fp_t, typename vector_t >
+std::vector<MatStateRowP<fp_t, vector_t>  >
 read_mat_state_file(std::istream & i)
 {
-  std::vector<MatStateRowP<fp_t, dim> > v;
+  std::vector<MatStateRowP<fp_t, vector_t>  > v;
   v.reserve(2700);
   while(!i.eof()) {
     std::string line;
     std::getline(i, line);
     if(line != "") {
-      MatStateRowP<fp_t, dim> row = line_to_struct<fp_t, dim>(line);
+      MatStateRowP<fp_t, vector_t>  row = line_to_struct<fp_t, vector_t> (line);
       v.push_back(row);
     }
   }
   return v;
 }  // read_mat_state_file
 
-template <typename fp_t, size_t dim>
-MatStateRowP<fp_t, dim>
+template <typename fp_t, typename vector_t >
+MatStateRowP<fp_t, vector_t>
 line_to_struct(std::string const & l)
 {
-  MatStateRowP<fp_t, dim> row;
+  size_t dim={vector_t::dim};
+  MatStateRowP<fp_t, vector_t>  row;
   std::stringstream sstr(l);
   sstr >> row.zone >> row.m_encl >> row.radius >> row.density;
-  for(uint32_t d = 0; d < dim; ++d) { sstr >> row.velocity.v[d]; }
+  for(uint32_t d = 0; d < dim; ++d) { sstr >> row.velocity[d]; }
   sstr >> row.ye >> row.eta >> row.temperature >> row.entropy >> row.u >>
       row.lnue_capture >> row.enue_capture >> row.lnueb_capture >>
       row.enueb_capture >> row.lnue_pair >> row.enue_pair >> row.lnueb_pair >>
