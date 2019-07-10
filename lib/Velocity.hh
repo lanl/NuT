@@ -11,9 +11,9 @@
 #include <vector>
 
 namespace nut {
-template <typename geo_t, size_t dim>
+template <typename geo_t, typename vector_t>
 struct Velocity {
-  typedef std::vector<vec_t<dim>> vec_vec;
+  typedef std::vector<vector_t> vec_vec;
 
   vec_vec vs;
 
@@ -21,13 +21,13 @@ struct Velocity {
 
   explicit Velocity(size_t const sz) : vs(sz) {}
 
-  vec_t<dim> const & v(cell_t const cidx) const
+  vector_t const & v(cell_t const cidx) const
   {
     cellOK(cidx);
     return vs.at(cidx - 1);
   }
 
-  vec_t<dim> & v(cell_t const cidx)
+  vector_t & v(cell_t const cidx)
   {
     cellOK(cidx);
     return vs.at(cidx - 1);
@@ -46,9 +46,9 @@ private:
 
 };  // Velocity
 
-template <size_t dim>
+template <typename vector_t>
 struct vel_t {
-  vec_t<dim> v;
+  vector_t v;
 };
 }  // namespace nut
 

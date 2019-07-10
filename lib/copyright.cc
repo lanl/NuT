@@ -5,10 +5,13 @@
 
 #include "copyright.hh"
 
-namespace nut
+namespace nut {
+std::string
+copyright()
 {
-    std::string copyright(){return "(c) Copyright 2010-2011 LANLLLC all rights reserved";}
-} // nut::
+  return "(c) Copyright 2010-2011 LANLLLC all rights reserved";
+}
+}  // namespace nut
 
 // version
 // $Id$

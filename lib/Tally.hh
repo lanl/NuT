@@ -8,7 +8,7 @@
 #define TALLY_H
 
 #include "Assert.hh"
-#include "Vec3D.hh"
+#include "detail/Vector.h"
 #include "types.hh"
 #include "utilities.hh"
 #include "utilities_io.hh"
@@ -22,17 +22,28 @@ namespace nut {
 /*! \brief arrays to keep track of tally in each mesh cell
  * \tparam <fp_t> {floating point type}
  */
-template <typename fpt, size_t Dim>
+template <
+    typename fpt,
+    size_t Dim,
+    /* Selects Vector if Dim == 3, otherwise Vector1 */
+    typename vector_ty = std::conditional_t<
+        Dim == static_cast<size_t>(3u),
+        nut::Vector,
+        std::conditional_t<Dim == static_cast<size_t>(1u), nut::Vector1, void>>>
 struct Tally {
-  static const size_t dim = Dim;
+  static_assert(Dim == 1u || Dim == 3u,
+                "Tally implemented only for one or three dimensional meshes");
+
+  static constexpr size_t dim = Dim;
 
   using cntr_t = uint32_t;  // counter type
   using fp_t = fpt;
   using FP_T = fp_t;
-  using vec_cr = vec_t<dim> const &;
+  using vector_t = vector_ty;
+  using vec_cr = vector_t const &;
   using vc = std::vector<cntr_t>;
   using vf = std::vector<fp_t>;
-  using vv = std::vector<vec_t<dim>>;
+  using vv = std::vector<vector_t>;
   using fp_cr = fp_t const &;
   using esc = std::pair<fp_t, fp_t>;
   using vesc = std::vector<esc>;
@@ -96,7 +107,7 @@ struct Tally {
    */
   explicit Tally(size_t const ncells = 0)
       : energy(ncells, fp_t(0)),
-        momentum(ncells, fp_t(0)),
+        momentum(ncells, {fp_t(0)}),
         n_n(ncells, cntr_t(0)),
         n_p(ncells, cntr_t(0)),
         n_e_minus(ncells, cntr_t(0)),
@@ -273,23 +284,28 @@ struct Tally {
                            0);
   }  // total_mc_steps
 
+  // template <typename vector_t>
   void deposit_inelastic_scat(cell_t const cell,
                               fp_cr e_i,
                               fp_cr e_f,
-                              vec_cr omega_i,
-                              vec_cr omega_f,
+                              vector_t const & omega_i,
+                              vector_t const & omega_f,
                               fp_cr wt,
                               nut::Species const species)
   {
     // We tally omega * ew, need to divide by c at end of time step
     // Do we need to track momentum and energy seperately by species?
+    static_assert(vector_t::dim == Dim,
+                  "template vector dimenstion must equal tally dimension");
     nrgOK(e_i, "initial energy");
     nrgOK(e_f, "final energy");
     cell_t index = make_idx(cell, m_n_cells);
 
-    vec_cr mom_dep = (e_i * omega_i) - (e_f * omega_f);
+    vector_t mom_dep = (e_i * omega_i) - (e_f * omega_f);
 
-    momentum[index] += wt * mom_dep;
+    for(size_t i = 0; i < vector_t::dim; ++i) {
+      momentum[index][i] += wt * mom_dep[i];
+    }
     energy[index] += wt * (e_i - e_f);
     return;
   }  // deposit_inelastic_el_scat
@@ -302,16 +318,18 @@ struct Tally {
     return;
   }  // deposit_energy
 
+  // template <typename vector_t>
   void deposit_momentum_elastic(cell_t const cell,
-                                vec_cr omega,
+                                vector_t const & omega,
                                 fp_cr e,
                                 fp_cr wt)
   {
     // We tally omega * ew, need to divide by c at end of time step
+    Equal(vector_t::dim, Dim, "template vector dimension", "tally dimension");
     nrgOK(e, "energy");
     cell_t const index = make_idx(cell, m_n_cells);
-    vec_t<dim> momm = wt * omega * e;
-    momentum[index] += momm;
+    vector_t momm = wt * omega * e;
+    for(size_t i = 0; i < dim; ++i) { momentum[index][i] += momm[i]; }
     return;
   }  // deposit_momentum_elastic
 

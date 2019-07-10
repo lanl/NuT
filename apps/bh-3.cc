@@ -39,13 +39,21 @@
 // #include <omp.h>
 
 using op_t = nut::Opacity<nut::geom_t>;
-constexpr size_t dim = 1;
-using Velocity_t = nut::Velocity<nut::geom_t, dim>;
 
-using Mesh_t =
+#ifdef HAVE_MURMELN
+using Mesh_T = murmeln_mesh::Spherical_1D_Mesh;
+using Mesh_Interface_T = murmeln::Spherical_Mesh_Interface;
+#else
+using Mesh_Interface_T =
     nut::Sphere_1D<nut::cell_t, nut::geom_t, nut::bdy_types::descriptor>;
-using p_t = nut::Particle<nut::geom_t, nut::rng_t, Mesh_t::Vector>;
-using tally_t = nut::Tally<nut::geom_t, dim>;
+using Mesh_T = Mesh_Interface_T;
+#endif
+
+using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::face_handle_t>;
+using vector_t = Mesh_Interface_T::Vector;
+using Velocity_t = nut::Velocity<nut::geom_t, vector_t>;
+using p_t = nut::Particle<nut::geom_t, nut::rng_t, Mesh_Interface_T::Vector>;
+using tally_t = nut::Tally<nut::geom_t, 1>;
 using census_t = nut::Census<p_t>;
 
 using vec_geom = std::vector<nut::geom_t>;
@@ -53,15 +61,18 @@ using vec_vec = tally_t::vv;
 using vsz = std::vector<size_t>;
 using log_t = nut::Null_Log;
 // using log_t = nut::Std_Log        ;
-using MatState_t = nut::MatState<nut::geom_t, dim>;
-
-using state_t = std::pair<MatState_t, Mesh_t>;
+using MatState_t = nut::MatState<nut::geom_t, vector_t>;
+// Used to construct a mesh and material state
+using cons_state_t = std::pair<MatState_t, Mesh_T>;
+// Used to share a material state and mesh interface
+using state_t = std::pair<MatState_t, Mesh_Interface_T>;
 using src_stat_t = nut::src_stats_t<nut::geom_t, nut::id_t>;
 using Chnker = nut::Chunker<src_stat_t>;
 
 void
 run_cycle(src_stat_t const & stats,
-          Mesh_t const & mesh,
+          Mesh_Interface_T const & mesh,
+          Boundary_Cond_T const & bcs,
           op_t const & op,
           Velocity_t const & vel,
           nut::geom_t const alpha,
@@ -83,11 +94,8 @@ run_cycle(src_stat_t const & stats,
   using nut::LessThan;
   using nut::PtclId;
   using nut::Require;
-  using nut::vec_t;
 
-  static const size_t dim = tally_t::dim;
-
-  cell_t const n_cells = mesh.n_cells();
+  cell_t const n_cells = mesh.num_cells();
 
   Require(stats.ns.size() == n_cells && stats.es.size() == n_cells &&
               stats.ews.size() == n_cells,
@@ -149,13 +157,15 @@ run_cycle(src_stat_t const & stats,
         id_t const ptcl_id(curr);
         nut::ctr_t ptcl_ctr(nut::rng_t::make_ctr(ptcl_id, 0u, 0u, 0u));
         nut::rng_t ptcl_rng(ptcl_ctr, key);  // for generating the particle
-        p_t p_in = nut::gen_init_particle<Mesh_t, geom_t, nut::rng_t, p_t>(
-            mesh, cidx, particle_dt, alpha, s, ew, op.temp(cidx), vel.v(cidx),
-            ptcl_rng);
+        p_t p_in =
+            nut::gen_init_particle<Mesh_Interface_T, geom_t, nut::rng_t, p_t>(
+                mesh, cidx, particle_dt, alpha, s, ew, op.temp(cidx),
+                vel.v(cidx), ptcl_rng);
         nut::ctr_t evt_ctr(nut::rng_t::make_ctr(0u, 0u, ptcl_id, 0u));
         nut::rng_t evt_rng(evt_ctr, key);  // for generating events
         p_in.rng = evt_rng;
-        nut::transport_particle(p_in, mesh, op, vel, tally, census, log, alpha);
+        nut::transport_particle(p_in, mesh, op, vel, tally, census, log, bcs,
+                                alpha);
         // std::cout << "final state: " << p_out << std::endl;
         ctr++;
         curr++;
@@ -171,9 +181,10 @@ run_cycle(src_stat_t const & stats,
 
   // fix up momenta
   // vec_vec new_momenta(n_cells);
+  geom_t const one_over_c = 1.0 / nut::c;
   std::transform(tally.momentum.begin(), tally.momentum.end(),
                  tally.momentum.begin(),
-                 [&](vec_t<dim> & v) { return v.div_by(nut::c); });
+                 [&](auto const & v) { return v * one_over_c; });
 
   // std::transform(tally.momentum.begin(),tally.momentum.end(),tally.momentum.begin(),
   //                nut::div_by<geom_t>(nut::c) );
@@ -183,7 +194,8 @@ run_cycle(src_stat_t const & stats,
 
 void
 run_cycle_buffer(src_stat_t const & stats,
-                 Mesh_t const & mesh,
+                 Mesh_Interface_T const & mesh,
+                 Boundary_Cond_T const & bcs,
                  op_t const & op,
                  Velocity_t const & vel,
                  nut::geom_t const alpha,
@@ -205,11 +217,8 @@ run_cycle_buffer(src_stat_t const & stats,
   using nut::LessThan;
   using nut::PtclId;
   using nut::Require;
-  using nut::vec_t;
 
-  static const size_t dim = tally_t::dim;
-
-  cell_t const n_cells = mesh.n_cells();
+  cell_t const n_cells = mesh.num_cells();
 
   Require(stats.ns.size() == n_cells && stats.es.size() == n_cells &&
               stats.ews.size() == n_cells,
@@ -277,7 +286,7 @@ run_cycle_buffer(src_stat_t const & stats,
         nut::ctr_t ptcl_ctr(nut::rng_t::make_ctr(ptcl_id, 0u, 0u, 0u));
         nut::rng_t ptcl_rng(ptcl_ctr, key);  // for generating the particle
         p_buff_in[p_buff_idx] =
-            nut::gen_init_particle<Mesh_t, geom_t, nut::rng_t, p_t>(
+            nut::gen_init_particle<Mesh_Interface_T, geom_t, nut::rng_t, p_t>(
                 mesh, cidx, particle_dt, alpha, s, ew, op.temp(cidx),
                 vel.v(cidx), ptcl_rng);
         nut::ctr_t evt_ctr(nut::rng_t::make_ctr(0u, 0u, ptcl_id, 0u));
@@ -297,54 +306,60 @@ run_cycle_buffer(src_stat_t const & stats,
       }  // loop over particles
     }    // loop over cells
     // transport particles
-    transport(p_buff_in, mesh, op, vel, tally, p_buff_out, census, log, alpha);
+    transport(p_buff_in, mesh, bcs, op, vel, tally, p_buff_out, census, log,
+              alpha);
 
     // dispose of particles, tally escape spectrum
 
   }  // chunk loop
 
   // std::cout << "run_cycle: Transport complete\n";
-
+  geom_t const one_over_c{1.0 / nut::c};
   // fix up momenta--divide all by c to derive momentum.
   std::transform(tally.momentum.begin(), tally.momentum.end(),
                  tally.momentum.begin(),
-                 [&](vec_t<dim> & v) { return v.div_by(nut::c); });
+                 [&](auto const & v) { return v * one_over_c; });
   return;
 }  // run_cycle_buffered
 
 /*!\brief generate a mesh & material state info by reading a material
  * state file and parsing it into MatState and Mesh objects. */
-state_t
+cons_state_t
 get_mat_state(std::string const filename,
               nut::geom_t const llimit,
               nut::geom_t const ulimit)
 {
   using nut::Require;
-  using vecrows = std::vector<nut::MatStateRowP<nut::geom_t, dim> >;
+  using vecrows = std::vector<nut::MatStateRowP<nut::geom_t, vector_t> >;
   std::ifstream infile(filename.c_str());
   if(!infile) {
     std::stringstream errstr;
     errstr << "Unable to open file \"" << filename << "\"";
     throw(std::runtime_error(errstr.str()));
   }
-  vecrows rows(nut::read_mat_state_file<nut::geom_t, dim>(infile));
+  vecrows rows(nut::read_mat_state_file<nut::geom_t, vector_t>(infile));
   infile.close();
 
   // get a mesh that includes only those cells within the
   // specified limits; also, get back the indices corresponding
   // to the limits.
   size_t llimitIdx(0), ulimitIdx(0);
-  Mesh_t mesh = nut::rows_to_mesh<nut::geom_t>(rows, llimit, ulimit, llimitIdx,
-                                               ulimitIdx);
+#ifdef HAVE_MURMELN
+  Mesh_T mesh = nut::rows_to_murmeln_mesh<nut::geom_t>(rows, llimit, ulimit,
+                                                       llimitIdx, ulimitIdx);
+#else
+  Mesh_Interface_T mesh = nut::rows_to_mesh<nut::geom_t>(rows, llimit, ulimit,
+                                                         llimitIdx, ulimitIdx);
+#endif
   Require(ulimitIdx >= llimitIdx, "invalid limits");
   size_t const nrows(ulimitIdx - llimitIdx);
-  Require(mesh.n_cells() == nrows,
+  Require(mesh.num_cells() == nrows,
           "get_mat_state: mesh size and nrows disagree");
   // get the subset of rows within the limits
   vecrows limitedRows(nrows);
   std::copy(&rows[llimitIdx], &rows[ulimitIdx], limitedRows.begin());
   // return the mesh & mat state within the limits
-  return state_t(MatState_t(limitedRows), mesh);
+  return cons_state_t(MatState_t(limitedRows), mesh);
 }  // get_mat_state
 
 void
@@ -354,7 +369,8 @@ run_one_species(nut::Species const spec,
 {
   using nut::Check;
   MatState_t const & mat = state.first;
-  Mesh_t const & mesh = state.second;
+  Mesh_Interface_T const & mesh = state.second;
+  Boundary_Cond_T bcs{nut::make_vacuum_boundary_1D(mesh)};
 
   MatState_t::Density_T const & d(mat.density);
   MatState_t::Luminosity_T const & l(mat.luminosity);
@@ -362,10 +378,10 @@ run_one_species(nut::Species const spec,
   MatState_t::Velocity_T const & v(mat.velocity);
   op_t const op(d, t);
 
-  size_t const ncells(mesh.n_cells());
+  size_t const ncells(mesh.num_cells());
   size_t const ncen(0);
 
-  std::vector<nut::cell_t> cidxs(mesh.n_cells());
+  std::vector<nut::cell_t> cidxs(mesh.num_cells());
   for(size_t i = 0; i < cidxs.size(); ++i) { cidxs[i] = i + 1; }
   Check(cidxs.size() == v.size(), "Cell indexes size != velocity size");
 
@@ -401,8 +417,8 @@ run_one_species(nut::Species const spec,
   uint32_t const rank(0);
   uint32_t const commSz(1);
 
-  run_cycle(stats, mesh, op, v, args.alpha, spec, args.seed, tally, census, key,
-            args.chunkSz, rank, commSz);
+  run_cycle(stats, mesh, bcs, op, v, args.alpha, spec, args.seed, tally, census,
+            key, args.chunkSz, rank, commSz);
 
   std::string outfname(args.outputF + "_" + nut::species_name(spec));
   std::ofstream outf(outfname.c_str());
@@ -439,7 +455,10 @@ main(int argc, char ** argv)
 
   args_t args = parseCL(argc, argv);
 
-  state_t state = get_mat_state(args.inputF, args.llimit, args.ulimit);
+  cons_state_t c_state = get_mat_state(args.inputF, args.llimit, args.ulimit);
+  Mesh_Interface_T mesh{std::get<1>(c_state)};
+  MatState_t mat_state{std::get<0>(c_state)};
+  state_t state{mat_state, mesh};
 
   // for each species, compute source stats, run particles, write tally
   // nu_e

@@ -2,6 +2,7 @@
 
 #define USING_HFBC_SIGMAS
 
+#include "Boundary_Cond.hh"
 #include "Density.hh"
 #include "Mesh.hh"
 #include "Opacity.hh"
@@ -10,6 +11,7 @@
 #include "Temperature.hh"
 #include "Velocity.hh"
 #include "decision.hh"
+#include "detail/Vector.h"
 #include "events.hh"
 #include "gtest/gtest.h"
 #include "soft_equiv.hh"
@@ -20,22 +22,26 @@
 
 using namespace nut::events;
 
+using nut::Boundary_Cond;
 using nut::cell_t;
 using nut::geom_t;
 using nut::Species;
-using nut::vec_t;
 using nut::bdy_types::descriptor;
 
 using fp_t = double;
 using vf = std::vector<fp_t>;
-using vec_vec = std::vector<vec_t<1>>;
 using rho_t = nut::Density<fp_t>;
 using T_t = nut::Temperature<fp_t>;
 using BRNG = nut::Buffer_RNG<fp_t>;
 using OpB = nut::Opacity<fp_t>;
-using p_t = nut::Particle<fp_t, BRNG, nut::Vec_T<fp_t, 1>>;
+using p_t = nut::Particle<fp_t, BRNG, nut::Vector1>;
 using mesh_t = nut::Sphere_1D<cell_t, geom_t, descriptor>;
-using v_t = nut::Velocity<fp_t, 1>;
+using vector_t = nut::Vector1;
+using vec_vec = std::vector<vector_t>;
+using v_t = nut::Velocity<fp_t, vector_t>;
+
+using face_t = mesh_t::face_handle_t;
+
 size_t ncells(10);
 vf nullv(ncells, fp_t(0));
 
@@ -125,39 +131,35 @@ TEST(nut_decide_event, decide_boundary_event)
 
   // reflect from innermost face
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
   cell_t const c1(1);
-  cell_t const f1(0);
+  face_t const f1(0);
   Event const exp_ev1(reflect);
-  Event ev1_in = decide_boundary_event(mesh, c1, f1);
-  auto [ev1, f] = nut::events::decode_face<uint32_t>(ev1_in);
+  Event ev1 = decide_boundary_event(mesh, c1, f1, bcs);
   EXPECT_EQ(exp_ev1, ev1);
   // transmit: high face of cell 1
   cell_t const c2(1);
-  cell_t const f2(1);
+  face_t const f2(1);
   Event const exp_ev2(cell_boundary);
-  Event ev2_in = decide_boundary_event(mesh, c2, f2);
-  auto [ev2, fc2] = nut::events::decode_face<uint32_t>(ev2_in);
+  Event ev2 = decide_boundary_event(mesh, c2, f2, bcs);
   EXPECT_EQ(exp_ev2, ev2);
   // transmit: low face of cell 2
   cell_t const c3(2);
-  cell_t const f3(0);
+  face_t const f3(2);
   Event const exp_ev3(cell_boundary);
-  Event ev3_in = decide_boundary_event(mesh, c3, f3);
-  auto [ev3, fc3] = nut::events::decode_face<uint32_t>(ev3_in);
+  Event ev3 = decide_boundary_event(mesh, c3, f3, bcs);
   EXPECT_EQ(exp_ev3, ev3);
   // transmit: low face of cell 10
   cell_t const c4(10);
-  cell_t const f4(0);
+  face_t const f4(10);
   Event const exp_ev4(cell_boundary);
-  Event ev4_in = decide_boundary_event(mesh, c4, f4);
-  auto [ev4, fc4] = nut::events::decode_face<uint32_t>(ev4_in);
+  Event ev4 = decide_boundary_event(mesh, c4, f4, bcs);
   EXPECT_EQ(exp_ev4, ev4);
   // escape: high face of cell 10
   cell_t const c5(10);
-  cell_t const f5(1);
+  face_t const f5(11);
   Event const exp_ev5(escape);
-  Event ev5_in = decide_boundary_event(mesh, c5, f5);
-  auto [ev5, fc5] = nut::events::decode_face<uint32_t>(ev5_in);
+  Event ev5 = decide_boundary_event(mesh, c5, f5, bcs);
   EXPECT_EQ(exp_ev5, ev5);
   return;
 }  // test_2
@@ -194,13 +196,14 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
 
   // reflect from innermost face
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  nut::event_n_dist e_n_d = decide_event(p, mesh, op, vel0s);
+  auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
 
   Event const event_exp = cell_boundary;
-  auto [event, fc_out] = nut::events::decode_face<uint32_t>(e_n_d.first);
+  // auto [event, fc_out] = nut::events::decode_face<uint32_t>(e_n_d.first);
   passed = event == event_exp;
   if(!passed) {
     std::cout << "event was " << event << ", should have been "
@@ -241,29 +244,30 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
 
   // reflect from innermost face
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
   for(size_t i = 0; i < 9; ++i) {
-    nut::event_n_dist e_n_d = decide_event(p, mesh, op, vel0s);
-    std::cout << nut::events::event_name(e_n_d.first)
-              << ", d = " << e_n_d.second << std::endl;
-    p.x += e_n_d.second;
+    auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
+    std::cout << nut::events::event_name(event) << ", d = " << distance
+              << std::endl;
+    p.x[0] += distance;
     p.cell += 1;
   }
 
-  nut::event_n_dist e_n_d = decide_event(p, mesh, op, vel0s);
+  auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
 
   Event const event_exp = escape;
-  Event const event = e_n_d.first;
   passed = event == event_exp;
   if(!passed) {
     std::cout << "event was " << event << ", AKA "
               << nut::events::event_name(event) << ", should have been "
-              << event_exp << std::endl;
+              << event_exp << ", AKA " << nut::events::event_name(event_exp)
+              << std::endl;
   }
   geom_t const d_exp = 1.0;
-  passed = e_n_d.second == d_exp and passed;
+  passed = distance == d_exp and passed;
   EXPECT_TRUE(passed);
   return;
 }  // test_4
@@ -365,6 +369,7 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
   std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
   std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   // generate opacity
   rho_t rho1(rho);
@@ -388,9 +393,8 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  nut::event_n_dist e_n_d = decide_event(p, mesh, op, vel0s);
+  auto [event, d, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
 
-  Event const & event = e_n_d.first;
   Event event_exp = nucleon_abs;
 
   passed = event == event_exp;
@@ -400,7 +404,6 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
   }
   geom_t const d_exp = 7343.827;
   geom_t const epsilon = 0.001;
-  geom_t const d = e_n_d.second;
   passed = nut::soft_equiv(d, d_exp, epsilon) && passed;
   if(!passed) {
     std::cout << "distance to event was " << std::setprecision(15) << d
@@ -433,6 +436,7 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
   std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
   std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   rho_t rho1(rho);
   T_t T1(T);
@@ -452,9 +456,8 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  nut::event_n_dist e_n_d = nut::decide_event(p, mesh, op, vel0s);
+  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, vel0s, bcs);
 
-  Event const event = e_n_d.first;
   Event const event_exp = nucleon_elastic_scatter;
 
   passed = event == event_exp;
@@ -464,7 +467,6 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
   }
   geom_t const d_exp = 9486.756;
   geom_t const epsilon = 0.001;
-  geom_t const d = e_n_d.second;
   passed = nut::soft_equiv(d, d_exp, epsilon) && passed;
   if(!passed) {
     std::cout << "distance to event was " << d << "expected distance was "
@@ -490,6 +492,7 @@ TEST(nut_decide_event, decide_event_electron_scatter)
   std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
   std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
   mesh_t mesh(bounds, b_types);
+  Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   rho_t rho1(rho);
   T_t T1(T);
@@ -510,18 +513,14 @@ TEST(nut_decide_event, decide_event_electron_scatter)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  nut::event_n_dist e_n_d = nut::decide_event(p, mesh, op, vel0s);
-
-  Event const event = e_n_d.first;
+  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, vel0s, bcs);
 
   Event const event_exp = electron_scatter;
-
   passed = event == event_exp;
   if(!passed) {
     std::cout << "event was " << event_name(event) << ", should have been "
               << event_name(event_exp) << std::endl;
   }
-  fp_t const d = e_n_d.second;
   fp_t const d_exp = 38310.5;
   geom_t const epsilon = 0.001;
   passed = nut::soft_equiv(d, d_exp, epsilon) && passed;

@@ -21,15 +21,15 @@ using test_aux::expect;
 TEST(MatState, 1D_instantiation_and_initialization)
 {
   // cf nut_Test_fileio.cc, test_3:
-  constexpr size_t dim{1};
   typedef double fp_t;
-  typedef nut::MatStateRowP<fp_t, dim> row_t;
+  using vector_t = nut::Spherical_1D_Mesh::Vector;
+  typedef nut::MatStateRowP<fp_t, vector_t> row_t;
   typedef std::vector<row_t> vecrow;
 
   std::stringstream instr(line);
-  vecrow rows(nut::read_mat_state_file<fp_t, 1>(instr));
+  vecrow rows(nut::read_mat_state_file<fp_t, vector_t>(instr));
 
-  MatState<fp_t, 1> state(rows);
+  MatState<fp_t, vector_t> state(rows);
 
   // check mat state
   // sizes of everything:

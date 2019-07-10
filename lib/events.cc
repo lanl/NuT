@@ -27,8 +27,8 @@ event_name(Event const & e)
     case reflect: name = "Reflect"; break;
     case step_end: name = "Step_end"; break;
     case weight_cutoff: name = "Weight_cutoff"; break;
-    case face_start: name = "face_start (?? not expected)"; break;
-    case face_mask: name = "face_mask (?? not expected)"; break;
+    // case face_start: name = "face_start (?? not expected)"; break;
+    // case face_mask: name = "face_mask (?? not expected)"; break;
     case null: name = "Null"; break;
   };
   return name;

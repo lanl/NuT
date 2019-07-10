@@ -4,13 +4,9 @@
 // Header for types
 // (c) Copyright 2011 LANSLLC all rights reserved.
 
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
-#include "Mesh_3D_Cartesian.hh" // TO DO this is very likely circular.
-                                // likely solution: include murmeln header directly
 #include "RNG.hh"
-#include "Vec3D.hh"
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -23,16 +19,19 @@ namespace nut {
 
 namespace bdy_types {
 
-#ifdef HAVE_MURMELN
-enum descriptor {
-  NONE = murmeln::Cartesian_Mesh_Interface::Boundary::NONE,
-  CELL = murmeln::Cartesian_Mesh_Interface::Boundary::CELL,
-  VACUUM = murmeln::Cartesian_Mesh_Interface::Boundary::VACUUM,
-  REFLECTIVE = murmeln::Cartesian_Mesh_Interface::Boundary::REFLECTIVE,
-  PERIODIC = murmeln::Cartesian_Mesh_Interface::Boundary::PERIODIC,
-  PROCESSOR = murmeln::Cartesian_Mesh_Interface::Boundary::PROCESSOR,
-};
-#else
+// #ifdef HAVE_MURMELN
+// using namespace murmeln_mesh::boundary;
+// using descriptor = BDY_TYPE;
+// using descriptor = murmeln::Cartesian_Mesh_Interface::Boundary;
+// enum descriptor {
+//   NONE = murmeln::Cartesian_Mesh_Interface::Boundary::NONE,
+//   CELL = murmeln::Cartesian_Mesh_Interface::Boundary::CELL,
+//   VACUUM = murmeln::Cartesian_Mesh_Interface::Boundary::VACUUM,
+//   REFLECTIVE = murmeln::Cartesian_Mesh_Interface::Boundary::REFLECTIVE,
+//   PERIODIC = murmeln::Cartesian_Mesh_Interface::Boundary::PERIODIC,
+//   PROCESSOR = murmeln::Cartesian_Mesh_Interface::Boundary::PROCESSOR,
+// };
+// #else
 enum descriptor {
   NONE = 0,
   CELL = NONE,
@@ -41,21 +40,19 @@ enum descriptor {
   PERIODIC = 3,
   PROCESSOR = 4,
 };
-#endif  // HAVE_MURMELN
+// #endif  // HAVE_MURMELN
 
 }  // namespace bdy_types
 
 using geom_t = double; /*^ type for geometry calculations */
-
-/** \brief Our type for geometric vectors */
-template <size_t dim>
-using vec_t = Vec_T<geom_t, dim>;
 
 using vg = std::vector<geom_t>;
 
 using cell_t = uint32_t; /*^ cell index. Use cell_t(-1) for null cell. */
 
 using id_t = uint32_t; /*^ particle index */
+
+using index_t = uint32_t; /*^ particle index */
 
 using vid = std::vector<id_t>;
 
@@ -97,11 +94,8 @@ species_type(std::string const & s);
 seed_t
 species_seed(Species const s);
 
+index_t constexpr max_index_t = std::numeric_limits<index_t>::max();
+
 }  // namespace nut
-
-#endif
-
-// version
-// $Id$
 
 // End of file
