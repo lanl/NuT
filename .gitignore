@@ -19,3 +19,5 @@ build*
 # Sublime workspace files
 *.sublime-workspace
 
+# avoid directories named old
+old*
