@@ -6,6 +6,7 @@
 #include "Particle.hh"
 #include "RNG.hh"
 #include "Tally.hh"
+#include "Vec3D.hh"
 #include "Velocity.hh"
 #include "apply_event.hh"
 #include "expect.hh"
@@ -26,15 +27,17 @@ using test_aux::check_two_changed;
 using test_aux::comp_verb;
 using test_aux::comp_verb_iter;
 
-typedef double fp_t;
-typedef nut::Buffer_RNG<fp_t> rng_t;
-typedef nut::Particle<fp_t, rng_t, 1> p_t;
-typedef nut::Tally<fp_t> t_t;
-typedef nut::Census<p_t> c_t;
-typedef nut::Velocity<fp_t, 1> v_t;
-typedef p_t::vec_t vec_t;
+using fp_t = double;
+using rng_t = nut::Buffer_RNG<fp_t>;
 
-typedef nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor> mesh_t;
+using p_t = nut::Particle<fp_t, rng_t, nut::Vec_T<fp_t, 1>>;
+constexpr size_t dim = 1;
+using tally_t = nut::Tally<fp_t, dim>;
+using c_t = nut::Census<p_t>;
+using v_t = nut::Velocity<fp_t, 1>;
+using vec_t = p_t::vec_t;
+
+using mesh_t = nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor>;
 
 // bits for std particle
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
@@ -46,22 +49,31 @@ cell_t const cell = 1;
 Species const s(nut::nu_e);
 
 p_t
-make_std_particle()
+make_std_particle_c1()
 {
+  p_t p({x}, {omega}, e, t, wt, cell, rng, s);
+  return p;
+}
+
+p_t
+make_std_particle_c2()
+{
+  vec_t x{1.5};
+  cell_t cell{2};
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
   return p;
 }
 
 using test_aux::expect;
 
-TEST(nut_apply_event,apply_nucleon_abs)
+TEST(nut_apply_event, apply_nucleon_abs)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
   ref.momentum[idx] = omega * wt * e;
@@ -87,13 +99,13 @@ TEST(nut_apply_event,apply_nucleon_abs)
   return;
 }  // test_1
 
-TEST(nut_apply_event,apply_nucleon_elastic_scatter)
+TEST(nut_apply_event, apply_nucleon_elastic_scatter)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
   size_t const n_cells(100);
-  t_t tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
   std::vector<nut::vec_t<1>> vs(n_cells);
   v_t vel(vs);
 
@@ -104,7 +116,7 @@ TEST(nut_apply_event,apply_nucleon_elastic_scatter)
   ref.momentum[idx] = wt * e * (omega - new_omega);
   ref.n_nucl_el_scat[idx] = 1;
 
-  nut::apply_nucleon_elastic_scatter<p_t, t_t, v_t, mesh_t>(p, tally, vel);
+  nut::apply_nucleon_elastic_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, vel);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.momentum, &ref.momentum) &&
@@ -127,14 +139,14 @@ TEST(nut_apply_event,apply_nucleon_elastic_scatter)
   return;
 }  // test_2
 
-TEST(nut_apply_event,apply_lepton_scatter_nu_e__electron)
+TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
   std::vector<nut::vec_t<1>> vs(n_cells);
   v_t vel(vs);
 
@@ -148,7 +160,7 @@ TEST(nut_apply_event,apply_lepton_scatter_nu_e__electron)
   ref.energy[idx] = wt * de;
   ref.n_nu_e_el_scat[idx] = 1;
 
-  nut::apply_lepton_scatter<p_t, t_t, v_t, mesh_t>(p, tally, e_e, vel);
+  nut::apply_lepton_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, e_e, vel);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same_verb(&tally.momentum, &ref.momentum,
@@ -166,15 +178,15 @@ TEST(nut_apply_event,apply_lepton_scatter_nu_e__electron)
   return;
 }  // test_3
 
-TEST(nut_apply_event,apply_lepton_scatter_nu_e_bar__positron)
+TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
   p.species = nut::nu_e_bar;
 
   size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
   std::vector<nut::vec_t<1>> vs(n_cells);
   v_t vel(vs);
 
@@ -188,7 +200,7 @@ TEST(nut_apply_event,apply_lepton_scatter_nu_e_bar__positron)
   ref.energy[idx] = wt * de;
   ref.n_nu_e_bar_pos_scat[idx] = 1;
 
-  nut::apply_lepton_scatter<p_t, t_t, v_t, mesh_t>(p, tally, e_e, vel);
+  nut::apply_lepton_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, e_e, vel);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.momentum, &ref.momentum) &&
@@ -204,76 +216,91 @@ TEST(nut_apply_event,apply_lepton_scatter_nu_e_bar__positron)
   return;
 }  // test_4
 
-TEST(nut_apply_event,apply_low_x_boundary)
+TEST(nut_apply_event, apply_cell_boundary)
 {
-  bool passed(false);
+  size_t constexpr n_cells(3);
+  size_t constexpr n_bdys(n_cells + 1);
+  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
+  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
 
-  p_t p(make_std_particle());
+  mesh_t mesh(bdys, bdy_types);
 
-  size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  {
+    bool passed(false);
 
-  cell_t const idx = cell - 1;
-  ref.n_cell_bdy[idx] = 1;
+    p_t p(make_std_particle_c2());
 
-  nut::apply_low_x_boundary<p_t, t_t>(p, tally);
+    size_t const n_cells(100);
+    tally_t tally(n_cells), ref(n_cells);
 
-  // check tally energy deposition, momentum deposition, and counts.
-  bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
-                        check_one_changed(tally, ref, &tally.n_cell_bdy);
-  if(!t_passed) {
-    cerr << "did not tally correctly, line " << __LINE__ << endl;
+    cell_t const idx = 1;  // cell 2, index is 1
+    ref.n_cell_bdy[idx] = 1;
+
+    mesh_t::Face f_low{nut::Sphere_1D_Faces::LOW};
+    nut::apply_cell_boundary<p_t, tally_t, mesh_t, mesh_t::Face>(mesh, f_low, p,
+                                                                 tally);
+
+    // check tally energy deposition, momentum deposition, and counts.
+    bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
+                          check_one_changed(tally, ref, &tally.n_cell_bdy);
+    if(!t_passed) {
+      cerr << "did not tally correctly, line " << __LINE__ << endl;
+    }
+    // check particle status
+    bool const p_passed = p.cell == 1;
+    if(!p_passed) {
+      cerr << __LINE__ << ": incorrect cell: " << p.cell << endl;
+    }
+    passed = t_passed && p_passed;
+    EXPECT_TRUE(passed);
   }
-  // check particle status
-  bool const p_passed = p.cell == cell - 1;
-  if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
-  passed = t_passed && p_passed;
-  EXPECT_TRUE(passed);
+  {
+    bool passed(false);
+
+    p_t p(make_std_particle_c1());
+
+    size_t const n_cells(100);
+    tally_t tally(n_cells), ref(n_cells);
+
+    cell_t const idx = cell - 1;
+    ref.n_cell_bdy[idx] = 1;
+
+    mesh_t::Face f_high{nut::Sphere_1D_Faces::HIGH};
+    nut::apply_cell_boundary<p_t, tally_t>(mesh, f_high, p, tally);
+
+    // check tally energy deposition, momentum deposition, and counts.
+    bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
+                          check_one_changed(tally, ref, &tally.n_cell_bdy);
+    if(!t_passed) {
+      cerr << "did not tally correctly, line " << __LINE__ << endl;
+    }
+    // check particle status
+    bool const p_passed = p.cell == cell + 1;
+    if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
+    passed = t_passed && p_passed;
+    EXPECT_TRUE(passed);
+  }
   return;
 }  // test_5
 
-TEST(nut_apply_event,apply_hi_x_boundary)
+TEST(nut_apply_event, apply_escape)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
-
-  cell_t const idx = cell - 1;
-  ref.n_cell_bdy[idx] = 1;
-
-  nut::apply_hi_x_boundary<p_t, t_t>(p, tally);
-
-  // check tally energy deposition, momentum deposition, and counts.
-  bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
-                        check_one_changed(tally, ref, &tally.n_cell_bdy);
-  if(!t_passed) {
-    cerr << "did not tally correctly, line " << __LINE__ << endl;
-  }
-  // check particle status
-  bool const p_passed = p.cell == cell + 1;
-  if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
-  passed = t_passed && p_passed;
-  EXPECT_TRUE(passed);
-  return;
-}  // test_6
-
-TEST(nut_apply_event,apply_escape)
-{
-  bool passed(false);
-
-  p_t p(make_std_particle());
-
-  size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
   ref.n_escape[idx] = 1;
   ref.ew_escaped[idx] = wt;
 
-  nut::apply_escape<p_t, t_t>(p, tally);
+  nut::apply_escape<p_t, tally_t>(p, tally);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed =
@@ -293,19 +320,19 @@ TEST(nut_apply_event,apply_escape)
   return;
 }  // test_7
 
-TEST(nut_apply_event,apply_reflect)
+TEST(nut_apply_event, apply_reflect)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
+  p_t p(make_std_particle_c1());
 
   size_t const n_cells(100);
-  nut::Tally<fp_t> tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
   ref.n_reflect[idx] = 1;
 
-  nut::apply_reflect<p_t, t_t>(p, tally);
+  nut::apply_reflect<p_t, tally_t>(p, tally);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.n_reflect, &ref.n_reflect) &&
@@ -324,15 +351,15 @@ TEST(nut_apply_event,apply_reflect)
   return;
 }  // test_8
 
-TEST(nut_apply_event,apply_census)
+TEST(nut_apply_event, apply_census)
 {
   bool passed(false);
 
-  p_t p(make_std_particle());
-  p_t p_ref(make_std_particle());
+  p_t p(make_std_particle_c1());
+  p_t p_ref(make_std_particle_c1());
 
   size_t const n_cells(100);
-  t_t tally(n_cells), ref(n_cells);
+  tally_t tally(n_cells), ref(n_cells);
 
   c_t c, c_ref;
 
@@ -343,7 +370,7 @@ TEST(nut_apply_event,apply_census)
   ref.n_census_nu_e[idx] = 1;
   ref.ew_census_nu_e[idx] = wt;
 
-  nut::apply_step_end<p_t, t_t, c_t>(p, tally, c);
+  nut::apply_step_end<p_t, tally_t, c_t>(p, tally, c);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed =

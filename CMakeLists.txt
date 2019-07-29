@@ -38,34 +38,21 @@
 # ensure min cmake version, optional
 cmake_minimum_required (VERSION 3.0)
 
-# Enable CTest
-enable_testing()
-
-# set compiler, looking first to the environment, defaulting to
-# GNU if nothing better is found
-#if (DEFINED ENV{CC})
-#   set(CMAKE_C_COMPILER $ENV{CC})
-#   set(CMAKE_CXX_COMPILER $ENV{CXX})
-#else()
-#   set(CMAKE_C_COMPILER gcc)
-#   set(CMAKE_CXX_COMPILER g++)
-#endif()
-
-
-
 # name the project
 # languages - CXX and C are included by default
 project (NuT LANGUAGES CXX)
 
+# Enable CTest
+enable_testing()
 
 # create variable
-set(NuT_COMPILE_FLAGS "-std=c++11 -g -Wall")
+set(NuT_COMPILE_FLAGS "-std=c++17 -g -Wall")
 
 # append CMAKE_CXX_FLAGS w/ above variable
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}${NuT_COMPILE_FLAGS}")
 
 # Do these actually do anything useful???
-set_property(GLOBAL PROPERTY CXX_STANDARD 11)
+set_property(GLOBAL PROPERTY CXX_STANDARD 17)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
 #--------- Random 123 --------------------------
@@ -80,8 +67,6 @@ if (NOT DEFINED RANDOM123_ROOT)
     )
 
   else()
-    # j cohn 21 Jul 2015 - though I thought I had added this earlier
-        # RANDOM123_INCLUDES is set by loading an appropriate boost module on darwin, for example
     if (DEFINED ENV{RANDOM123_INCLUDES})
 
                 set(RANDOM123_ROOT $ENV{RANDOM123_INCLUDES})
@@ -102,6 +87,30 @@ if (NOT DEFINED RANDOM123_ROOT)
   endif()
 
 endif()
+
+# Find murmeln
+if(DEFINED ENV{MURMELN_DIR})
+
+  set(MURMELN_INCLUDE_DIR $ENV{MURMELN_DIR}/include)
+  include_directories(${MURMELN_INCLUDE_DIR})
+
+  set(MURMELN_LIB_DIR $ENV{MURMELN_DIR}/lib)
+  # message(STATUS "MURMELN_LIB_DIR: " ${MURMELN_LIB_DIR})
+  find_library(Murmeln_LIB
+    NAMES libMurmeln libMurmeln.dylib
+    HINTS  ${MURMELN_LIB_DIR})
+
+  add_definitions(-DHAVE_MURMELN)
+
+else()
+
+  set(Murmeln_LIB "")
+
+  message(STATUS "Skipping Murmeln; if you wanted to use that, you must set MURMELN_DIR environment variable")
+
+endif() # if(DEFINED ENV{MURMELN_DIR})
+
+
 # 2. ---------- Library ----------
 add_subdirectory(lib)
 
@@ -142,11 +151,6 @@ endif()
 #add_custom_target(clean-cmake
 #     ${CMAKE_CLEAN_CMD})
 
-
-#----------Google Tests------------------------------
-
-
-
 # Put this down here to catch BOOST configurizing
 add_subdirectory(apps)
 
@@ -173,4 +177,4 @@ if (${build_api_doc} )#
 
 endif() #${build_api_doc}
 
-
+# End of file

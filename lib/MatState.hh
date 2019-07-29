@@ -11,6 +11,7 @@
 #include "Assert.hh"
 #include "Density.hh"
 #include "Luminosity.hh"
+#include "Mesh.hh"
 #include "Temperature.hh"
 #include "Velocity.hh"
 #include "constants.hh"
@@ -20,7 +21,7 @@
 namespace nut {
 namespace P  // transformations specific to the p.1-p.7 file format
 {
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 struct state_entry_t {
   dens_t<fp_t> d;
   temp_t<fp_t> t;
@@ -28,13 +29,13 @@ struct state_entry_t {
   vel_t<dim> v;
 };
 
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 state_entry_t<fp_t, dim>
 row_to_state_entry(MatStateRowP<fp_t, dim> const & row);
 
 }  // namespace P
 
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 struct MatState {
   typedef Density<fp_t> Density_T;
   typedef Luminosity<fp_t> Luminosity_T;
@@ -104,14 +105,15 @@ extract_radius(MatStateRowP<fp_t, dim> const & row)
 /*!\brief: create a mesh within the given limits; identify the limiting
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
-template <typename mesh_t, typename fp_t, size_t dim = 1>
-mesh_t
-rows_to_mesh(std::vector<MatStateRowP<fp_t, dim> > const & rows,
-             fp_t const llimit,
-             fp_t const ulimit,
-             size_t & llimitIdx,
-             size_t & ulimitIdx)
+template <typename fp_t>
+Spherical_1D_Mesh rows_to_mesh(std::vector<MatStateRowP<fp_t, 1> > const & rows,
+                               fp_t const llimit,
+                               fp_t const ulimit,
+                               size_t & llimitIdx,
+                               size_t & ulimitIdx)
 {
+  using mesh_t = Spherical_1D_Mesh;
+  constexpr size_t dim = 1;
   // bool const  lims_ok = (ulimit > llimit);
   // Require(lims_ok , "rows_to_mesh: lower limit >= upper limit");
   size_t nrows = rows.size();
@@ -153,16 +155,16 @@ rows_to_mesh(std::vector<MatStateRowP<fp_t, dim> > const & rows,
   std::vector<typename mesh_t::bdy_desc_t> descs(ncells + 1);
 
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
-  descs[0] = bdy_types::R;
-  descs[ncells] = bdy_types::V;
-  for(size_t i = 1; i < ncells; ++i) { descs[i] = bdy_types::T; }
+  descs[0] = bdy_types::REFLECTIVE;
+  descs[ncells] = bdy_types::VACUUM;
+  for(size_t i = 1; i < ncells; ++i) { descs[i] = bdy_types::NONE; }
   return mesh_t(bounds, descs);
 }  // rows_to_mesh
 
 namespace P {
 /*! functions for extracting and converting particular quantities
  * from a MatStateRow */
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 dens_t<fp_t>
 row_to_rho(MatStateRowP<fp_t, dim> const & row)
 {
@@ -173,7 +175,7 @@ row_to_rho(MatStateRowP<fp_t, dim> const & row)
   return r;
 }
 
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 temp_t<fp_t>
 row_to_temp(MatStateRowP<fp_t, dim> const & row)
 {
@@ -183,7 +185,7 @@ row_to_temp(MatStateRowP<fp_t, dim> const & row)
   return t;
 }
 
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 lum_t<fp_t>
 row_to_lum(MatStateRowP<fp_t, dim> const & row)
 {
@@ -194,7 +196,7 @@ row_to_lum(MatStateRowP<fp_t, dim> const & row)
   return l;
 }
 
-template <typename fp_t, size_t dim = 1>
+template <typename fp_t, size_t dim>
 vel_t<dim>
 row_to_vel(MatStateRowP<fp_t, dim> const & row)
 {

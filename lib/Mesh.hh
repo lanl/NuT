@@ -18,6 +18,11 @@
 #include <vector>
 
 namespace nut {
+
+namespace Sphere_1D_Faces {
+enum Faces { LOW = 0, HIGH = 1 };
+}
+
 /*!\brief Mesh functions for 1D spherical geometry.
  * \tparam <cell_t> {cell index type}
  * \tparam <boundary_t> {geometry (numerical) type}
@@ -29,10 +34,13 @@ public:
   static const size_t dim = 1;
 
   typedef geometry_t geom_t;
+  using Vector = Vec_T<geom_t, 1>;
   typedef bdy_descriptor_t bdy_desc_t;
   typedef std::vector<geom_t> vb;
   typedef std::vector<bdy_desc_t> vbd;
   typedef std::pair<geom_t, geom_t> extents_t;
+
+  using Face = Sphere_1D_Faces::Faces;
 
   struct coord_t {
     vec_t<dim> x;
@@ -42,6 +50,21 @@ public:
     geom_t d;    /** distance to boundary */
     cell_t face; /** which face will be intersected: 0 (low) or 1 (high) */
   };
+
+  using Intersection = d_to_b_t;
+  using Ray = coord_t;
+
+  static geom_t get_distance(Intersection const & i) { return i.d; }
+
+  static Face get_face(Intersection const & i) {
+    auto fidx = i.face;
+    Require(fidx == Face::LOW || fidx == Face::HIGH, "Invalid face encontered");
+    return static_cast<Face>(fidx);
+  }
+
+  static const cell_t null_cell_;
+
+  static cell_t null_cell() { return null_cell_; }
 
   // ctor
   Sphere_1D(vb const & bdys_, vbd const & descs_)
@@ -65,41 +88,49 @@ public:
     return vol;
   }  // volume
 
-  /*!\brief which cell is across a face. Computed.
+  /*!\brief which cell is across a face. Note this just tells what the next
+   * cell is, no account is taken of the boundary type.
    *
    * \param cell: 0 < cell <= n_cells
    * \param face: 0 (left) or 1 (right)
    */
-  cell_t cell_across_face(cell_t const cell, cell_t face) const
+  cell_t cell_across(cell_t const cell, cell_t face) const
   {
     cellOK(cell);
-    LessThan(face, cell_t(2), "face");
-    // compute index into descriptors
-    cell_t idx = cell - 1;
-    idx += face;
-    bdy_desc_t const & btype = m_descs[idx];
-    cell_t result(-1);
-    switch(btype) {
-      case bdy_types::T: result = cell - 1 + 2 * face; break;
-      case bdy_types::R: result = cell; break;
-      case bdy_types::V: result = cell_t(0); break;
-      default:
-        std::stringstream errstr;
-        errstr << "Sphere_1D::cell_across_face" << __LINE__
-               << " unknown boundary type: " << btype;
-        Require(false, errstr.str().c_str());
+    // LessThan(face, cell_t(2), "face");
+    if(cell == 1 && face == Sphere_1D_Faces::LOW) { return null_cell_; }
+    else if(cell == m_ncells && face == Sphere_1D_Faces::HIGH) {
+      return null_cell_;
     }
-    return result;
+    if(face == Sphere_1D_Faces::LOW) { return cell - 1; }
+    return cell + 1;
+    // // compute index into descriptors
+    // cell_t idx = cell - 1;
+    // idx += face;
+    // bdy_desc_t const & btype = m_descs[idx];
+    // cell_t result(-1);
+    // switch(btype) {
+    //   case bdy_types::CELL: result = cell - 1 + 2 * face; break;
+    //   case bdy_types::REFLECTIVE: result = cell; break;
+    //   case bdy_types::VACUUM: result = null_cell_; break;
+    //   default:
+    //     std::stringstream errstr;
+    //     errstr << "Sphere_1D::cell_across_face" << __LINE__
+    //            << " unknown boundary type: " << btype;
+    //     Require(false, errstr.str().c_str());
+    // }
+    // return result;
   }  // cell_across_face
 
-  geom_t sample_position(geom_t const urd, cell_t const cell) const
+  template <typename rng_t>
+  geom_t sample_position(rng_t & rng, cell_t const cell) const
   {
     extents_t extents = this->cell_extents(cell);
     geom_t const lo = extents.first;
     geom_t const hi = extents.second;
     geom_t const lo3 = lo * lo * lo;
     geom_t const hi3 = hi * hi * hi;
-    geom_t const r = std::pow(lo3 + (hi3 - lo3) * urd, 1.0 / 3.0);
+    geom_t const r = std::pow(lo3 + (hi3 - lo3) * rng.random(), 1.0 / 3.0);
     return r;
   }
 
@@ -111,7 +142,7 @@ public:
   }
 
   /*!\brief type of cell boundary */
-  bdy_desc_t bdy_type(cell_t const c, cell_t const face) const
+  bdy_desc_t get_bdy_type(cell_t const c, cell_t const face) const
   {
     cell_t const idx = make_idx(c, m_ncells);
     cell_t const fidx = face_to_index(face);
@@ -148,6 +179,13 @@ public:
     coord.x.v[0] = new_r;
     coord.omega.v[0] = std::cos(theta - std::asin(distance / new_r * s));
     return std::move(coord);
+  }
+
+  Intersection intersection(Ray const & r, cell_t const c) const
+  {
+    vec_t<dim> & x{r.position()};
+    vec_t<dim> & o{r.direction()};
+    return this->distance_to_bdy(x, o, c);
   }
 
   d_to_b_t distance_to_bdy(vec_t<dim> const x,
@@ -246,16 +284,16 @@ public:
     return d2b;
   }  // dist_to_bdy_impl
 
-  static inline EandOmega<1> LT_to_comoving(vec_t<1> const v_lab,
-                                            geom_t const & e_lab,
-                                            vec_t<1> const & omega_lab)
+  static EandOmega<1> LT_to_comoving(vec_t<1> const v_lab,
+                                     geom_t const & e_lab,
+                                     vec_t<1> const & omega_lab)
   {
     return spec_1D::LT_to_comoving_sphere1D(v_lab.v[0], e_lab, omega_lab);
   }  // LT_to_comoving
 
-  static EandOmega<1> inline LT_to_lab(vec_t<1> const v_lab,
-                                       geom_t const & e_com,
-                                       vec_t<1> const & omega_com)
+  static EandOmega<1> LT_to_lab(vec_t<1> const v_lab,
+                                geom_t const & e_com,
+                                vec_t<1> const & omega_com)
   {
     return spec_1D::LT_to_lab_sphere1D(v_lab.v[0], e_com, omega_com);
   }
@@ -272,6 +310,12 @@ public:
   }
 
 };  // Sphere_1D
+
+using Spherical_1D_Mesh = Sphere_1D<cell_t, geom_t, bdy_types::descriptor>;
+
+template <typename cell_t, typename geometry_t, typename bdy_descriptor_t>
+const cell_t Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::null_cell_ =
+    0xFFFFFFFF;
 
 }  // namespace nut
 

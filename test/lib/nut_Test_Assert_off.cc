@@ -49,7 +49,7 @@ TEST(nut_assertions, Equal_OFF)
     std::cerr << "test_2:" << __LINE__ << " Caught assertion--not expected"
               << std::endl;
   }
-return;
+  return;
 }  // test_2
 
 TEST(nut_assertions, InOpenRange_double_OFF)
@@ -71,7 +71,7 @@ TEST(nut_assertions, InOpenRange_double_OFF)
     std::cerr << "test_3:" << __LINE__ << " Caught assertion--not expected"
               << std::endl;
   }
-return;
+  return;
 }  // test_3
 
 TEST(nut_assertions, GreaterThan_double_OFF)
@@ -93,7 +93,7 @@ TEST(nut_assertions, GreaterThan_double_OFF)
     std::cerr << "test_4:" << __LINE__ << " Caught assertion--not expected"
               << std::endl;
   }
-return;
+  return;
 }  // test_4
 
 TEST(nut_assertions, InOpenRange_uint32_t_OFF)
@@ -115,7 +115,7 @@ TEST(nut_assertions, InOpenRange_uint32_t_OFF)
     std::cerr << "test_5:" << __LINE__ << " Caught assertion--not expected"
               << std::endl;
   }
-return;
+  return;
 }  // test_5
 
 TEST(nut_assertions, GreaterThan_int64_t_OFF)
@@ -137,7 +137,7 @@ TEST(nut_assertions, GreaterThan_int64_t_OFF)
     std::cerr << "test_6:" << __LINE__ << " Caught assertion--not expected"
               << std::endl;
   }
-return;
+  return;
 }  // test_6
 
 // End of file

@@ -7,6 +7,7 @@
 #define DECISION_HH
 
 #include "constants.hh"
+#include "events.hh"
 #include "lorentz.hh"
 #include "types.hh"
 #include <algorithm>
@@ -17,6 +18,11 @@
 #include <stdexcept>
 #include <utility>  // pair
 // #include <iomanip>
+
+/* unresolved_event is not used in all translation units,
+ * leading to unexciting warnings. Suppress those. */
+#pragma clang diagnostic push
+#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
 
 namespace nut {
 
@@ -45,13 +51,12 @@ decide_event(particle_t & p,  // non-const b/c of RNG
              opacity_t const & opacity,
              velocity_t const & velocity)
 {
-  static const size_t dim(particle_t::dim);
+  constexpr size_t dim(particle_t::dim);
 
   typedef typename particle_t::fp_t fp_t;
   // Currently there are always  three top-level events considered.
   // Changing vector to std::array
   typedef std::array<event_n_dist, 3> vend_t;
-  typedef typename mesh_t::d_to_b_t d_to_b_t;
 
   vend_t e_n_ds;
 
@@ -77,15 +82,19 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   fp_t const random_dev = p.rng.random();
   /* fp_t const ignored    =*/p.rng.random();  // to keep pace with McPhD
 
+  // collision distance
   geom_t const d_coll =
       (sig_coll != fp_t(0)) ? -std::log(random_dev) / sig_coll : huge;
 
   e_n_ds[0] = event_n_dist(events::collision, d_coll);
 
-  d_to_b_t dnf = mesh.distance_to_bdy(x, oli, cell);
-  geom_t const d_bdy = dnf.d;
+  // boundary distance
+  typename mesh_t::Intersection dnf = mesh.distance_to_bdy(x, oli, cell);
+  geom_t const d_bdy = mesh.get_distance(dnf);
+  typename mesh_t::Face face = mesh.get_face(dnf);
   e_n_ds[1] = event_n_dist(events::boundary, d_bdy);
 
+  // time step end distance
   geom_t const d_step_end = c * tleft;
   e_n_ds[2] = event_n_dist(events::step_end, d_step_end);
 
@@ -107,7 +116,7 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   }
   else {
     if(closest.first == events::boundary) {
-      closest.first = decide_boundary_event(mesh, cell, dnf.face);
+      closest.first = decide_boundary_event(mesh, cell, face);
     }
     // compensate RNG if decide_scatter_event not called
     p.rng.random();
@@ -115,6 +124,10 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   return closest;
 }  // decide_event
 
+/**\brief Examine the cell & face, and determine what kind of boundary this is.
+ * \remark If it is a cell boundary, the face will be encoded in the event.
+ * Decode via events::decode_event.
+ */
 template <typename MeshT>
 events::Event
 decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
@@ -122,15 +135,20 @@ decide_boundary_event(MeshT const & mesh, cell_t const cell, cell_t const face)
   using namespace bdy_types;
   using namespace events;
   Event event(null);
-  bdy_types::descriptor b_type(mesh.bdy_type(cell, face));
+  bdy_types::descriptor b_type(mesh.get_bdy_type(cell, face));
   switch(b_type) {
-    case V: event = escape; break;
-    case R: event = reflect; break;
-    case T:
-      // 1D specific
-      event = face == 0 ? cell_low_x_boundary : cell_high_x_boundary;
+    case VACUUM: event = escape; break;
+    case REFLECTIVE: event = reflect; break;
+    case NONE:
+      event = cell_boundary;
+      event = events::encode_face(event, face);
       break;
-    default: unresolved_event(__LINE__, "decide_boundary_event");
+    case PERIODIC:
+    case PROCESSOR:
+    default:
+      std::stringstream errstr;
+      errstr << "decide_boundary_event: untreated boundary " << b_type;
+      unresolved_event(__LINE__, errstr.str());
   };
   return event;
 }  // decide_boundary_event
@@ -189,9 +207,8 @@ unresolved_event(size_t lineno, std::string const & eventstr)
 
 }  // namespace nut
 
-#endif  // include guard
+#pragma clang diagnostic pop
 
-// version
-// $Id$
+#endif  // include guard
 
 // End of file

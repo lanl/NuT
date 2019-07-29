@@ -7,8 +7,8 @@
 #define APPLY_EVENT_HH
 
 /**\file apply events to particles */
+#include "events.hh"
 #include "Planck.hh"
-
 #include "Tally.hh"
 #include "Velocity.hh"
 #include "constants.hh"
@@ -17,6 +17,11 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+
+/* unknown_event and underresolved_event are not used in all translation units,
+ * leading to unexciting warnings. Suppress those. */
+#pragma clang diagnostic push
+#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
 
 namespace nut {
 namespace {
@@ -53,19 +58,20 @@ template <typename ParticleT,
           typename OpacityT,
           typename VelocityT,
           typename CensusT,
-          typename fp_t>
+          typename TallyT>
 void
 apply_event(ParticleT & p,
-            events::Event const & event,
+            events::Event const & event_in,
             geom_t const distance,
             MeshT const & mesh,
             OpacityT const & opacity,
             VelocityT const & velocity,
-            Tally<fp_t> & tally,
+            TallyT & tally,
             CensusT & census,
-            fp_t const alpha = fp_t(2.0))
+            typename TallyT::fp_t const alpha = typename TallyT::fp_t(2.0))
 {
   using namespace events;
+  using fp_t = typename TallyT::fp_t;
 
   cell_t const index = make_idx(p.cell, opacity.m_n_cells);
 
@@ -73,32 +79,37 @@ apply_event(ParticleT & p,
 
   tally.accum_pl(distance);
 
+  // recover the face, if any, from the event. Also cleans up the event.
+  auto [event, faceu] = decode_face<uint32_t>(event_in);
+
+  typename MeshT::Face face = static_cast<typename MeshT::Face>(faceu);
+
   switch(event) {
     case nucleon_abs: apply_nucleon_abs(p, tally); break;
     case nucleon_elastic_scatter:
-      apply_nucleon_elastic_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
+      apply_nucleon_elastic_scatter<ParticleT, TallyT, VelocityT, MeshT>(
           p, tally, velocity);
       break;
     case electron_scatter: {
       fp_t const ebar = opacity.m_T.T_e_minus[index];
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
-          p, tally, e_e, velocity);
+      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
+                                                                velocity);
     } break;
     case positron_scatter: {
       fp_t const ebar = opacity.m_T.T_e_plus[index];
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, Tally<fp_t>, VelocityT, MeshT>(
-          p, tally, e_e, velocity);
+      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
+                                                                velocity);
     } break;
     // case nu_e_annhilation:
     //     break;
     // case nu_x_annhilation:
     //     break;
-    case cell_low_x_boundary: apply_low_x_boundary(p, tally); break;
-    case cell_high_x_boundary: apply_hi_x_boundary(p, tally); break;
+    case cell_boundary: apply_cell_boundary(mesh, face, p, tally); break;
+    // case cell_boundary: apply_hi_x_boundary(p, tally); break;
     case escape: apply_escape(p, tally); break;
     case reflect: apply_reflect(p, tally); break;
     case step_end: apply_step_end(p, tally, census); break;
@@ -192,21 +203,13 @@ apply_lepton_scatter(p_t & p,
   return;
 }  // apply_lepton_scatter
 
-template <typename p_t, typename tally_t>
+template <typename p_t, typename tally_t, typename mesh_t, typename face_t>
 void
-apply_low_x_boundary(p_t & p, tally_t & t)
+apply_cell_boundary(mesh_t const & m, face_t const & face, p_t & p, tally_t & t)
 {
   t.count_cell_bdy(p.cell);
-  p.cell -= 1;
-  return;
-}
-
-template <typename p_t, typename tally_t>
-void
-apply_hi_x_boundary(p_t & p, tally_t & t)
-{
-  t.count_cell_bdy(p.cell);
-  p.cell += 1;
+  p.cell = m.cell_across(p.cell, face);
+  Require(p.cell != m.null_cell(), "invalid cell from cell boundary");
   return;
 }
 
@@ -259,10 +262,8 @@ unknown_event(nut::events::Event const & event)
 
 }  // namespace nut
 
+#pragma clang diagnostic pop
+
 #endif  // include guard
 
 // End of file
-
-/*
-"collision","nucleon_abs","nucleon_elastic_scatter","electron_scatter","positron_scatter","nu_e_annhilation","nu_x_annhilation","boundary","cell_low_x_boundary","cell_high_x_boundary","escape","reflect","step_end"
-*/
