@@ -21,7 +21,7 @@
 /* unknown_event and underresolved_event are not used in all translation units,
  * leading to unexciting warnings. Suppress those. */
 #pragma clang diagnostic push
-#pragma GCC diagnostic ignored "-Wunneeded-internal-declaration"
+#pragma clang diagnostic ignored "-Wunneeded-internal-declaration"
 
 namespace nut {
 namespace {

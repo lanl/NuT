@@ -49,7 +49,7 @@ enable_testing()
 set(NuT_COMPILE_FLAGS "-std=c++17 -g -Wall")
 
 # append CMAKE_CXX_FLAGS w/ above variable
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}${NuT_COMPILE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NuT_COMPILE_FLAGS}")
 
 # Do these actually do anything useful???
 set_property(GLOBAL PROPERTY CXX_STANDARD 17)
