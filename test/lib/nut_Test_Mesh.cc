@@ -114,12 +114,14 @@ TEST(nut_test, Sphere_1D_distance_to_boundary_theta_0_cell_1)
   Sp1D::d_to_b_t d_n_face = mesh.distance_to_bdy(0.5, 1.0, 1);
 
   bool passed1 = soft_expect(d_n_face.d, 0.5, "distance");
-  bool passed2 = expect(d_n_face.face, 1u, "face");
+  bool passed2 = expect(d_n_face.face, 2u, "face");
   EXPECT_TRUE(passed1);
   EXPECT_TRUE(passed2);
   return;
 }  // test_5
 
+/* Particle is headed straight to the center of the universe! It will pass
+ * through and intersect face #2 in 1.5 units */
 TEST(nut_test, Sphere_1D_distance_to_boundary_theta_pi_cell_1)
 {
   Sp1D mesh{make_mesh()};
@@ -127,7 +129,7 @@ TEST(nut_test, Sphere_1D_distance_to_boundary_theta_pi_cell_1)
   Sp1D::d_to_b_t d_n_face = mesh.distance_to_bdy(0.5, -1.0, 1);
 
   bool passed1 = soft_expect(d_n_face.d, 1.5, "distance");
-  bool passed2 = expect(d_n_face.face, 1u, "face");
+  bool passed2 = expect(d_n_face.face, 2u, "face");
   EXPECT_TRUE(passed1);
   EXPECT_TRUE(passed2);
   return;
@@ -140,7 +142,7 @@ TEST(nut_test, Sphere_1D_distance_to_boundary_theta_pi_cell_2)
   Sp1D::d_to_b_t d_n_face = mesh.distance_to_bdy(1.5, -1.0, 2);
 
   bool passed1 = soft_expect(d_n_face.d, 0.5, "distance");
-  bool passed2 = expect(d_n_face.face, 0u, "face");
+  bool passed2 = expect(d_n_face.face, 2u, "face");
   EXPECT_TRUE(passed1);
   EXPECT_TRUE(passed2);
   return;
@@ -164,7 +166,7 @@ TEST(nut_test, Sphere_1D_distance_to_boundary_cell_2_grazing_inner_sphere)
   Sp1D::d_to_b_t d_n_face = mesh.distance_to_bdy(x, omega, cell);
 
   bool passed1 = soft_expect(d_n_face.d, d_exp, "distance", tol);
-  bool passed2 = expect(d_n_face.face, 0u, "face");
+  bool passed2 = expect(d_n_face.face, 2u, "face");
   EXPECT_TRUE(passed1);
   EXPECT_TRUE(passed2);
   return;

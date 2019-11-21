@@ -55,7 +55,7 @@ public:
   };
   struct d_to_b_t {
     geom_t d;    /** distance to boundary */
-    cell_t face; /** which face will be intersected: 0 (low) or 1 (high) */
+    cell_t face; /** which face will be intersected */
   };
 
   using Intersection = d_to_b_t;

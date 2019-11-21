@@ -264,8 +264,6 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
               << nut::events::event_name(event) << ", should have been "
               << event_exp << ", AKA " << nut::events::event_name(event_exp)
               << std::endl;
-    printf("%s:%i position = %f, cell = %u\n", __FUNCTION__, __LINE__, p.x,
-           p.cell);
   }
   geom_t const d_exp = 1.0;
   passed = distance == d_exp and passed;

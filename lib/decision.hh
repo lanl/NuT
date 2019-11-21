@@ -58,12 +58,8 @@ decide_boundary_event(MeshT const & mesh,
   using namespace events;
   Event event(null);
   bdy_types::descriptor b_type{bdy_types::NONE};
-    printf("%s:%i cell = %u, face = %u, b_type = %u\n", __FUNCTION__, __LINE__,
-           cell, face, b_type);
   if(bc.is_known_boundary(face)) { b_type = bc.get_boundary_type(face); }
   switch(b_type) {
-    printf("%s:%i cell = %u, face = %u, b_type = %u\n", __FUNCTION__, __LINE__,
-           cell, face, b_type);
     case bdy_types::VACUUM: event = escape; break;
     case bdy_types::REFLECTIVE: event = reflect; break;
     case bdy_types::NONE:
