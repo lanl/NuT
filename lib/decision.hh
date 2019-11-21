@@ -6,6 +6,7 @@
 #ifndef DECISION_HH
 #define DECISION_HH
 
+#include "Boundary_Cond.hh"
 #include "constants.hh"
 #include "events.hh"
 #include "lorentz.hh"
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <utility>  // pair
 // #include <iomanip>
 
@@ -47,22 +49,29 @@ tuple_min_2nd(pair const & p1, pair const & p2)
  */
 template <typename MeshT, typename Face_T>
 events::Event
-decide_boundary_event(MeshT const & mesh, cell_t const cell, Face_T const face)
+decide_boundary_event(MeshT const & mesh,
+                      cell_t const cell,
+                      Face_T const face,
+                      Boundary_Cond<Face_T> const & bc)
 {
   // using namespace bdy_types;
   using namespace events;
   Event event(null);
-  typename MeshT::Cell mcell{cell};
-  auto b_type(mesh.get_boundary_type(mcell, face));
+  bdy_types::descriptor b_type{bdy_types::NONE};
+    printf("%s:%i cell = %u, face = %u, b_type = %u\n", __FUNCTION__, __LINE__,
+           cell, face, b_type);
+  if(bc.is_known_boundary(face)) { b_type = bc.get_boundary_type(face); }
   switch(b_type) {
-    case MeshT::Boundary::VACUUM: event = escape; break;
-    case MeshT::Boundary::REFLECTIVE: event = reflect; break;
-    case MeshT::Boundary::NONE:
+    printf("%s:%i cell = %u, face = %u, b_type = %u\n", __FUNCTION__, __LINE__,
+           cell, face, b_type);
+    case bdy_types::VACUUM: event = escape; break;
+    case bdy_types::REFLECTIVE: event = reflect; break;
+    case bdy_types::NONE:
       event = cell_boundary;
       // event = events::encode_face(event, face.id());
       break;
-    case MeshT::Boundary::PERIODIC:
-    case MeshT::Boundary::PROCESSOR:
+    case bdy_types::PERIODIC:
+    case bdy_types::PROCESSOR:
     default:
       std::stringstream errstr;
       errstr << "decide_boundary_event: untreated boundary " << b_type;
@@ -79,7 +88,8 @@ event_data<typename mesh_t::Face>
 decide_event(particle_t & p,  // non-const b/c of RNG
              mesh_t const & mesh,
              opacity_t const & opacity,
-             velocity_t const & velocity)
+             velocity_t const & velocity,
+             Boundary_Cond<typename mesh_t::Face> const & bcs)
 {
   using vector_t = typename mesh_t::Vector;
 
@@ -87,10 +97,12 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   // Currently there are always  three top-level events considered.
   // Changing vector to std::array
   using event_data = event_data<typename mesh_t::Face>;
-  using vend_t =  std::array<event_data, 3>;
   using EandOmega_T = typename mesh_t::EandOmega_T;
 
-  vend_t e_n_ds;
+  auto null_event_data = []() {
+    return std::make_tuple(events::null, 1e300, mesh_t::null_face());
+  };
+  event_data e_n_ds[3]{null_event_data(), null_event_data(), null_event_data()};
 
   cell_t const cell{p.cell};
   fp_t const tleft = p.t;
@@ -121,8 +133,8 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   e_n_ds[0] = event_data(events::collision, d_coll, mesh_t::null_face());
 
   // boundary distance
-  typename mesh_t::Intersection dnf = mesh.intersection({x, oli},
-    typename mesh_t::Cell{cell});
+  typename mesh_t::Intersection dnf =
+      mesh.intersection({x, oli}, typename mesh_t::Cell{cell});
   geom_t const d_bdy = mesh.get_distance(dnf);
   typename mesh_t::Face face = mesh.get_face(dnf);
   e_n_ds[1] = event_data(events::boundary, d_bdy, face);
@@ -132,24 +144,23 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   e_n_ds[2] = event_data(events::step_end, d_step_end, mesh_t::null_face());
 
   // pick (event,dist) pair with shortest distance
-  event_data closest = *(std::min_element(e_n_ds.begin(), e_n_ds.end(),
-                                            tuple_min_2nd<event_data>));
+  event_data closest =
+      *(std::min_element(e_n_ds, e_n_ds + 3, tuple_min_2nd<event_data>));
   events::Event & closest_event = events::get_event(closest);
   // if needed, further resolve events
   if(closest_event == events::collision) {
     // need to compute the comoving energy at the scattering site,
     // in order to compute the different cross sections there.
 
-    typename mesh_t::Ray const scat_site(
-        mesh.advance_point(x, oli, d_coll));
-    auto const& o_sct = scat_site.direction();
+    typename mesh_t::Ray const scat_site(mesh.advance_point(x, oli, d_coll));
+    auto const & o_sct = scat_site.direction();
     EandOmega_T const eno_scat = mesh_t::LT_to_comoving(vtmp, eli, o_sct);
     fp_t const ecscat = eno_scat.first;
     closest_event = decide_scatter_event(p.rng, ecscat, cell, opacity, species);
   }
   else {
     if(closest_event == events::boundary) {
-      closest_event = decide_boundary_event(mesh, cell, face);
+      closest_event = decide_boundary_event(mesh, cell, face, bcs);
     }
     // compensate RNG if decide_scatter_event not called
     p.rng.random();

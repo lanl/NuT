@@ -48,7 +48,7 @@ TEST(nut_mesh, Sphere_1D_inst_init)
 TEST(nut_test, Sphere_1D_num_cells)
 {
   Sp1D mesh{make_mesh()};
-  EXPECT_EQ(mesh.n_cells(), 3u);
+  EXPECT_EQ(mesh.num_cells(), 3u);
   return;
 }  // test_2
 
@@ -58,7 +58,7 @@ TEST(nut_test, Sphere_1D_volume)
 
   geom_t const vols_exp[] = {4.1887902047863905, 29.321531433504735,
                              179560.86970857819};
-  Sp1D::vb vols(mesh.n_cells());
+  Sp1D::vb vols(mesh.num_cells());
   vols[0] = mesh.volume(1);
   vols[1] = mesh.volume(2);
   vols[2] = mesh.volume(3);
@@ -70,7 +70,7 @@ TEST(nut_test, Sphere_1D_volume)
     std::copy(vols.begin(), vols.end(),
               std::ostream_iterator<geom_t>(std::cout, ","));
     std::cout << std::endl << "expected: ";
-    std::copy(&vols_exp[0], &vols_exp[mesh.n_cells()],
+    std::copy(&vols_exp[0], &vols_exp[mesh.num_cells()],
               std::ostream_iterator<geom_t>(std::cout, ","));
     std::cout << std::endl;
   }
@@ -84,7 +84,7 @@ TEST(nut_test, Sphere_1D_cell_across)
 
   cell_t const null{mesh.null_cell()};
   cell_t const cells_a_exp[] = {null, 2, 1, 3, 2, null};
-  std::vector<cell_t> cells_across(mesh.n_cells() * 2);
+  std::vector<cell_t> cells_across(mesh.num_cells() * 2);
   cells_across[0] = mesh.cell_across(1, 0, unused);
   cells_across[1] = mesh.cell_across(1, 1, unused);
   cells_across[2] = mesh.cell_across(2, 0, unused);
@@ -100,7 +100,7 @@ TEST(nut_test, Sphere_1D_cell_across)
     std::copy(cells_across.begin(), cells_across.end(),
               std::ostream_iterator<cell_t>(std::cout, ","));
     std::cout << std::endl << "expected: ";
-    std::copy(&cells_a_exp[0], &cells_a_exp[mesh.n_cells() * 2],
+    std::copy(&cells_a_exp[0], &cells_a_exp[mesh.num_cells() * 2],
               std::ostream_iterator<cell_t>(std::cout, ","));
     std::cout << std::endl;
   }
@@ -244,7 +244,7 @@ TEST(
   std::vector<cell_t> fs(xs.size());
   for(size_t i = 0; i < xs.size(); ++i) {
     geom_t x = xs[i], o = omegas[i], rl = r_los[i], rh = r_his[i];
-    Sp1D::d_to_b_t dnf = Sp1D::dist_to_bdy_impl(x, o, rl, rh);
+    Sp1D::d_to_b_t dnf = Sp1D::dist_to_bdy_impl(x, o, rl, rh, 0);
     ds[i] = (dnf.d);
     fs[i] = (dnf.face);
   }

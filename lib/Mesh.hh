@@ -40,7 +40,8 @@ public:
   typedef std::vector<bdy_desc_t> vbd;
   typedef std::pair<geom_t, geom_t> extents_t;
 
-  using Face = Sphere_1D_Faces::Faces;
+  // using Face = Sphere_1D_Faces::Faces;
+  using Face = id_t;
   using Cell = cell_t;
   using EandOmega_T = spec_1D_Spherical::EandOmega_T<geom_t, Vector>;
 
@@ -67,7 +68,6 @@ public:
   static Face get_face(Intersection const & i)
   {
     auto fidx = i.face;
-    Require(fidx == Face::LOW || fidx == Face::HIGH, "Invalid face encontered");
     return static_cast<Face>(fidx);
   }
 
@@ -86,8 +86,6 @@ public:
     nut::Require(m_bdys.size() >= 2, "must have at least two boundaries");
     nut::Equal(m_bdys.size(), m_descs.size(), "bdys size", "descs size");
   }
-
-  cell_t n_cells() const { return m_ncells; }
 
   /*!\brief volume of spherical shell 'cell'. 0 < cell <= n_cells. */
   geom_t volume(cell_t const cell) const
@@ -110,7 +108,17 @@ public:
   }
 
   /**\brief Reflection in spherical just reverses the direction cosine.*/
-  static inline Vector reflect(Face const & /*f*/, Vector const &direction) {
+  static inline Vector reflect(Face const & /*f*/,
+                               Vector const & direction,
+                               Vector const & /*unused*/)
+  {
+    return Vector{-1.0 * direction[0]};
+  }
+  /**\brief For compatibility*/
+  static inline Vector reflect(Vector const & direction,
+                               Face const & /*f*/,
+                               Vector const & /*unused*/)
+  {
     return Vector{-1.0 * direction[0]};
   }
 
@@ -160,6 +168,8 @@ public:
     cell_t const fidx = face_to_index(face);
     return m_descs[idx + fidx];
   }
+
+  cell_t num_cells() const { return m_ncells; }
 
   /*!\brief get the lower and upper bounds of a cell. *
    * 0 < cell <= n_cells                              */
@@ -212,13 +222,15 @@ public:
   {
     cellOK(cell);
     extents_t extents = this->cell_extents(cell);
-    return dist_to_bdy_impl(x.v[0], omega.v[0], extents.first, extents.second);
+    return dist_to_bdy_impl(x.v[0], omega.v[0], extents.first, extents.second,
+                            cell);
   }  // distance_to_bdy
 
   static d_to_b_t dist_to_bdy_impl(geom_t const x,
                                    geom_t const omega,
                                    geom_t const rlo,
-                                   geom_t const rhi)
+                                   geom_t const rhi,
+                                   cell_t const cell)
   {
     geom_t const rhisq = rhi * rhi;
     geom_t const rlosq = rlo * rlo;
@@ -290,11 +302,11 @@ public:
     cell_t face = -1;
     if(d_hi < d_lo) {
       d_bdy = d_hi;
-      face = 1;  // will intersect outer sphere
+      face = cell + 1;  // will intersect outer sphere
     }
     else {
       d_bdy = d_lo;
-      face = 0;  // will intersect inner sphere
+      face = cell;  // will intersect inner sphere
     }
     d_to_b_t d2b;
     d2b.d = d_bdy;

@@ -8,6 +8,7 @@
 #include "constants.hh"
 #include "soft_equiv.hh"
 #include <cmath>
+#include <sstream>
 
 namespace nut {
 
@@ -40,8 +41,12 @@ LT_to_comoving(vector_t const & v_lab,
                vector_t const & omega_lab)
 {
   nut::Equal(vector_t::dim, 3, "vector dimension", "3");
-  nut::Require(soft_equiv(1.0, omega_lab.norm()),
-               "direction must be unit vector!");
+  bool is_unit_vector(nut::soft_equiv(1.0, omega_lab.norm()));
+  if(!is_unit_vector){
+    std::stringstream errstr;
+    errstr << "direction must be unit vector! (" << __LINE__ << ")";
+    nut::Require(is_unit_vector, errstr.str().c_str());
+  }
   nut::LessThan(v_lab.norm(), nut::c, "material speed");
   EandOmega_T<FP_T, vector_t> res;
   FP_T & e = res.first;
@@ -74,8 +79,12 @@ LT_to_lab(vector_t const & v_lab,
           vector_t const & omega_com)
 {
   nut::Equal(vector_t::dim, 3, "vector dimension", "3");
-  nut::Require(soft_equiv(1.0, omega_com.norm()),
-               "direction must be unit vector!");
+  bool is_unit_vector(nut::soft_equiv(1.0, omega_com.norm()));
+  if(!is_unit_vector){
+    std::stringstream errstr;
+    errstr << "direction must be unit vector! (" << __LINE__ << ")";
+    nut::Require(is_unit_vector, errstr.str().c_str());
+  }
   nut::LessThan(v_lab.norm(), nut::c, "material speed");
   EandOmega_T<FP_T, vector_t> res;
   FP_T const vdo = v_lab.dot(omega_com);
@@ -105,8 +114,6 @@ LT_to_comoving_sphere1D(vector_t const v_lab,
                         vector_t const omega_lab)
 {
   nut::Equal(vector_t::dim, size_t{1u}, "vector dimension", "1");
-  nut::Require(nut::soft_equiv(1.0, omega_lab.norm()),
-               "direction must be unit vector!");
   nut::LessThan(v_lab.norm(), nut::c, "material speed");
   FP_T const voc = v_lab[0] / nut::c;
   FP_T const onemovoc = (1.0 - omega_lab[0] * voc);
@@ -119,11 +126,11 @@ LT_to_comoving_sphere1D(vector_t const v_lab,
 // Yes, you should pass v_lab here--it's the material speed in the lab frame!
 template <typename FP_T, typename vector_t>
 inline EandOmega_T<FP_T, vector_t>
-LT_to_lab_sphere1D(vector_t const v_lab, FP_T const e_com, vector_t const omega_com)
+LT_to_lab_sphere1D(vector_t const v_lab,
+                   FP_T const e_com,
+                   vector_t const omega_com)
 {
   nut::Equal(vector_t::dim, size_t{1u}, "vector dimension", "1");
-  nut::Require(soft_equiv(1.0, omega_com.norm()),
-               "direction must be unit vector!");
   nut::LessThan(v_lab.norm(), nut::c, "material speed");
   FP_T const voc = v_lab[0] / nut::c;
   FP_T const onepovoc = 1.0 + omega_com[0] * voc;

@@ -6,6 +6,7 @@
 #ifndef TRANSPORT_HH
 #define TRANSPORT_HH
 
+#include "Boundary_Cond.hh"
 #include "Tally.hh"
 #include "apply_event.hh"
 #include "decision.hh"
@@ -31,6 +32,7 @@ transport_particle(ParticleT const & in_p,
                    TallyT & tally,
                    CensusT & census,
                    LogT & log,
+                   Boundary_Cond<typename MeshT::Face> const & bcs,
                    typename TallyT::fp_t const alpha);
 
 template <typename ParticleT,
@@ -46,6 +48,7 @@ transport_particle_no_log(ParticleT const & in_p,
                           VelocityT const & velocity,
                           TallyT & tally,
                           CensusT & census,
+                          Boundary_Cond<typename MeshT::Face> const & bcs,
                           typename TallyT::fp_t const alpha);
 
 /** transport a collection of particles, populating a collection of
@@ -61,6 +64,7 @@ template <typename PContainer,
 void
 transport(PContainer & p_source,
           MeshT const & mesh,
+          Boundary_Cond<typename MeshT::Face> const & bcs,
           OpacityT const & opacity,
           VelocityT const & vel,
           TallyT & tally,
@@ -81,7 +85,7 @@ transport(PContainer & p_source,
         p_source.begin(), p_source.end(), p_sink.begin(), [&](p_t & p) {
           return transport_particle_no_log<p_t, MeshT, OpacityT, VelocityT,
                                            CensusT, TallyT>(
-              p, mesh, opacity, vel, tally, census, alpha);
+              p, mesh, opacity, vel, tally, census, bcs, alpha);
         });
   }
   else {
@@ -89,7 +93,7 @@ transport(PContainer & p_source,
                    [&](p_t & p) {
                      return transport_particle<p_t, MeshT, OpacityT, VelocityT,
                                                CensusT, TallyT, LogT>(
-                         p, mesh, opacity, vel, tally, census, log, alpha);
+                         p, mesh, opacity, vel, tally, census, log, bcs, alpha);
                    });
   }
   return;
@@ -110,15 +114,15 @@ transport_particle(ParticleT const & in_p,
                    TallyT & tally,
                    CensusT & census,
                    LogT & log,
+                   Boundary_Cond<typename MeshT::Face> const & bcs,
                    typename TallyT::fp_t const alpha)
 {
   using event_data = event_data<typename MeshT::Face>;
   ParticleT particle = in_p;
   cntr_t i = 1;
   while(particle.t >= 0.0 && particle.alive == true) {
-    event_data evt_data = decide_event(particle, mesh, opacity, vel);
-    apply_event(particle, evt_data, mesh, opacity, vel, tally, census,
-                alpha);
+    event_data evt_data = decide_event(particle, mesh, opacity, vel, bcs);
+    apply_event(particle, evt_data, mesh, opacity, vel, tally, census, alpha);
     i++;
   }
   return particle;
@@ -137,14 +141,14 @@ transport_particle_no_log(ParticleT const & in_p,
                           VelocityT const & vel,
                           TallyT & tally,
                           CensusT & census,
+                          Boundary_Cond<typename MeshT::Face> const & bcs,
                           typename TallyT::fp_t const alpha)
 {
   using event_data = event_data<typename MeshT::Face>;
   ParticleT particle = in_p;
   while(particle.t >= 0.0 && particle.alive == true) {
-    event_data evt_data = decide_event(particle, mesh, opacity, vel);
-    apply_event(particle, evt_data, mesh, opacity, vel, tally, census,
-                alpha);
+    event_data evt_data = decide_event(particle, mesh, opacity, vel, bcs);
+    apply_event(particle, evt_data, mesh, opacity, vel, tally, census, alpha);
   }
   return particle;
 }  // transport_particle_no_log

@@ -326,15 +326,26 @@ TEST(nut_apply_event, apply_reflect)
 
   p_t p(make_std_particle_c1());
 
-  size_t const n_cells(100);
+  size_t constexpr n_cells(3);
+  size_t constexpr n_bdys(n_cells + 1);
+  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
+  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
+
+  mesh_t mesh(bdys, bdy_types);
+
+  // size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
   ref.n_reflect[idx] = 1;
 
-  vector_t face_normal{-1.0};
-
-  nut::apply_reflect<p_t, tally_t>(p, tally, face_normal);
+  // vector_t face_normal{-1.0};
+  typename mesh_t::Face face{1};
+  nut::apply_reflect<p_t, tally_t>(p, tally, mesh, face);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.n_reflect, &ref.n_reflect) &&

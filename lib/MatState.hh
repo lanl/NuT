@@ -173,7 +173,7 @@ rows_to_mesh(
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
 template <typename fp_t>
-murmeln::Spherical_Mesh_Interface
+murmeln_mesh::Spherical_1D_Mesh
 rows_to_murmeln_mesh(
     std::vector<
         MatStateRowP<fp_t, murmeln::Spherical_Mesh_Interface::Vector> > const &
@@ -183,9 +183,9 @@ rows_to_murmeln_mesh(
     size_t & llimitIdx,
     size_t & ulimitIdx)
 {
-  using murmeln::Spherical_Mesh_Interface;
-  using mesh_t = Spherical_Mesh_Interface;
-  using vector_t = Spherical_Mesh_Interface::Vector;
+  using murmeln_mesh::Spherical_1D_Mesh;
+  using mesh_t = Spherical_1D_Mesh;
+  using vector_t = Spherical_1D_Mesh::Vector;
   // bool const  lims_ok = (ulimit > llimit);
   // Require(lims_ok , "rows_to_mesh: lower limit >= upper limit");
   size_t nrows = rows.size();
@@ -193,7 +193,7 @@ rows_to_murmeln_mesh(
   size_t lIdx = 0;
   size_t uIdx = nrows;
   // get radii from rows
-  std::vector<Spherical_Mesh_Interface::Geom_T> rads(nrows);
+  std::vector<Spherical_1D_Mesh::Geom_T> rads(nrows);
   std::transform(rows.begin(), rows.end(), rads.begin(),
                  extract_radius<fp_t, vector_t>);
   bndsTmp[0] = rads[0] - (rads[1] - rads[0]) / 2;
@@ -223,7 +223,7 @@ rows_to_murmeln_mesh(
   ulimitIdx = uIdx;
   llimitIdx = lIdx;
   size_t const ncells = uIdx - lIdx;
-  std::vector<Spherical_Mesh_Interface::Geom_T> bounds(ncells + 1);
+  std::vector<Spherical_1D_Mesh::Geom_T> bounds(ncells + 1);
 
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
   return mesh_t(std::move(bounds));

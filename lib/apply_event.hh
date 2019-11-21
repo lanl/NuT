@@ -77,7 +77,7 @@ apply_event(ParticleT & p,
   Event const & event = events::get_event(event_data);
   geom_t distance = events::get_distance(event_data);
   typename MeshT::Face face = events::get_face(event_data);
-  typename MeshT::Vector face_normal = mesh.get_normal(face);
+  // typename MeshT::Vector face_normal = mesh.get_normal(p.cell, face);
 
   stream_particle(p, distance, mesh);
 
@@ -110,7 +110,8 @@ apply_event(ParticleT & p,
     case cell_boundary: apply_cell_boundary(mesh, face, p, tally); break;
     // case cell_boundary: apply_hi_x_boundary(p, tally); break;
     case escape: apply_escape(p, tally); break;
-    case reflect: apply_reflect(p, tally, face_normal); break;
+    // case reflect: apply_reflect(p, tally, face_normal); break;
+    case reflect: apply_reflect(p, tally, mesh, face); break;
     case step_end: apply_step_end(p, tally, census); break;
     // error if we get to an unresolved collision or boundary
     case boundary:  // fall through to next
@@ -155,9 +156,18 @@ apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel)
   Vector ocf = Mesh_T::sample_direction_isotropic(p.rng);
 
   // LT comoving -> lab
-  EandOmega_T const eno_lf = Mesh_T::LT_to_lab(v, eci, ocf);
-  geom_t const elf = eno_lf.first;
-  Vector const olf = eno_lf.second;
+  geom_t elf;
+  Vector olf;
+  try {
+    EandOmega_T const eno_lf = Mesh_T::LT_to_lab(v, eci, ocf);
+    elf = eno_lf.first;
+    olf = eno_lf.second;
+  } catch(std::exception & e) {
+    printf("%s:%i Caught exception \"%s\"\n", __FUNCTION__, __LINE__, e.what());
+    printf("%s:%i ocf = %f\n", __FUNCTION__, __LINE__, ocf[0]);
+    throw(e);
+  }
+
   // tally
   t.count_nucleon_elastic_scatter(p.cell);
   t.deposit_inelastic_scat(cell, eli, elf, oli, olf, p.weight, p.species);
@@ -166,7 +176,7 @@ apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel)
   p.e = elf;
 
   return;
-}
+}  // namespace nut
 
 template <typename p_t, typename tally_t, typename velocity_t, typename Mesh_T>
 void
@@ -213,7 +223,7 @@ apply_cell_boundary(mesh_t const & m, face_t const & face, p_t & p, tally_t & t)
   if constexpr(std::is_class<decltype(
                    m.cell_across(mcell, face, p.x))>::value) {
     auto new_mcell = m.cell_across(mcell, face, p.x);
-    p.cell = new_mcell.id();
+    p.cell = new_mcell.as_id();
   }
   else {
     p.cell = m.cell_across(mcell, face, p.x);
@@ -231,12 +241,18 @@ apply_escape(p_t & p, tally_t & t)
   return;
 }
 
-template <typename p_t, typename tally_t, typename vector_t>
+template <typename p_t, typename tally_t, typename mesh_t>
 void
-apply_reflect(p_t & p, tally_t & t, vector_t const & face_normal)
+apply_reflect(p_t & p,
+              tally_t & t,
+              mesh_t const & m, /*vector_t const & face_normal*/
+              typename mesh_t::Face const face)
 {
+  using vector_t = typename mesh_t::Vector;
   t.count_reflect(p.cell);
-  vector_t reflected = p.omega.reflect(face_normal);
+  vector_t unused{0.0};
+  vector_t reflected = m.reflect(p.omega, face, unused);
+  // vector_t reflected = p.omega.reflect(face_normal);
   p.omega = reflected;
   return;
 }
