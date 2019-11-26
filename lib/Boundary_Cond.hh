@@ -11,10 +11,10 @@
 namespace nut {
 
 /**\brief Store/retrieve boundary conditions */
-template <class Face_Index_T>
+template <class Face_Index_T, typename descriptor_t = bdy_types::descriptor>
 struct Boundary_Cond {
   using face_t = Face_Index_T;
-  using desc_t = bdy_types::descriptor;
+  using desc_t = descriptor_t;
   using bc_map_t = std::unordered_map<Face_Index_T, desc_t>;
 
   /**\brief Get the boundary type associated with Face f.
@@ -31,6 +31,8 @@ struct Boundary_Cond {
   bool is_known_boundary(face_t f) const { return (m_bcs.count(f) != 0); }
 
   void set_boundary_type(face_t f, desc_t d) { m_bcs[f] = d; }
+
+  size_t size() const { return m_bcs.size(); }
 
   bc_map_t m_bcs;
 };
@@ -52,17 +54,34 @@ template <typename Mesh_Cartesian_3D>
 Boundary_Cond<typename Mesh_Cartesian_3D::Face>
 make_vacuum_boundary_3D(Mesh_Cartesian_3D const & mesh)
 {
-  using index_t = typename Mesh_Cartesian_3D::index_t;
-  index_t const nx = mesh.get_num_x();
-  using face_t = typename Mesh_Cartesian_3D::Face;
+  using face_t = typename Mesh_Cartesian_3D::face_handle_t;
+  using real_mesh_t = typename Mesh_Cartesian_3D::mesh_t;
+  using bdy_face_iterator = typename real_mesh_t::boundary_face_iterator;
   Boundary_Cond<face_t> bcs;
+  // lambda to set all the faces from a boundary_face_iterator to VACUUM
+  auto set_plane_bcs = [&bcs](bdy_face_iterator it){
+    while(it){
+      bcs.set_boundary_type(*it, bdy_types::VACUUM);
+      it++;
+    }
+    return;
+  };
 
-  face_t low{0u};
-  bcs.set_boundary_type(low, bdy_types::REFLECTIVE);
-  face_t high{mesh.num_cells()};
-  bcs.set_boundary_type(high, bdy_types::VACUUM);
+  auto const & real_mesh(mesh.get_mesh());
+  auto i_l_x = real_mesh.boundary_faces_begin(real_mesh_t::LOW_X);
+  auto i_l_y = real_mesh.boundary_faces_begin(real_mesh_t::LOW_Y);
+  auto i_l_z = real_mesh.boundary_faces_begin(real_mesh_t::LOW_Z);
+  auto i_h_x = real_mesh.boundary_faces_begin(real_mesh_t::HIGH_X);
+  auto i_h_y = real_mesh.boundary_faces_begin(real_mesh_t::HIGH_Y);
+  auto i_h_z = real_mesh.boundary_faces_begin(real_mesh_t::HIGH_Z);
 
-  throw(std::logic_error("vacuum BCs not implemented yet!"));
+  set_plane_bcs(i_l_x);
+  set_plane_bcs(i_l_y);
+  set_plane_bcs(i_l_z);
+  set_plane_bcs(i_h_x);
+  set_plane_bcs(i_h_y);
+  set_plane_bcs(i_h_z);
+
   return bcs;
 }  // make_vacuum_boundary(Mesh_3D)
 
