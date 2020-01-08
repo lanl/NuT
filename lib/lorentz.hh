@@ -40,7 +40,7 @@ LT_to_comoving(vector_t const & v_lab,
                FP_T const & e_lab,
                vector_t const & omega_lab)
 {
-  nut::Equal(vector_t::dim, 3, "vector dimension", "3");
+  nut::Equal(vector_t::dim, 3ul, "vector dimension", "3");
   bool is_unit_vector(nut::soft_equiv(1.0, omega_lab.norm()));
   if(!is_unit_vector){
     std::stringstream errstr;
