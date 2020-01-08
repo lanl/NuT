@@ -357,7 +357,4 @@ const typename Sphere_1D<cell_t, geometry_t, bdy_descriptor_t>::Face
 
 #endif
 
-// version
-// $Id$
-
 // End of file

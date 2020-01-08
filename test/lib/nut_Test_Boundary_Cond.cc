@@ -5,10 +5,17 @@
 
 #include "Boundary_Cond.hh"
 #include "Mesh_3D_Cartesian.hh"
+#ifdef HAVE_MURMELN
+#include "murmeln/mesh_adaptors/Spherical_Mesh_Interface.h"
+#else
+#include "Mesh3DCar.hh"
+#endif
 #include "expect.hh"
 #include "gtest/gtest.h"
 #include "types.hh"  // boundary types
 
+/* These tests really only work with Murmeln interface */
+#ifdef HAVE_MURMELN
 TEST(nut_Boundary_Condition, init)
 {
   using Mesh_Iface_T = murmeln::Cartesian_Mesh_Interface;
@@ -37,7 +44,7 @@ TEST(nut_Boundary_Condition, 3D_examples)
   EXPECT_EQ(d0, nut::bdy_types::VACUUM);
 
   // Many faces should not be known to the boundary conditions
-  for(uint32_t i = 1; i < 1000; ++i){
+  for(uint32_t i = 1; i < 1000; ++i) {
     Face f{i};
     EXPECT_FALSE(bcs.is_known_boundary(f));
     bcs.set_boundary_type(f, nut::bdy_types::VACUUM);
@@ -47,4 +54,8 @@ TEST(nut_Boundary_Condition, 3D_examples)
   }
   return;
 }  //
+
+#endif
+// HAVE_MURMELN
+
 // End of file

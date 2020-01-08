@@ -169,6 +169,7 @@ rows_to_mesh(
   return mesh_t(bounds, descs);
 }  // rows_to_mesh
 
+#ifdef HAVE_MURMELN
 /*!\brief: create a mesh within the given limits; identify the limiting
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
@@ -227,7 +228,9 @@ rows_to_murmeln_mesh(
 
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
   return mesh_t(std::move(bounds));
-}  // rows_to_mesh
+}  // rows_to_murmeln_mesh
+#endif
+// HAVE_MURMELN
 
 namespace P {
 /*! functions for extracting and converting particular quantities
@@ -290,8 +293,5 @@ row_to_state_entry(MatStateRowP<fp_t, vector_t> const & row)
 }  // namespace nut
 
 #endif  // include guard
-
-// version
-// $Id$
 
 // End of file

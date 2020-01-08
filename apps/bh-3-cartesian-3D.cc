@@ -10,6 +10,7 @@
 // changing to the Philox CBRNG (Salmon et al, SC 2011).
 
 #include "Mesh_3D_Cartesian.hh"
+
 #include "RNG.hh"
 #include "constants.hh"
 #include "types.hh"
@@ -42,8 +43,12 @@ constexpr size_t dim = 3;
 
 using op_t = nut::Opacity<nut::geom_t>;
 
+// At this point, rely completely on Murmeln's 3D Cartesian Mesh
+#ifdef HAVE_MURMELN
 using Mesh_Interface_T = murmeln::Cartesian_Mesh_Interface;
 using Mesh_T = Mesh_Interface_T::mesh_t;
+#endif
+
 using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::Face>;
 using vector_t = Mesh_T::Vector;
 using Velocity_t = nut::Velocity<nut::geom_t, vector_t>;

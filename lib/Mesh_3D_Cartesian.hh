@@ -6,6 +6,7 @@
 #pragma once
 
 #ifdef HAVE_MURMELN
+
 #include "murmeln/mesh_adaptors/Cartesian_Mesh_Interface.h"
 
 namespace nut {
@@ -26,7 +27,11 @@ make_cartesian_mesh()
   return mesh;
 }
 
-}  // namespace nut
+} // nut::
+
+#else
+
+#error "NuT now relies on the Murmeln 3D Cartesian mesh "
 
 #endif
 // #ifdef HAVE_MURMELN
