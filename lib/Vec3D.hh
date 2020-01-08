@@ -12,6 +12,7 @@
 #include <iostream>  // for operator >>, <<, istream, ostream.
 #include <numeric>
 #include <stdint.h>
+#include <initializer_list>
 
 namespace nut {
 
@@ -42,6 +43,11 @@ struct Vec_T {
   Vec_T() { std::fill(v.begin(), v.end(), fp_t(0.0)); }
 
   Vec_T(fp_t const i) { std::fill(v.begin(), v.end(), i); }
+
+  Vec_T(std::initializer_list<double> l)
+  {
+    std::copy(l.begin(), l.end(), v.begin());
+  }
 
   /**\brief subscript operator, const access */
   double const & operator[](size_t i) const
@@ -116,7 +122,7 @@ struct Vec_T {
   }
 
   /**\brief Compute this vector reflected in face with normal vector n */
-  vec_t reflect(vec_t const &n){
+  vec_t reflect(vec_t const &n) const {
     return this->perpendicular(n) - this->parallel(n);
   }
 
