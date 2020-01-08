@@ -46,7 +46,9 @@ using Mesh_Interface_T = murmeln::Spherical_Mesh_Interface;
 #else
 using Mesh_Interface_T =
     nut::Sphere_1D<nut::cell_t, nut::geom_t, nut::bdy_types::descriptor>;
+using Mesh_T = Mesh_Interface_T;
 #endif
+
 using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::Face>;
 using vector_t = Mesh_Interface_T::Vector;
 using Velocity_t = nut::Velocity<nut::geom_t, vector_t>;
