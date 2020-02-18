@@ -1,7 +1,7 @@
 # NuT
 ===
 
-[![Build Status](https://travis-ci.org/lanl/NuT.svg?branch=feat-incorporate-3d-mesh)](https://travis-ci.org/lanl/NuT)
+[![Build Status](https://travis-ci.org/lanl/NuT.svg?branch=master)](https://travis-ci.org/lanl/NuT)
 
 Monte Carlo code for Neutrino Transport
 
