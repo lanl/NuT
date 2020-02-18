@@ -56,7 +56,7 @@ template <typename ContT>
 typename ContT::value_type
 sum(ContT const & v)
 {
-  return std::accumulate(v.begin(), v.end(), typename ContT::value_type(0));
+  return std::accumulate(v.begin(), v.end(), typename ContT::value_type{0});
 }
 
 /** Add each element of v1 to corr. element v2. */
@@ -76,9 +76,9 @@ append_vector(std::vector<T> const & v1, std::vector<T> & v2)
 }
 
 /** Compare arrays element-wise*/
-template <size_t sz>
+template <typename vector>
 bool
-arrays_eq(vec_t<sz> const & a1, vec_t<sz> const & a2)
+arrays_eq(vector const & a1, vector const & a2)
 {
   return std::equal(a1.begin(), a1.end(), a2.begin());
 }

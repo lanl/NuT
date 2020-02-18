@@ -18,46 +18,51 @@
 #include "fileio.hh"
 #include <algorithm>
 
+#ifdef HAVE_MURMELN
+#include "murmeln/mesh_adaptors/Spherical_Mesh_Interface.h"
+#endif
+
 namespace nut {
 namespace P  // transformations specific to the p.1-p.7 file format
 {
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 struct state_entry_t {
   dens_t<fp_t> d;
   temp_t<fp_t> t;
   lum_t<fp_t> l;
-  vel_t<dim> v;
+  vel_t<vector_t> v;
 };
 
-template <typename fp_t, size_t dim>
-state_entry_t<fp_t, dim>
-row_to_state_entry(MatStateRowP<fp_t, dim> const & row);
+template <typename fp_t, typename vector_t>
+state_entry_t<fp_t, vector_t>
+row_to_state_entry(MatStateRowP<fp_t, vector_t> const & row);
 
 }  // namespace P
 
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 struct MatState {
   typedef Density<fp_t> Density_T;
   typedef Luminosity<fp_t> Luminosity_T;
   typedef Temperature<fp_t> Temperature_T;
-  typedef Velocity<fp_t, dim> Velocity_T;
+  typedef Velocity<fp_t, vector_t> Velocity_T;
 
   Density_T density;
   Luminosity_T luminosity;
   Temperature_T temperature;
   Velocity_T velocity;
 
-  explicit MatState(std::vector<MatStateRowP<fp_t, dim> > const & rows);
+  explicit MatState(std::vector<MatStateRowP<fp_t, vector_t> > const & rows);
 
 private:
-  void add_entry(P::state_entry_t<fp_t, dim> const & entry, size_t const pos);
+  void add_entry(P::state_entry_t<fp_t, vector_t> const & entry,
+                 size_t const pos);
 };  // MatState
 
 // ctor
 
-template <typename fp_t, size_t dim>
-MatState<fp_t, dim>::MatState(
-    std::vector<MatStateRowP<fp_t, dim> > const & rows)
+template <typename fp_t, typename vector_t>
+MatState<fp_t, vector_t>::MatState(
+    std::vector<MatStateRowP<fp_t, vector_t> > const & rows)
     : density(rows.size(), false),
       luminosity(rows.size()),
       temperature(rows.size()),
@@ -66,17 +71,18 @@ MatState<fp_t, dim>::MatState(
   // for each line,
   for(size_t i = 0; i < rows.size(); ++i) {
     // 1. extract & convert interesting quantities,
-    P::state_entry_t<fp_t, dim> entry = P::row_to_state_entry(rows[i]);
+    P::state_entry_t<fp_t, vector_t> entry = P::row_to_state_entry(rows[i]);
     // 2. push back onto relevant arrays
     add_entry(entry, i);
   }
   return;
 }  // MatState :: ctor
 
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 void
-MatState<fp_t, dim>::add_entry(P::state_entry_t<fp_t, dim> const & entry,
-                               size_t const i)
+MatState<fp_t, vector_t>::add_entry(
+    P::state_entry_t<fp_t, vector_t> const & entry,
+    size_t const i)
 {
   density.rho_p[i] = entry.d.nucleon;
   density.rho_e_minus[i] = entry.d.e_minus;
@@ -94,9 +100,9 @@ MatState<fp_t, dim>::add_entry(P::state_entry_t<fp_t, dim> const & entry,
 }
 
 namespace {
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 fp_t
-extract_radius(MatStateRowP<fp_t, dim> const & row)
+extract_radius(MatStateRowP<fp_t, vector_t> const & row)
 {
   return row.radius;
 }
@@ -106,14 +112,16 @@ extract_radius(MatStateRowP<fp_t, dim> const & row)
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
 template <typename fp_t>
-Spherical_1D_Mesh rows_to_mesh(std::vector<MatStateRowP<fp_t, 1> > const & rows,
-                               fp_t const llimit,
-                               fp_t const ulimit,
-                               size_t & llimitIdx,
-                               size_t & ulimitIdx)
+Spherical_1D_Mesh
+rows_to_mesh(
+    std::vector<MatStateRowP<fp_t, Spherical_1D_Mesh::Vector> > const & rows,
+    fp_t const llimit,
+    fp_t const ulimit,
+    size_t & llimitIdx,
+    size_t & ulimitIdx)
 {
   using mesh_t = Spherical_1D_Mesh;
-  constexpr size_t dim = 1;
+  using vector_t = Spherical_1D_Mesh::Vector;
   // bool const  lims_ok = (ulimit > llimit);
   // Require(lims_ok , "rows_to_mesh: lower limit >= upper limit");
   size_t nrows = rows.size();
@@ -123,7 +131,7 @@ Spherical_1D_Mesh rows_to_mesh(std::vector<MatStateRowP<fp_t, 1> > const & rows,
   // get radii from rows
   std::vector<fp_t> rads(nrows);
   std::transform(rows.begin(), rows.end(), rads.begin(),
-                 extract_radius<fp_t, dim>);
+                 extract_radius<fp_t, vector_t>);
   bndsTmp[0] = rads[0] - (rads[1] - rads[0]) / 2;
   for(size_t i = 0; i < nrows - 1; ++i) {
     bndsTmp[i + 1] = rads[i] + (rads[i + 1] - rads[i]) / 2;
@@ -161,12 +169,75 @@ Spherical_1D_Mesh rows_to_mesh(std::vector<MatStateRowP<fp_t, 1> > const & rows,
   return mesh_t(bounds, descs);
 }  // rows_to_mesh
 
+#ifdef HAVE_MURMELN
+/*!\brief: create a mesh within the given limits; identify the limiting
+ * indices in the rows vector. The limiting indices use STL begin,end
+ * convention. */
+template <typename fp_t>
+murmeln_mesh::Spherical_1D_Mesh
+rows_to_murmeln_mesh(
+    std::vector<
+        MatStateRowP<fp_t, murmeln::Spherical_Mesh_Interface::Vector> > const &
+        rows,
+    fp_t const llimit,
+    fp_t const ulimit,
+    size_t & llimitIdx,
+    size_t & ulimitIdx)
+{
+  using murmeln_mesh::Spherical_1D_Mesh;
+  using mesh_t = Spherical_1D_Mesh;
+  using vector_t = Spherical_1D_Mesh::Vector;
+  // bool const  lims_ok = (ulimit > llimit);
+  // Require(lims_ok , "rows_to_mesh: lower limit >= upper limit");
+  size_t nrows = rows.size();
+  std::vector<fp_t> bndsTmp(nrows + 1);
+  size_t lIdx = 0;
+  size_t uIdx = nrows;
+  // get radii from rows
+  std::vector<Spherical_1D_Mesh::Geom_T> rads(nrows);
+  std::transform(rows.begin(), rows.end(), rads.begin(),
+                 extract_radius<fp_t, vector_t>);
+  bndsTmp[0] = rads[0] - (rads[1] - rads[0]) / 2;
+  for(size_t i = 0; i < nrows - 1; ++i) {
+    bndsTmp[i + 1] = rads[i] + (rads[i + 1] - rads[i]) / 2;
+  }
+  bndsTmp[nrows] = rads[nrows - 1] + (rads[nrows - 1] - rads[nrows - 2]) / 2;
+
+  // would use STL algs here, but need a actual indices
+  // find limiting indices: want the greatest index such that
+  // bndsTmp[i] < llimit
+  while(bndsTmp[lIdx + 1] < llimit && lIdx < nrows) { lIdx++; }
+  if(lIdx == nrows) {
+    std::stringstream errstr;
+    errstr << "rows_to_mesh: lower bound (" << llimit
+           << ") not within range of input (max input radius: "
+           << rads[nrows - 1] << ", which comes out to upper bdy of "
+           << bndsTmp[nrows] << std::endl;
+    throw(std::runtime_error(errstr.str()));
+  }
+  // now look for the least upper index such that
+  // bndsTmp[uIdx] > ulimit
+  uIdx = lIdx;
+  while(bndsTmp[uIdx] < ulimit && uIdx < nrows) { uIdx++; }
+
+  // outputs
+  ulimitIdx = uIdx;
+  llimitIdx = lIdx;
+  size_t const ncells = uIdx - lIdx;
+  std::vector<Spherical_1D_Mesh::Geom_T> bounds(ncells + 1);
+
+  std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
+  return mesh_t(std::move(bounds));
+}  // rows_to_murmeln_mesh
+#endif
+// HAVE_MURMELN
+
 namespace P {
 /*! functions for extracting and converting particular quantities
  * from a MatStateRow */
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 dens_t<fp_t>
-row_to_rho(MatStateRowP<fp_t, dim> const & row)
+row_to_rho(MatStateRowP<fp_t, vector_t> const & row)
 {
   dens_t<fp_t> r;
   r.nucleon = row.density / pmg;
@@ -175,9 +246,9 @@ row_to_rho(MatStateRowP<fp_t, dim> const & row)
   return r;
 }
 
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 temp_t<fp_t>
-row_to_temp(MatStateRowP<fp_t, dim> const & row)
+row_to_temp(MatStateRowP<fp_t, vector_t> const & row)
 {
   temp_t<fp_t> t;
   // convert to MeV: T's in file are in 10^9 K, k_B in MeV/K
@@ -185,9 +256,9 @@ row_to_temp(MatStateRowP<fp_t, dim> const & row)
   return t;
 }
 
-template <typename fp_t, size_t dim>
+template <typename fp_t, typename vector_t>
 lum_t<fp_t>
-row_to_lum(MatStateRowP<fp_t, dim> const & row)
+row_to_lum(MatStateRowP<fp_t, vector_t> const & row)
 {
   lum_t<fp_t> l;
   l.nue = 1e51 * (row.lnue_capture + row.lnue_pair);
@@ -196,20 +267,20 @@ row_to_lum(MatStateRowP<fp_t, dim> const & row)
   return l;
 }
 
-template <typename fp_t, size_t dim>
-vel_t<dim>
-row_to_vel(MatStateRowP<fp_t, dim> const & row)
+template <typename fp_t, typename vector_t>
+vel_t<vector_t>
+row_to_vel(MatStateRowP<fp_t, vector_t> const & row)
 {
-  vel_t<dim> v;
+  vel_t<vector_t> v;
   v.v = row.velocity;
   return v;
 }
 
-template <typename fp_t, size_t dim>
-state_entry_t<fp_t, dim>
-row_to_state_entry(MatStateRowP<fp_t, dim> const & row)
+template <typename fp_t, typename vector_t>
+state_entry_t<fp_t, vector_t>
+row_to_state_entry(MatStateRowP<fp_t, vector_t> const & row)
 {
-  state_entry_t<fp_t, dim> entry;
+  state_entry_t<fp_t, vector_t> entry;
   entry.d = row_to_rho(row);
   entry.t = row_to_temp(row);
   entry.l = row_to_lum(row);
@@ -222,8 +293,5 @@ row_to_state_entry(MatStateRowP<fp_t, dim> const & row)
 }  // namespace nut
 
 #endif  // include guard
-
-// version
-// $Id$
 
 // End of file

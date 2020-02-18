@@ -17,8 +17,9 @@ namespace nut {
 
 /**\class Particle
  * \tparam fpt: floating point type
- *\tparam rngt: random number generator type
- *\tparam vectort: space vector type
+ * \tparam rngt: random number generator type
+ * \tparam vectort: space vector type
+ * \tparam cellt: cell index type
  */
 template <typename fpt, typename rngt, typename vectort>
 struct Particle {
@@ -49,7 +50,9 @@ struct Particle {
            cell_t cell_,
            rng_t rng_,
            Species s_)
-      : e(e_),
+      : x(x_),
+        omega(omega_),
+        e(e_),
         t(t_),
         weight(weight_),
         cell(cell_),
@@ -58,8 +61,6 @@ struct Particle {
         alive(true),
         fate(NOT_DEAD_YET)
   {
-    std::copy(x_.begin(), x_.end(), x.begin());
-    std::copy(omega_.begin(), omega_.end(), omega.begin());
   }
 
   Particle() {}
@@ -68,30 +69,13 @@ struct Particle {
 
   bool operator==(Particle const & p) const
   {
-    bool passed = arrays_eq<dim>(x, p.x) && omega == p.omega && e == p.e &&
+    bool passed = arrays_eq(x, p.x) && omega == p.omega && e == p.e &&
                   t == p.t && weight == p.weight && cell == p.cell &&
                   rng == p.rng && species == p.species && alive == p.alive;
     return passed;
   }
 
 };  // Particle
-
-// template <typename fp_t,typename rng_t>
-// std::ostream &
-// operator<<(std::ostream & os, Particle<fp_t,rng_t> const & p)
-// {
-//     os << "x: "       << p.x
-//        << ", omega: " << p.omega
-//        << ", t: " << p.t
-//        << ", e: " << p.e
-//        << ", weight: " << p.weight
-//        << ", cell: "   << (p.cell - 1)
-//        << ", rng: "    << p.rng
-//        << ", species: " << p.species
-//        << ", alive: "   << p.alive
-//         ;
-//     return os;
-// }
 
 }  // namespace nut
 

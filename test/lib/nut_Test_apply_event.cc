@@ -6,9 +6,9 @@
 #include "Particle.hh"
 #include "RNG.hh"
 #include "Tally.hh"
-#include "Vec3D.hh"
 #include "Velocity.hh"
 #include "apply_event.hh"
+#include "detail/Vector.h"
 #include "expect.hh"
 #include "gtest/gtest.h"
 #include "test_aux.hh"
@@ -30,12 +30,12 @@ using test_aux::comp_verb_iter;
 using fp_t = double;
 using rng_t = nut::Buffer_RNG<fp_t>;
 
-using p_t = nut::Particle<fp_t, rng_t, nut::Vec_T<fp_t, 1>>;
+using vector_t = nut::Vector1;
+using p_t = nut::Particle<fp_t, rng_t, vector_t>;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
 using c_t = nut::Census<p_t>;
-using v_t = nut::Velocity<fp_t, 1>;
-using vec_t = p_t::vec_t;
+using v_t = nut::Velocity<fp_t, vector_t>;
 
 using mesh_t = nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor>;
 
@@ -43,7 +43,7 @@ using mesh_t = nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor>;
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
                     0.21932404923057958};
 rng_t rng(rns, 3);
-vec_t const x = {0.5}, omega = {1.0};
+vector_t const x = {0.5}, omega = {1.0};
 fp_t e = 5.0, t = 1.0, wt = 1.0;
 cell_t const cell = 1;
 Species const s(nut::nu_e);
@@ -58,7 +58,7 @@ make_std_particle_c1()
 p_t
 make_std_particle_c2()
 {
-  vec_t x{1.5};
+  vector_t x{1.5};
   cell_t cell{2};
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
   return p;
@@ -76,7 +76,7 @@ TEST(nut_apply_event, apply_nucleon_abs)
   tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
-  ref.momentum[idx] = omega * wt * e;
+  ref.momentum[idx] = {omega * wt * e};
   ref.energy[idx] = wt * e;
   ref.n_nu_e_nucl_abs[idx] = 1;
   ref.ew_nu_e_nucl_abs[idx] = wt;
@@ -85,7 +85,7 @@ TEST(nut_apply_event, apply_nucleon_abs)
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed =
       check_same_verb(&tally.momentum, &ref.momentum,
-                      comp_verb_iter<vec_t>()) &&
+                      comp_verb_iter<vector_t>()) &&
       check_same_verb(&tally.energy, &ref.energy, comp_verb<fp_t>("energy")) &&
       check_same_v(&tally.n_nu_e_nucl_abs, &ref.n_nu_e_nucl_abs,
                    "n nu_e nucl abs") &&
@@ -106,14 +106,14 @@ TEST(nut_apply_event, apply_nucleon_elastic_scatter)
   p_t p(make_std_particle_c1());
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
-  std::vector<nut::vec_t<1>> vs(n_cells);
+  std::vector<vector_t> vs(n_cells);
   v_t vel(vs);
 
   cell_t const idx = cell - 1;
-  vec_t const new_omega = {2 * rns[0] - 1};
+  vector_t const new_omega = {2 * rns[0] - 1};
   // since we have zero v, there should be zero energy transfer,
   // and it should be as if we did an elastic scatter (cause we did).
-  ref.momentum[idx] = wt * e * (omega - new_omega);
+  ref.momentum[idx] = {wt * e * (omega - new_omega)};
   ref.n_nucl_el_scat[idx] = 1;
 
   nut::apply_nucleon_elastic_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, vel);
@@ -125,10 +125,10 @@ TEST(nut_apply_event, apply_nucleon_elastic_scatter)
     cerr << "did not tally correctly, line " << __LINE__ << endl;
     std::cout << "actual momentum: ";
     std::copy(tally.momentum.begin(), tally.momentum.end(),
-              std::ostream_iterator<vec_t>(std::cout, ","));
+              std::ostream_iterator<vector_t>(std::cout, ","));
     std::cout << std::endl << "expected momentum: ";
     std::copy(ref.momentum.begin(), ref.momentum.end(),
-              std::ostream_iterator<vec_t>(std::cout, ","));
+              std::ostream_iterator<vector_t>(std::cout, ","));
     std::cout << std::endl;
   }
   // check particle status
@@ -147,16 +147,16 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
-  std::vector<nut::vec_t<1>> vs(n_cells);
+  std::vector<vector_t> vs(n_cells);
   v_t vel(vs);
 
   cell_t const idx = cell - 1;
-  fp_t const new_omega = 2 * rns[0] - 1;
+  vector_t const new_omega{2 * rns[0] - 1};
 
   fp_t const e_e = 3.0;
   fp_t const de = (p.e - e_e) / 4.0;
   fp_t const e_f = p.e - de;
-  ref.momentum[idx] = (p.e * p.omega - e_f * new_omega) * wt;
+  ref.momentum[idx] = {(p.e * p.omega - e_f * new_omega) * wt};
   ref.energy[idx] = wt * de;
   ref.n_nu_e_el_scat[idx] = 1;
 
@@ -164,7 +164,7 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same_verb(&tally.momentum, &ref.momentum,
-                                        comp_verb_iter<vec_t>()) &&
+                                        comp_verb_iter<vector_t>()) &&
                         check_same_verb(&tally.n_nu_e_el_scat,
                                         &ref.n_nu_e_el_scat, comp_verb<fp_t>());
   if(!t_passed) {
@@ -187,16 +187,16 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
 
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
-  std::vector<nut::vec_t<1>> vs(n_cells);
+  std::vector<vector_t> vs(n_cells);
   v_t vel(vs);
 
   cell_t const idx = cell - 1;
-  fp_t const new_omega = 2 * rns[0] - 1;
+  vector_t const new_omega = {2 * rns[0] - 1};
 
   fp_t const e_e = 3.0;
   fp_t const de = (p.e - e_e) / 4.0;
   fp_t const e_f = p.e - de;
-  ref.momentum[idx] = (p.e * p.omega - e_f * new_omega) * wt;
+  ref.momentum[idx] = {(p.e * p.omega - e_f * new_omega) * wt};
   ref.energy[idx] = wt * de;
   ref.n_nu_e_bar_pos_scat[idx] = 1;
 
@@ -240,9 +240,9 @@ TEST(nut_apply_event, apply_cell_boundary)
     cell_t const idx = 1;  // cell 2, index is 1
     ref.n_cell_bdy[idx] = 1;
 
-    mesh_t::Face f_low{nut::Sphere_1D_Faces::LOW};
-    nut::apply_cell_boundary<p_t, tally_t, mesh_t, mesh_t::Face>(mesh, f_low, p,
-                                                                 tally);
+    mesh_t::face_handle_t f_low{nut::Sphere_1D_Faces::LOW};
+    nut::apply_cell_boundary<p_t, tally_t, mesh_t, mesh_t::face_handle_t>(
+        mesh, f_low, p, tally);
 
     // check tally energy deposition, momentum deposition, and counts.
     bool const t_passed = check_same(&tally.n_cell_bdy, &ref.n_cell_bdy) &&
@@ -269,7 +269,7 @@ TEST(nut_apply_event, apply_cell_boundary)
     cell_t const idx = cell - 1;
     ref.n_cell_bdy[idx] = 1;
 
-    mesh_t::Face f_high{nut::Sphere_1D_Faces::HIGH};
+    mesh_t::face_handle_t f_high{nut::Sphere_1D_Faces::HIGH};
     nut::apply_cell_boundary<p_t, tally_t>(mesh, f_high, p, tally);
 
     // check tally energy deposition, momentum deposition, and counts.
@@ -326,13 +326,26 @@ TEST(nut_apply_event, apply_reflect)
 
   p_t p(make_std_particle_c1());
 
-  size_t const n_cells(100);
+  size_t constexpr n_cells(3);
+  size_t constexpr n_bdys(n_cells + 1);
+  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+      nut::bdy_types::VACUUM};
+  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
+
+  mesh_t mesh(bdys, bdy_types);
+
+  // size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
   ref.n_reflect[idx] = 1;
 
-  nut::apply_reflect<p_t, tally_t>(p, tally);
+  // vector_t face_normal{-1.0};
+  typename mesh_t::face_handle_t face{1};
+  nut::apply_reflect<p_t, tally_t>(p, tally, mesh, face);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.n_reflect, &ref.n_reflect) &&
@@ -341,7 +354,7 @@ TEST(nut_apply_event, apply_reflect)
     cerr << "did not tally correctly, line " << __LINE__ << endl;
   }
   // check particle status
-  bool const p_passed = p.omega == -omega;
+  bool const p_passed = p.omega == -1.0 * omega;
   if(!p_passed) {
     cerr << "particle not reflected: new omega = " << p.omega << __LINE__
          << endl;

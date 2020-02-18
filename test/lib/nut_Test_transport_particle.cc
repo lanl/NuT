@@ -24,7 +24,7 @@ using test_aux::comp_verb;
 
 using fp_t = double;
 using rng_t = nut::Buffer_RNG<fp_t>;
-using p_t = nut::Particle<fp_t, rng_t, nut::Vec_T<fp_t, 1>>;
+using p_t = nut::Particle<fp_t, rng_t, nut::Vector1>;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
 using c_t = nut::Census<p_t>;
@@ -35,14 +35,18 @@ namespace {
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
                     0.21932404923057958};
 rng_t rng(rns, 3);
-fp_t const x = 0.5, omega = 1.0, e = 5.0, t = 1.0, wt = 1.0;
+fp_t const x = 0.5;
+fp_t const omega = 1.0;
+fp_t const e = 5.0;
+fp_t const t = 1.0;
+fp_t const wt = 1.0;
 cell_t const cell = 1;
 Species const s(nut::nu_e);
 
 p_t
 make_std_particle()
 {
-  p_t p(x, omega, e, t, wt, cell, rng, s);
+  p_t p({x}, {omega}, e, t, wt, cell, rng, s);
   return p;
 }
 }  // namespace

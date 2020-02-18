@@ -5,21 +5,19 @@
 
 #include "RNG.hh"
 
-namespace nut
+namespace nut {
+
+std::ostream &
+operator<<(std::ostream & os, Philox4x32_RNG const & r)
 {
+  os << "Philox4x32RNG, ctr = {" << r.m_c.v[0] << " " << r.m_c.v[1] << " "
+     << r.m_c.v[2] << " " << r.m_c.v[3] << "}"
+     << "; key = {" << r.m_k.v[0] << " " << r.m_k.v[1] << "}"
+     << "; bank = {" << r.m_bank[0] << " " << r.m_bank[1] << "}"
+     << "; currently on " << r.m_idx << ".";
+  return os;
+}
 
-     std::ostream & operator<<(std::ostream & os,Philox4x32_RNG const & r)
-     {
-         os << "Philox4x32RNG, ctr = {" 
-            << r.m_c.v[0]<<" "<<r.m_c.v[1]<<" "<<r.m_c.v[2]<<" "<<r.m_c.v[3]<<"}"
-            << "; key = {" << r.m_k.v[0]<<" "<<r.m_k.v[1] << "}"
-            << "; bank = {" << r.m_bank[0] << " " << r.m_bank[1] << "}"
-            << "; currently on " << r.m_idx << ".";
-         return os;
-     }
-
-
-} // nut::
-
+}  // namespace nut
 
 // End of file

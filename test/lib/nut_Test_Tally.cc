@@ -41,7 +41,8 @@ TEST(nut_Tally, deposit_inelastic_el_scat)
   nut::Tally<fp_t, dim> tally(n_cells), ref(n_cells);
 
   fp_t const ei(2.0), ef(1.9);
-  fp_t const omega_i(1.0), omega_f(-1.0);
+  nut::Vector1 const omega_i{1.0};
+  nut::Vector1 const omega_f{-1.0};
   fp_t const wt(0.5);
   nut::Species const s(nut::nu_e);
   nut::cell_t const c(21);
@@ -92,11 +93,9 @@ TEST(nut_Tally, deposit_momentum_elastic)
 
   using vv = t_t::vv;
 
-  static const size_t dim = t_t::dim;
-
   t_t tally(n_cells), ref(n_cells);
 
-  fp_t const o = 0.3;
+  nut::Vector1 const o = {0.3};
   fp_t const wt = 0.2;
   fp_t const e = 4.0;
   nut::cell_t const c(21);
@@ -105,9 +104,9 @@ TEST(nut_Tally, deposit_momentum_elastic)
   passed = check_one_changed<t_t, vv>(tally, ref, &tally.momentum) and passed;
   if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
 
-  ref.momentum[c - 1] = 0.2 * 0.3 * 4.0;
+  ref.momentum[c - 1] = {0.2 * 0.3 * 4.0};
   passed = check_same_verb(&tally.momentum, &ref.momentum,
-                           comp_verb_iter<nut::vec_t<dim>>()) and
+                           comp_verb_iter<nut::Vector1>()) and
            passed;
 
   if(!passed) std::cout << "FAILED " << __LINE__ << std::endl;
@@ -653,7 +652,7 @@ TEST(nut_Tally, merge)
 
   for(uint32_t i = 0; i < n_cells; ++i) {
     t1.energy[i] = (double)i;
-    t1.momentum[i] = (double)i;
+    t1.momentum[i] = {(double)i};
     t1.n_n[i] = (double)i;
     t1.n_p[i] = (double)i;
     t1.n_e_minus[i] = (double)i;
@@ -688,7 +687,7 @@ TEST(nut_Tally, merge)
     t1.ew_census_nu_x_bar[i] = (double)i;
 
     t2.energy[i] = 2 * (double)i;
-    t2.momentum[i] = 2 * (double)i;
+    t2.momentum[i] = {2 * (double)i};
     t2.n_n[i] = 2 * (double)i;
     t2.n_p[i] = 2 * (double)i;
     t2.n_e_minus[i] = 2 * (double)i;
@@ -723,7 +722,7 @@ TEST(nut_Tally, merge)
     t2.ew_census_nu_x_bar[i] = 2 * (double)i;
 
     ref.energy[i] = 3 * (double)i;
-    ref.momentum[i] = 3 * (double)i;
+    ref.momentum[i] = {3 * (double)i};
     ref.n_n[i] = 3 * (double)i;
     ref.n_p[i] = 3 * (double)i;
     ref.n_e_minus[i] = 3 * (double)i;
