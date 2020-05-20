@@ -83,7 +83,8 @@ TEST(nut_RNG, Buffer_RNG_double_rolled_over)
   fp_t const in_vals[vals_sz] = {0., 0.11, 0.22, 0.33};
 
   typedef nut::Buffer_RNG<fp_t> rng_t;
-  rng_t rng_base(&in_vals[0], vals_sz);
+  bool constexpr silent{true};
+  rng_t rng_base(&in_vals[0], vals_sz, silent);
   rng_adaptor<fp_t, rng_t> rng(rng_base);
 
   std::vector<fp_t> out_vals(2 * vals_sz);
@@ -123,9 +124,9 @@ TEST(nut_RNG, use_LCG_RNG_print_a_few_values)
 
   std::generate(out_vals.begin(), out_vals.end(), rng);
 
-  std::copy(out_vals.begin(), out_vals.end(),
-            std::ostream_iterator<double>(std::cout, ","));
-  std::cout << std::endl;
+  // std::copy(out_vals.begin(), out_vals.end(),
+  //           std::ostream_iterator<double>(std::cout, ","));
+  // std::cout << std::endl;
   EXPECT_TRUE(passed);
   return;
 }  // test_6
@@ -209,9 +210,9 @@ TEST(nut_RNG, use_MLCG_print_a_few_values_seed_42)
 
   std::generate(out_vals.begin(), out_vals.end(), rng);
 
-  std::copy(out_vals.begin(), out_vals.end(),
-            std::ostream_iterator<double>(std::cout, ","));
-  std::cout << std::endl;
+  // std::copy(out_vals.begin(), out_vals.end(),
+  //           std::ostream_iterator<double>(std::cout, ","));
+  // std::cout << std::endl;
   EXPECT_TRUE(passed);
   return;
 }  // test_9
@@ -254,41 +255,43 @@ TEST(nut_RNG, use_MLCG_test_splitting)
   rng_adaptor<double, rng_t> rng2(ngens.first);
   rng_adaptor<double, rng_t> rng3(ngens.second);
 
+  // TO DO: this test sucks! No real testing is happening here.
+
   // check old generator
   {
-    std::cout << "after split, state of RNG 1: ";
-    rng1.dump_state(std::cout);
+    // std::cout << "after split, state of RNG 1: ";
+    // rng1.dump_state(std::cout);
     size_t const vals_sz(4);
     std::vector<double> out_vals(vals_sz);
     std::generate(out_vals.begin(), out_vals.end(), rng1);
-    std::cout << "; some values: ";
-    std::copy(out_vals.begin(), out_vals.end(),
-              std::ostream_iterator<double>(std::cout, ","));
-    std::cout << std::endl;
+    // std::cout << "; some values: ";
+    // std::copy(out_vals.begin(), out_vals.end(),
+    //           std::ostream_iterator<double>(std::cout, ","));
+    // std::cout << std::endl;
   }
   // check new generators
   {
-    std::cout << "after split, state of RNG 2: ";
-    rng2.dump_state(std::cout);
+    // std::cout << "after split, state of RNG 2: ";
+    // rng2.dump_state(std::cout);
     size_t const vals_sz(4);
     std::vector<double> out_vals(vals_sz);
     std::generate(out_vals.begin(), out_vals.end(), rng2);
-    std::cout << "; some values: ";
-    std::copy(out_vals.begin(), out_vals.end(),
-              std::ostream_iterator<double>(std::cout, ","));
-    std::cout << std::endl;
+    // std::cout << "; some values: ";
+    // std::copy(out_vals.begin(), out_vals.end(),
+    //           std::ostream_iterator<double>(std::cout, ","));
+    // std::cout << std::endl;
   }
 
   {
-    std::cout << "after split, state of RNG 3: ";
-    rng3.dump_state(std::cout);
+    // std::cout << "after split, state of RNG 3: ";
+    // rng3.dump_state(std::cout);
     size_t const vals_sz(4);
     std::vector<double> out_vals(vals_sz);
     std::generate(out_vals.begin(), out_vals.end(), rng3);
-    std::cout << "; some values: ";
-    std::copy(out_vals.begin(), out_vals.end(),
-              std::ostream_iterator<double>(std::cout, ","));
-    std::cout << std::endl;
+    // std::cout << "; some values: ";
+    // std::copy(out_vals.begin(), out_vals.end(),
+    //           std::ostream_iterator<double>(std::cout, ","));
+    // std::cout << std::endl;
   }
   EXPECT_TRUE(passed);
   return;
@@ -330,9 +333,9 @@ TEST(nut_RNG, print_a_few_values)
 
   std::generate(out_vals.begin(), out_vals.end(), rng);
 
-  std::copy(out_vals.begin(), out_vals.end(),
-            std::ostream_iterator<double>(std::cout, ","));
-  std::cout << std::endl;
+  // std::copy(out_vals.begin(), out_vals.end(),
+  //           std::ostream_iterator<double>(std::cout, ","));
+  // std::cout << std::endl;
   EXPECT_TRUE(passed);
   return;
 }  // test_13

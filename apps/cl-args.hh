@@ -19,11 +19,14 @@ struct args_t {
   double dt;            /* -t */
   double alpha;         /* -a */
   uint32_t seed;        /* -s */
+  bool halp;            /* -h */
 };
 
 // parse CL
 args_t
 parseCL(int argc, char ** argv);
+
+std::string help();
 
 #endif  // include guard
 

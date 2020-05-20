@@ -72,9 +72,10 @@ struct src_stats_t {
 
 };  // src_stats_t
 
-template <typename fp_t, typename sz_t>
+template <typename fp_t, typename sz_t, typename Lum_Iter>
 void
-calc_src_stats_lum(std::vector<fp_t> const & lums,
+calc_src_stats_lum(Lum_Iter lum_begin,
+                   Lum_Iter lum_end,
                    std::vector<sz_t> const & cidxs,
                    src_stats_t<fp_t, sz_t> & stats,  // output
                    fp_t const dt,
@@ -82,16 +83,19 @@ calc_src_stats_lum(std::vector<fp_t> const & lums,
                    size_t const ncen)
 {
   Require(ntot >= ncen, "calc_src_stats_lum: ntot must be >= ncen");
-  Equal(stats.size(), lums.size(), "stats.size()", "lums.size()");
+  int64_t const in_lums{std::distance(lum_begin, lum_end)};
+  Require(in_lums > 0, "lum_end must be greater than lum_begin");
+  size_t const n_lums{static_cast<size_t>(in_lums)};
+  Equal(stats.size(), n_lums, "stats.size()", "lums.size()");
   Equal(stats.size(), cidxs.size(), "stats.size()", "idxs.size()");
   // populate energies
-  std::transform(lums.begin(), lums.end(), stats.es.begin(), mult<fp_t>(dt));
+  std::transform(lum_begin, lum_end, stats.es.begin(), mult<fp_t>(dt));
   std::copy(cidxs.begin(), cidxs.end(), stats.cidxs.begin());
   // compute # per cell
   fp_t const ev_tot = sum(stats.es);
   GreaterThan(ev_tot, fp_t(0), "total energy must be > 0");
 
-  std::vector<fp_t> fracs(lums.size(), fp_t(0));
+  std::vector<fp_t> fracs(n_lums, fp_t(0));
   std::transform(stats.es.begin(), stats.es.end(), fracs.begin(),
                  div_by<fp_t>(ev_tot));
 

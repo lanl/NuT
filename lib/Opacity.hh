@@ -9,35 +9,67 @@
 #error "Undefined cross sections!!!"
 #endif
 
-#include "Density.hh"
+#include "Cell_Data.hh"
 #include "Planck.hh"
-#include "Temperature.hh"
 #include "types.hh"
 #include "utilities_io.hh"
 
 namespace nut {
 
-template <typename fp_t,
-          // typename rng_t,
-          typename den_t = Density<fp_t>,
-          typename temp_t = Temperature<fp_t> >
+template <typename fp_t, typename vector_t>
 class Opacity {
 public:
   // types
-  typedef den_t density_t;
-  typedef temp_t temperature_t;
-  typedef fp_t const & fp_cr;
+  using Cell_Data_T = Cell_Data<fp_t, vector_t>;
+  using fp_cr = fp_t const &;
+  using vec_cell_data_t = std::vector<Cell_Data_T>;
+
+  auto constexpr static fetch_l_nue = [](Cell_Data_T const & d) {
+    return d.l_nue;
+  };
+  auto constexpr static fetch_l_nuebar = [](Cell_Data_T const & d) {
+    return d.l_nueb;
+  };
+  auto constexpr static fetch_l_nux = [](Cell_Data_T const & d) {
+    return d.l_nux;
+  };
+
+  using L_NuE_Iterator = Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nue)>;
+  using L_NuEbar_Iterator =
+      Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nuebar)>;
+  using L_NuX_Iterator = Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nux)>;
+
+  std::pair<L_NuE_Iterator, L_NuE_Iterator> get_nue_luminance_data() const
+  {
+    return std::make_pair(m_cell_data.begin(), m_cell_data.end());
+  }
 
   // ctor
-  Opacity(density_t const & rho_, temperature_t const & T_)
-      : m_n_cells(rho_.n_cells), m_rho(rho_), m_T(T_)
+  explicit Opacity(vec_cell_data_t && data, bool have_composition_ = false)
+      : m_cell_data(std::forward<vec_cell_data_t>(data)),
+        m_n_cells(m_cell_data.size()),
+        m_have_composition(have_composition_)
   {
   }
 
-  fp_cr temp(cell_t const cidx) const
+  size_t const num_cells() const { return m_n_cells; }
+
+  fp_cr T_p(cell_t const cidx) const
   {
     cellOK(cidx, m_n_cells + 1);
-    return m_T.T_p.at(cidx - 1);
+    return m_cell_data.at(cidx - 1).T_p;
+  }
+
+  Cell_Data_T const &cell_data(cell_t const cidx) const
+  {
+    cellOK(cidx, m_n_cells + 1);
+    return m_cell_data.at(cidx - 1);
+  }
+
+  vector_t const & velocity(cell_t const cidx) const
+  {
+    cellOK(cidx, m_n_cells + 1);
+    return m_cell_data.at(cidx - 1).velocity;
   }
 
   /* total collision opacity */
@@ -79,7 +111,8 @@ public:
   fp_t sigma_N_abs(cell_t const cell, fp_t const e_nu) const
   {
     nrgOK(e_nu);
-    fp_t const sig_N_abs = m_rho.rho_nuc(cell) * sigmas::nu_N_abs(e_nu);
+    fp_t const sig_N_abs =
+        m_cell_data.at(cell - 1).rho_nuc() * sigmas::nu_N_abs(e_nu);
     return sig_N_abs;
   }  // sigma_N_abs
 
@@ -90,99 +123,15 @@ public:
     size_t const index = make_idx(cell, m_n_cells);
     // we treat protons and neutrons distinctly from the nuclei
     // for elastic scattering *if* we have composition information.
-    fp_t const sig_N_el = sigmas::nu_N_elastic(e_nu) * (m_rho.rho_p[index]);
+    fp_t const sig_N_el =
+        sigmas::nu_N_elastic(e_nu) * (m_cell_data[index].rho_p);
     fp_t sigma(sig_N_el);
-    if(m_rho.have_composition == true) {
-      fp_t const abar = m_rho.abar[index];
-      sigma += m_rho.rho_A[index] * sigmas::nu_A_elastic(e_nu, abar);
+    if(m_have_composition == true) {
+      fp_t const abar = m_cell_data[index].abar;
+      sigma += m_cell_data[index].rho_A * sigmas::nu_A_elastic(e_nu, abar);
     }
     return sigma;
   }  // sigma_N_elastic
-
-  // nu-lepton cross sections, sampling a distribution via a power-law approx.
-  // to determine the lepton energy
-
-  // template <typename rng_t>
-  // fp_t sample_sigma_nu_e_minus(cell_t const cell,fp_t const e_nu,
-  //                              Species const nu_species,
-  //                              fp_t const alpha, rng_t & rng){
-  //     //compute opacity for e- interaction
-  //     cellOK(cell,m_n_cells);
-  //     nrgOK(e_nu);
-  //     fp_t sigma(0);
-
-  //     cell_t const index = make_idx(cell,m_n_cells);
-  //     fp_t const ebar = m_T.T_e_minus[index];
-  //     nrgOK(ebar,"ebar");
-  //     fp_t const rho = m_rho.rho_e_minus[index];
-  //     fp_t e_e_minus = gen_power_law_energy(alpha,ebar,rng);
-  //     nrgOK(e_e_minus,"energy e_minus");
-
-  //     switch(nu_species)
-  //     {
-  //     case nu_e:
-  //         sigma = sigma_nu_e_e_minus(e_nu, e_e_minus, rho);
-  //         break;
-  //     case nu_e_bar:
-  //         sigma = sigma_nu_e_bar_e_minus(e_nu, e_e_minus, rho);
-  //         break;
-  //     case nu_x:
-  //     case nu_mu:
-  //     case nu_tau:
-  //         sigma = sigma_nu_x_e_minus(e_nu, e_e_minus, rho);
-  //         break;
-  //     case nu_mu_bar:
-  //     case nu_tau_bar:
-  //         sigma = sigma_nu_x_bar_e_minus(e_nu, e_e_minus, rho);
-  //         break;
-  //     default:
-  //         // should not get here
-  //         unhandled_species_exc(nu_species,
-  //                               "Opacity::sample_sigma_nu_e_minus");
-  //     } // switch
-  //     return sigma;
-  // } // sample_sigma_nu_e_minus
-
-  // template <typename rng_t>
-  // fp_t sample_sigma_nu_e_plus(cell_t const cell,fp_cr e_nu,
-  //                             Species const nu_species,
-  //                             fp_cr alpha,rng_t & rng) {
-  //     //compute opacity for e- interaction
-  //     cellOK(cell,m_n_cells);
-  //     nrgOK(e_nu);
-  //     fp_t sigma(0);
-
-  //     cell_t const index = make_idx(cell,m_n_cells);
-  //     fp_t ebar = m_T.T_e_plus[index];
-  //     nrgOK(ebar,"ebar");
-  //     fp_t e_e_plus = gen_power_law_energy(alpha,ebar,rng);
-  //     nrgOK(e_e_plus, "energy e_plus");
-  //     fp_t const rho = m_rho.rho_e_plus[index];
-
-  //     switch( nu_species)
-  //     {
-  //     case nu_e:
-  //         sigma = sigma_nu_e_e_plus(cell,e_nu,alpha,rng, e_e_plus, rho);
-  //         break;
-  //     case nu_e_bar:
-  //         sigma = sigma_nu_e_bar_e_plus(cell,e_nu,alpha,rng, e_e_plus, rho);
-  //         break;
-  //     case nu_mu:
-  //     case nu_tau:
-  //         sigma = sigma_nu_x_e_plus(cell,e_nu,alpha,rng, e_e_plus, rho);
-  //         break;
-  //     case nu_mu_bar:
-  //     case nu_tau_bar:
-  //         sigma = sigma_nu_x_bar_e_plus(cell,e_nu,alpha,rng, e_e_plus, rho);
-  //         break;
-  //     default:
-  //         // should not get here
-  //         unhandled_species_exc(nu_species,
-  //                               "Opacity::sample_sigma_nu_e_plus");
-  //     }
-  //     return sigma;
-  // } // sample_sigma_nu_e_plus
-
   // nu-lepton cross sections, using mean temp as lepton energy
 
   fp_t sigma_nu_e_minus(cell_t const cell,
@@ -195,8 +144,8 @@ public:
     fp_t sigma(0);
 
     cell_t const index = make_idx(cell, m_n_cells);
-    fp_t const e_e_minus = m_T.T_e_minus[index];
-    fp_t const rho = m_rho.rho_e_minus[index];
+    fp_t const e_e_minus = m_cell_data[index].T_e_minus;
+    fp_t const rho = m_cell_data[index].rho_e_minus;
 
     switch(nu_species) {
       case nu_e: sigma = sigma_nu_e_e_minus(e_nu, e_e_minus, rho); break;
@@ -226,8 +175,8 @@ public:
     fp_t sigma(0);
     cell_t const index = make_idx(cell, m_n_cells);
 
-    fp_t const e_e_plus = m_T.T_e_plus[index];
-    fp_t const rho = m_rho.rho_e_plus[index];
+    fp_t const e_e_plus = m_cell_data[index].T_e_plus;
+    fp_t const rho = m_cell_data[index].rho_e_plus;
 
     switch(nu_species) {
       case nu_e: sigma = sigma_nu_e_e_plus(e_nu, e_e_plus, rho); break;
@@ -294,23 +243,12 @@ public:
     return sigma;
   }
 
-  // to do: construct a template member function that takes
-  // a functor as parameter. Replace all the above with one call
-  // variously instantiated with calls to the sigmas.
-  // template <typename x_sec>
-  // static
-  // fp_t sigma(fp_cr e_nu, fp_cr e_e_plus, fp_cr rho, x_sec xs){
-  //     fp_t sigma = xs(e_nu,e_e_plus) * rho;
-  //     return sigma;
-  // } // sigma
-
   // state:
+  vec_cell_data_t m_cell_data;
+
   cell_t const m_n_cells;
 
-  density_t const & m_rho;
-
-  temperature_t const & m_T;
-
+  bool m_have_composition;
 };  // class Opacity
 
 }  // namespace nut

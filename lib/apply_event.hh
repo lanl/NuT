@@ -9,7 +9,6 @@
 /**\file apply events to particles */
 #include "Planck.hh"
 #include "Tally.hh"
-#include "Velocity.hh"
 #include "constants.hh"
 #include "events.hh"
 #include "lorentz.hh"
@@ -31,16 +30,22 @@ void
 unknown_event(nut::events::Event const & event);
 }  // namespace
 
-template <typename p_t, typename tally_t, typename vel_t, typename Mesh_T>
+template <typename p_t,
+          typename tally_t,
+          typename Mesh_T,
+          typename vector_t = typename Mesh_T::Vector>
 void
-apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel);
+apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vector_t const & v);
 
-template <typename p_t, typename tally_t, typename velocity_t, typename Mesh_T>
+template <typename p_t,
+          typename tally_t,
+          typename Mesh_T,
+          typename vector_t = typename Mesh_T::Vector>
 void
 apply_lepton_scatter(p_t & p,
                      tally_t & t,
-                     typename tally_t::FP_T const e_lep,
-                     velocity_t const & vel);
+                     vector_t const & velocity,
+                     typename tally_t::FP_T const e_lep);
 
 template <typename Mesh_T, typename Particle_T, typename fp_t>
 void
@@ -56,7 +61,6 @@ stream_particle(Particle_T & p, fp_t const d, Mesh_T const & mesh)
 template <typename ParticleT,
           typename MeshT,
           typename OpacityT,
-          typename VelocityT,
           typename CensusT,
           typename TallyT>
 void
@@ -64,15 +68,13 @@ apply_event(ParticleT & p,
             event_data<typename MeshT::face_handle_t> const & event_data,
             MeshT const & mesh,
             OpacityT const & opacity,
-            VelocityT const & velocity,
             TallyT & tally,
             CensusT & census,
             typename TallyT::fp_t const alpha = typename TallyT::fp_t(2.0))
 {
   using namespace events;
   using fp_t = typename TallyT::fp_t;
-
-  cell_t const index = make_idx(p.cell, opacity.m_n_cells);
+  using vector_t = typename MeshT::Vector;
 
   Event const & event = events::get_event(event_data);
   geom_t distance = events::get_distance(event_data);
@@ -83,25 +85,33 @@ apply_event(ParticleT & p,
 
   tally.accum_pl(distance);
 
+  vector_t const & velocity = opacity.velocity(p.cell);
+  typename OpacityT::Cell_Data_T const & cell_data = opacity.cell_data(p.cell);
+
+  /*
+
+  template <typename p_t, typename tally_t, typename vector_t, typename Mesh_T>
+  void
+  apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vector_t const & v)
+
+  */
   switch(event) {
     case nucleon_abs: apply_nucleon_abs(p, tally); break;
     case nucleon_elastic_scatter:
-      apply_nucleon_elastic_scatter<ParticleT, TallyT, VelocityT, MeshT>(
-          p, tally, velocity);
+      apply_nucleon_elastic_scatter<ParticleT, TallyT, MeshT>(p, tally,
+                                                              velocity);
       break;
     case electron_scatter: {
-      fp_t const ebar = opacity.m_T.T_e_minus[index];
+      fp_t const ebar = cell_data.T_e_minus;
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
-                                                                velocity);
+      apply_lepton_scatter<ParticleT, TallyT, MeshT>(p, tally, velocity, e_e);
     } break;
     case positron_scatter: {
-      fp_t const ebar = opacity.m_T.T_e_plus[index];
+      fp_t const ebar = cell_data.T_e_plus;
       fp_t const e_e = ebar;
       // fp_t const e_e  = gen_power_law_energy_alpha2(ebar,p.rng);
-      apply_lepton_scatter<ParticleT, TallyT, VelocityT, MeshT>(p, tally, e_e,
-                                                                velocity);
+      apply_lepton_scatter<ParticleT, TallyT, MeshT>(p, tally, velocity, e_e);
     } break;
     // case nu_e_annhilation:
     //     break;
@@ -136,28 +146,27 @@ apply_nucleon_abs(p_t & p, tally_t & t)
   return;
 }  // apply_nucleon_abs
 
-template <typename p_t, typename tally_t, typename vel_t, typename Mesh_T>
+template <typename p_t, typename tally_t, typename Mesh_T, typename vector_t>
 void
-apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel)
+apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vector_t const & v)
 {
-  using Vector = typename Mesh_T::Vector;
   using vector4_t = typename Mesh_T::vector4_t;
   // size_t const dim(tally_t::dim);
   cell_t const cell = p.cell;
-  Vector const v = vel.v(cell);
+  // Vector const v = vel.v(cell);
   geom_t const eli = p.e;
-  Vector const oli = p.omega;
+  vector_t const oli = p.omega;
   // LT to comoving frame (need init comoving e to compute
   // final lab e).
 
   vector4_t eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
   geom_t const eci = eno_cmi[0];
   // scatter: sample a new direction
-  Vector ocf = Mesh_T::sample_direction_isotropic(p.rng);
+  vector_t ocf = Mesh_T::sample_direction_isotropic(p.rng);
 
   // LT comoving -> lab
   geom_t elf;
-  Vector olf;
+  vector_t olf;
   try {
     vector4_t const eno_lf = Mesh_T::LT_to_lab(v, eci, ocf);
     elf = eno_lf[0];
@@ -178,33 +187,32 @@ apply_nucleon_elastic_scatter(p_t & p, tally_t & t, vel_t const & vel)
   return;
 }  // namespace nut
 
-template <typename p_t, typename tally_t, typename velocity_t, typename Mesh_T>
+template <typename p_t, typename tally_t, typename Mesh_T, typename vector_t>
 void
 apply_lepton_scatter(p_t & p,
                      tally_t & t,
-                     typename tally_t::FP_T const e_lep,
-                     velocity_t const & vel)
+                     vector_t const & velocity,
+                     typename tally_t::FP_T const e_lep)
 {
   using vector4_t = typename Mesh_T::vector4_t;
-  using Vector = typename Mesh_T::Vector;
   using fp_t = typename tally_t::FP_T;
   cell_t const cell = p.cell;
-  Vector const v = vel.v(cell);
+  // Vector const v = op.velocity(cell);
   geom_t const eli = p.e;
-  Vector const oli = p.omega;
+  vector_t const oli = p.omega;
 
   // LT to comoving frame (need init comoving e to compute
   // final lab e).
-  vector4_t eno_cmi = Mesh_T::LT_to_comoving(v, eli, oli);
+  vector4_t eno_cmi = Mesh_T::LT_to_comoving(velocity, eli, oli);
   geom_t const eci = eno_cmi[0];
   // scatter
-  Vector ocf = Mesh_T::sample_direction_isotropic(p.rng);
+  vector_t ocf = Mesh_T::sample_direction_isotropic(p.rng);
   fp_t const de = (eci - e_lep) / 4.;
   fp_t const ecf = eci - de;
   // LT comoving -> lab
-  vector4_t const eno_lf = Mesh_T::LT_to_lab(v, ecf, ocf);
+  vector4_t const eno_lf = Mesh_T::LT_to_lab(velocity, ecf, ocf);
   geom_t const elf = eno_lf[0];
-  Vector olf{};
+  vector_t olf{};
   for(size_t i = 0; i < olf.size(); ++i) { olf[i] = eno_lf[i + 1]; }
   // tally
   t.count_lepton_scatter(p.cell, p.species);
