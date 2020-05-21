@@ -4,7 +4,6 @@
 #   2. move (and configure if necessary) the header files to the include
 #      directory.
 
-
 set(NUT_HEADERS
   Assert.hh
   Boundary_Cond.hh
@@ -55,7 +54,6 @@ set(NUT_HEADERS
   detail/boundary.h
 )
 
-
 set(NUT_SRC
   Cartesian_Mesh.cc
   RNG.cc
@@ -67,7 +65,18 @@ set(NUT_SRC
 
 add_library(nut ${NUT_SRC} )
 
-target_include_directories(nut PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(nut
+  PUBLIC
+    ${RANDOM123_INCLUDE_DIR}
+    ${MURMELN_INCLUDE_DIR}
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+if(NUT_ENABLE_ASSERTIONS)
+  target_compile_definitions(
+    PUBLIC
+      REQUIRE_ON=1
+    )
+endif()
 
 install(FILES ${NUT_HEADERS} DESTINATION include)
 install(TARGETS nut DESTINATION lib)

@@ -6,7 +6,6 @@
 #ifndef CL_ARGS_HH
 #define CL_ARGS_HH
 
-#include "types.hh"
 #include <string>
 #include <stdint.h>
 

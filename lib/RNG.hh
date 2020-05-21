@@ -4,8 +4,7 @@
 // Header for RNG: classes that provide loverly random numbers
 // (c) Copyright 2010 LANSLLC all rights reserved.
 
-#ifndef RNG_H
-#define RNG_H
+#pragma once
 
 #include "Random123/philox.h"
 #include <iostream>
@@ -475,10 +474,5 @@ private:
 };  // LCG
 
 }  // namespace nut
-
-#endif
-
-// version
-// $Id$
 
 // End of file

@@ -34,7 +34,6 @@
 
 #------------------------------------------------------------
 
-
 # ensure min cmake version, optional
 cmake_minimum_required (VERSION 3.0)
 
@@ -55,61 +54,52 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NuT_COMPILE_FLAGS}")
 set_property(GLOBAL PROPERTY CXX_STANDARD 17)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
 
-#--------- Random 123 --------------------------
+# ------------------------------- CMake Options -------------------------------
+option(NUT_ENABLE_ASSERTIONS "Enable NuT assertions" OFF)
+
+
+# --------------------------------- Random 123 ---------------------------------
 if (NOT DEFINED RANDOM123_ROOT)
 
   if (DEFINED ENV{RANDOM123_DIR})
 
     set(RANDOM123_ROOT $ENV{RANDOM123_DIR})
     message("RANDOM123_ROOT is ${RANDOM123_ROOT}")
-    include_directories(
-      ${RANDOM123_ROOT}/include
-    )
-
+    # include_directories(
+    #   ${RANDOM123_ROOT}/include
+    # )
   else()
     if (DEFINED ENV{RANDOM123_INCLUDES})
-
-                set(RANDOM123_ROOT $ENV{RANDOM123_INCLUDES})
-                message("RANDOM123_ROOT is ${RANDOM123_ROOT}")
-                include_directories(
-                  ${RANDOM123_ROOT}/include
-                )
-
-        else()
-
-                message("Warning: environment variable RANDOM123_DIR is not defined")
-                message("nut_unittests will not be made")
-                message("To make nut_unittests, set RANDOM123_DIR to top level of Random123 distribution directory (the one with docs, examples, include).")
-                return()
-
+      set(RANDOM123_ROOT $ENV{RANDOM123_INCLUDES})
+      message("RANDOM123_ROOT is ${RANDOM123_ROOT}")
+      # include_directories(
+      #   ${RANDOM123_ROOT}/include
+      # )
+    else()
+      message("Warning: environment variable RANDOM123_DIR is not defined")
+      message("nut_unittests will not be made")
+      message("To make nut_unittests, set RANDOM123_DIR to top level of Random123 distribution directory (the one with docs, examples, include).")
+      return()
     endif()
-
   endif()
-
 endif()
+
+set(RANDOM123_INCLUDE_DIR ${RANDOM123_ROOT}/include)
 
 # Find murmeln
 if(DEFINED ENV{MURMELN_DIR})
-
   set(MURMELN_INCLUDE_DIR $ENV{MURMELN_DIR}/include)
-  include_directories(${MURMELN_INCLUDE_DIR})
-
+  # include_directories(${MURMELN_INCLUDE_DIR})
   set(MURMELN_LIB_DIR $ENV{MURMELN_DIR}/lib)
   # message(STATUS "MURMELN_LIB_DIR: " ${MURMELN_LIB_DIR})
   find_library(Murmeln_LIB
     NAMES libMurmeln libMurmeln.dylib
     HINTS  ${MURMELN_LIB_DIR})
-
   add_definitions(-DHAVE_MURMELN)
-
 else()
-
   set(Murmeln_LIB "")
-
   message(STATUS "Skipping Murmeln; if you wanted to use that, you must set MURMELN_DIR environment variable")
-
 endif() # if(DEFINED ENV{MURMELN_DIR})
-
 
 # 2. ---------- Library ----------
 add_subdirectory(lib)
@@ -129,27 +119,6 @@ if (${build_gtests} )
       message("Warning: Test dir ${NuT_GTEST_DIR} not found.")
    endif()
 endif()
-
-##------Cmake clean up-------------------------------
-## set(NuT_CMAKE_CLEAN_FILES CMakeCache.txt cmake_install.cmake Makefile Doxyfile CMakeFiles)
-## set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${NuT_CMAKE_CLEAN_FILES}")
-#set(CMAKE_CLEAN_CMD COMMAND ${CMAKE_COMMAND} -E remove -f CMakeCache.txt cmake_install.cmake Makefile Doxyfile
-#    COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles)
-#
-#if (${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_BINARY_DIR})
-#   # in SRC build
-#   # delete cmake created directory(ies)
-#   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
-#     COMMAND ${CMAKE_COMMAND} -E remove_directory doc/Doxygen)
-#else()
-#   # out of SRC build
-#   # delete cmake created directories
-#   set(CMAKE_CLEAN_CMD ${CMAKE_CLEAN_CMD}
-#     COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/*)
-#endif()
-#
-#add_custom_target(clean-cmake
-#     ${CMAKE_CLEAN_CMD})
 
 # Put this down here to catch BOOST configurizing
 add_subdirectory(apps)

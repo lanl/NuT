@@ -5,7 +5,6 @@
 
 #include "cl-args.hh"
 
-#include "RNG.hh"
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
