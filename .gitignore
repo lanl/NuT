@@ -1,6 +1,7 @@
 # Build directories
 build*
 
+*sublime-project
 *sublime-workspace
 
 # Compiled Object files
