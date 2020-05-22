@@ -1,8 +1,8 @@
 # CMakeLists.txt for unit tests
-if (NOT DEFINED GTEST_ROOT)
+if (NOT DEFINED GTEST_INSTALL_ROOT)
   if (DEFINED ENV{GTEST_ROOT})
-    set(GTEST_ROOT $ENV{GTEST_ROOT})
-    message(STATUS "GTEST_ROOT is ${GTEST_ROOT}")
+    set(GTEST_INSTALL_ROOT $ENV{GTEST_ROOT})
+    message(STATUS "GTEST_INSTALL_ROOT is ${GTEST_INSTALL_ROOT}")
   else()
      message(WARNING "Warning: environment variable GTEST_ROOT is not defined.")
      message(WARNING "NuT Unittests will not be made")
@@ -11,36 +11,31 @@ if (NOT DEFINED GTEST_ROOT)
   endif()
 endif()
 
-set(GTEST_CMAKE_PATH ${GTEST_ROOT}/cmake/cmake)
+set(GTEST_CMAKE_PATH ${GTEST_INSTALL_ROOT}/lib/cmake)
+message(STATUS "GTEST_CMAKE_PATH: " ${GTEST_CMAKE_PATH})
 
 # Define helper functions and macros used by Google Test.
 # include(${GTEST_ROOT}/cmake/internal_utils.cmake)
 find_package(GTest REQUIRED
-  HINT ${GTEST_CMAKE_PATH})
-
-# config_compiler_and_linker()  # Defined in internal_utils.cmake
-
-include_directories(
-	${CMAKE_CURRENT_LIST_DIR}/../lib
-  ${RANDOM123_ROOT}/include}
-	${GTEST_ROOT}
-	${GTEST_ROOT}/include
-)
+  CONFIG
+  HINTS ${GTEST_CMAKE_PATH}
+  )
 
 # build tests
 #---------------------------------------------------------
 # build nut_unittest1 from sources shown
-file(GLOB NUT_UNITTESTS
+file(GLOB NUT_UNITTEST_SRC
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.cc
 )
 
-add_executable(nut_unittests ${NUT_UNITTESTS} )
+add_executable(nut_unittests ${NUT_UNITTEST_SRC} )
 
 target_include_directories(nut_unittests
   PUBLIC
-    ${GTEST_ROOT}/include
+    ${GTEST_INSTALL_ROOT}/include
   PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../lib
   )
 
 target_link_libraries(nut_unittests
