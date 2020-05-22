@@ -67,7 +67,7 @@ using cell_d_t = nut::Cell_Data<geom_t, vector_t>;
 using cell_data_t = std::vector<cell_d_t>;
 using cons_state_t = std::pair<cell_data_t, Mesh_T>;
 // Used to share a material state and mesh interface
-using state_t = std::pair<cell_data_t, Mesh_Interface_T>;
+using state_t = std::pair<op_t, Mesh_Interface_T>;
 using src_stat_t = nut::src_stats_t<geom_t, nut::id_t>;
 using Chnker = nut::Chunker<src_stat_t>;
 
@@ -367,27 +367,20 @@ run_one_species(nut::Species const spec, args_t const & args, state_t & state)
   Mesh_Interface_T const & mesh = state.second;
   Boundary_Cond_T bcs{nut::make_vacuum_boundary_1D(mesh)};
 
-  op_t const op(std::move(state.first));
-
+  op_t & op(state.first);
   size_t const ncells(mesh.num_cells());
   size_t const ncen(0);
-
   std::vector<nut::cell_t> cidxs(mesh.num_cells());
   for(size_t i = 0; i < cidxs.size(); ++i) { cidxs[i] = i + 1; }
   Check(cidxs.size() == op.num_cells(), "Cell indexes size != velocity size");
-
   src_stat_t stats(ncells);
   tally_t tally(ncells);
   census_t census;
   uint32_t const cycle(1);
+  auto [nu_es, nu_e_end] = op.get_nue_luminance_data();
+  auto [nu_ebars, nu_ebar_end] = op.get_nuebar_luminance_data();
+  auto [nu_xs, nu_x_end] = op.get_nux_luminance_data();
 
-  auto const & cell_data = state.first;
-  auto nu_es = nut::make_nu_e_iterator<cell_d_t>(cell_data.cbegin());
-  auto nu_e_end = nut::make_nu_e_iterator<cell_d_t>(cell_data.end());
-  auto nu_ebars = nut::make_nu_ebar_iterator<cell_d_t>(cell_data.begin());
-  auto nu_ebar_end = nut::make_nu_ebar_iterator<cell_d_t>(cell_data.end());
-  auto nu_xs = nut::make_nu_x_iterator<cell_d_t>(cell_data.begin());
-  auto nu_x_end = nut::make_nu_x_iterator<cell_d_t>(cell_data.end());
   switch(spec) {
     case nut::nu_e:
       nut::calc_src_stats_lum(nu_es, nu_e_end, cidxs, stats, args.dt,
@@ -406,15 +399,12 @@ run_one_species(nut::Species const spec, args_t const & args, state_t & state)
                 << nut::species_name(spec) << std::endl;
       throw std::runtime_error("run_one_species: unhandled species");
   }
-
   summarize_stats(stats, std::cout, spec, cycle);
-
   nut::seed_t const lo = species_seed(spec);
   nut::key_t key = nut::rng_t::make_key(args.seed, lo);
 
   uint32_t const rank(0);
   uint32_t const commSz(1);
-
   run_cycle(stats, mesh, bcs, op, args.alpha, spec, args.seed, tally, census,
             key, args.chunkSz, rank, commSz);
 
@@ -427,7 +417,6 @@ run_one_species(nut::Species const spec, args_t const & args, state_t & state)
   }
   write_tally_mcphd(outf, tally, spec, cycle);
   summarize_tally(tally, std::cout, spec, cycle);
-
   return;
 }  // run_species
 
@@ -453,7 +442,7 @@ main(int argc, char ** argv)
 
   args_t args = parseCL(argc, argv);
 
-  if(args.halp){
+  if(args.halp) {
     std::cout << help();
     return -1;
   }
@@ -461,11 +450,9 @@ main(int argc, char ** argv)
   cons_state_t c_state = get_mat_state(args.inputF, args.llimit, args.ulimit);
   Mesh_Interface_T mesh{std::get<1>(c_state)};
   cell_data_t mat_state{std::get<0>(c_state)};
-  state_t state{mat_state, mesh};
+  state_t state{op_t(std::move(mat_state)), mesh};
 
   // for each species, compute source stats, run particles, write tally
-  // nu_e
-
   run_one_species(nut::nu_e, args, state);
 
   run_one_species(nut::nu_e_bar, args, state);
