@@ -24,24 +24,34 @@ public:
   using fp_cr = fp_t const &;
   using vec_cell_data_t = std::vector<Cell_Data_T>;
 
-  auto constexpr static fetch_l_nue = [](Cell_Data_T const & d) {
-    return d.l_nue;
-  };
-  auto constexpr static fetch_l_nuebar = [](Cell_Data_T const & d) {
-    return d.l_nueb;
-  };
-  auto constexpr static fetch_l_nux = [](Cell_Data_T const & d) {
-    return d.l_nux;
-  };
+  /** Get pair of begin and end iterators of nu_e luminance data.
+   *
+   * These iterators march over the array of structs picking out just the
+   * nu_e luminance field. It a simple thing, and difficult to say that type.
+   */
+  auto get_nue_luminance_data() const {
+    return make_pair(make_nu_e_iterator<Cell_Data_T>(m_cell_data.begin()),
+                     make_nu_e_iterator<Cell_Data_T>(m_cell_data.end()));
+  }
 
-  using L_NuE_Iterator = Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nue)>;
-  using L_NuEbar_Iterator =
-      Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nuebar)>;
-  using L_NuX_Iterator = Cell_Data_Iterator<Cell_Data_T, decltype(fetch_l_nux)>;
+  /** Get pair of begin and end iterators of nu_ebar luminance data.
+   *
+   * These iterators march over the array of structs picking out just the
+   * nu_ebar luminance field. It a simple thing, and difficult to say that type.
+   */
+  auto get_nuebar_luminance_data() const {
+    return make_pair(make_nu_ebar_iterator<Cell_Data_T>(m_cell_data.begin()),
+                     make_nu_ebar_iterator<Cell_Data_T>(m_cell_data.end()));
+  }
 
-  std::pair<L_NuE_Iterator, L_NuE_Iterator> get_nue_luminance_data() const
-  {
-    return std::make_pair(m_cell_data.begin(), m_cell_data.end());
+  /** Get pair of begin and end iterators of nu_x luminance data.
+   *
+   * These iterators march over the array of structs picking out just the
+   * nu_x luminance field. It a simple thing, and difficult to say that type.
+   */
+  auto get_nux_luminance_data() const {
+    return make_pair(make_nu_x_iterator<Cell_Data_T>(m_cell_data.begin()),
+                     make_nu_x_iterator<Cell_Data_T>(m_cell_data.end()));
   }
 
   // ctor
