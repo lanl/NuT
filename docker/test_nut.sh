@@ -6,4 +6,6 @@
  cd build
  cmake ..
  make VERBOSE=on -j 4 2>&1 | tee make.out
+ pwd
+ ls -la
  ./test/nut_unittests
