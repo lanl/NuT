@@ -23,8 +23,9 @@ parseCL(int argc, char ** argv)
   args.dt = 1e-7;
   args.alpha = 2.0;
   args.seed = 426356;
+  args.halp = '\0';
 
-  static const char * optString = "n:i:o:l:u:c:t:a:s:";
+  static const char * optString = "n:i:o:l:u:c:t:a:s:h";
 
   const struct option longOpts[] = {
       {"n-particles", required_argument, NULL, 'n'},
@@ -36,17 +37,16 @@ parseCL(int argc, char ** argv)
       {"simulation-time", required_argument, NULL, 't'},
       {"alpha", required_argument, NULL, 'a'},
       {"seed", required_argument, NULL, 's'},
+      {"help", no_argument, NULL, 'h'},
       {NULL, no_argument, NULL, 0}};
 
   int longidx(0);
   int opt = getopt_long(argc, argv, optString, longOpts, &longidx);
-  // std::cout << __LINE__ << ": opt = " << opt << std::endl;
   while(opt != -1) {
     if(optarg == NULL) { std::cout << "optarg = NULL" << std::endl; }
 
-    std::stringstream s(optarg);
-    // std::cout << "optarg = " << optarg << "; stringstream(optarg): "
-    //           << s.str() << "; longidx = " << longidx << std::endl;
+    std::stringstream s;
+    if(optarg) { s << optarg; }
     switch(opt) {
       case 'n': s >> args.n_particles; break;
       case 'i': args.inputF = optarg; break;
@@ -57,6 +57,7 @@ parseCL(int argc, char ** argv)
       case 't': s >> args.dt; break;
       case 'a': s >> args.alpha; break;
       case 's': s >> args.seed; break;
+      case 'h': args.halp = true; break;
       default:
         std::stringstream errors("parseCL, unrecognized option: ");
         errors << opt << std::endl;
@@ -100,7 +101,8 @@ parseCL(int argc, char ** argv)
             << "chunkSize: " << args.chunkSz << "\n"
             << "sim time: " << args.dt << "\n"
             << "alpha: " << args.alpha << "\n"
-            << "seed: " << args.seed << "\n";
+            << "seed: " << args.seed << "\n"
+            << "help: " << args.halp << "\n";
 
   if(errors.str() != "") {
     std::cerr << "CL parsing errors:\n" << errors.str() << std::endl;
@@ -108,6 +110,23 @@ parseCL(int argc, char ** argv)
   }
   return args;
 }  // parseCL
+
+
+std::string help(){
+  std::string s =
+      "-n --n-particles number particles\n"
+      "-i --input input-filename\n"
+      "-o --output output-filename\n"
+      "-l --lower-limit mesh-lower-limit\n"
+      "-u --upper-limit mesh-upper-limit\n"
+      "-c --chunk-size chunk-size\n"
+      "-t --simulation-time simulation-time\n"
+      "-a --alpha alpha\n"
+      "-s --seed seed\n"
+      "-h --help print this awesome message!\n";
+  return s;
+}
+
 
 // version
 // $Id$

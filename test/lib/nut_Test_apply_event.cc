@@ -36,7 +36,6 @@ constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
 using c_t = nut::Census<p_t>;
 using v_t = nut::Velocity<fp_t, vector_t>;
-
 using mesh_t = nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor>;
 
 // bits for std particle
@@ -87,10 +86,8 @@ TEST(nut_apply_event, apply_nucleon_abs)
       check_same_verb(&tally.momentum, &ref.momentum,
                       comp_verb_iter<vector_t>()) &&
       check_same_verb(&tally.energy, &ref.energy, comp_verb<fp_t>("energy")) &&
-      check_same_v(&tally.n_nu_e_nucl_abs, &ref.n_nu_e_nucl_abs,
-                   "n nu_e nucl abs") &&
-      check_same_v(&tally.ew_nu_e_nucl_abs, &ref.ew_nu_e_nucl_abs,
-                   "ew nu_e nucl abs");
+      check_same(&tally.n_nu_e_nucl_abs, &ref.n_nu_e_nucl_abs) &&
+      check_same(&tally.ew_nu_e_nucl_abs, &ref.ew_nu_e_nucl_abs);
 
   // check particle status
   bool const p_passed = expect(p.alive, false, "Particle.alive");
@@ -108,7 +105,6 @@ TEST(nut_apply_event, apply_nucleon_elastic_scatter)
   tally_t tally(n_cells), ref(n_cells);
   std::vector<vector_t> vs(n_cells);
   v_t vel(vs);
-
   cell_t const idx = cell - 1;
   vector_t const new_omega = {2 * rns[0] - 1};
   // since we have zero v, there should be zero energy transfer,
@@ -116,7 +112,8 @@ TEST(nut_apply_event, apply_nucleon_elastic_scatter)
   ref.momentum[idx] = {wt * e * (omega - new_omega)};
   ref.n_nucl_el_scat[idx] = 1;
 
-  nut::apply_nucleon_elastic_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, vel);
+  nut::apply_nucleon_elastic_scatter<p_t, tally_t, mesh_t>(p, tally,
+                                                           vel.v(cell));
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.momentum, &ref.momentum) &&
@@ -149,7 +146,6 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
   tally_t tally(n_cells), ref(n_cells);
   std::vector<vector_t> vs(n_cells);
   v_t vel(vs);
-
   cell_t const idx = cell - 1;
   vector_t const new_omega{2 * rns[0] - 1};
 
@@ -160,7 +156,9 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e__electron)
   ref.energy[idx] = wt * de;
   ref.n_nu_e_el_scat[idx] = 1;
 
-  nut::apply_lepton_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, e_e, vel);
+  vector_t velocity = vel.v(cell);
+
+  nut::apply_lepton_scatter<p_t, tally_t, mesh_t>(p, tally, velocity, e_e);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same_verb(&tally.momentum, &ref.momentum,
@@ -188,10 +186,10 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
   size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);
   std::vector<vector_t> vs(n_cells);
-  v_t vel(vs);
 
   cell_t const idx = cell - 1;
   vector_t const new_omega = {2 * rns[0] - 1};
+  v_t vel(vs);
 
   fp_t const e_e = 3.0;
   fp_t const de = (p.e - e_e) / 4.0;
@@ -200,7 +198,8 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
   ref.energy[idx] = wt * de;
   ref.n_nu_e_bar_pos_scat[idx] = 1;
 
-  nut::apply_lepton_scatter<p_t, tally_t, v_t, mesh_t>(p, tally, e_e, vel);
+  vector_t velocity = vel.v(cell);
+  nut::apply_lepton_scatter<p_t, tally_t, mesh_t>(p, tally, velocity, e_e);
 
   // check tally energy deposition, momentum deposition, and counts.
   bool const t_passed = check_same(&tally.momentum, &ref.momentum) &&

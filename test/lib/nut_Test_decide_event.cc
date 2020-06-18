@@ -3,13 +3,10 @@
 #define USING_HFBC_SIGMAS
 
 #include "Boundary_Cond.hh"
-#include "Density.hh"
 #include "Mesh.hh"
 #include "Opacity.hh"
 #include "Particle.hh"
 #include "RNG.hh"
-#include "Temperature.hh"
-#include "Velocity.hh"
 #include "decision.hh"
 #include "detail/Vector.h"
 #include "events.hh"
@@ -30,15 +27,13 @@ using nut::bdy_types::descriptor;
 
 using fp_t = double;
 using vf = std::vector<fp_t>;
-using rho_t = nut::Density<fp_t>;
-using T_t = nut::Temperature<fp_t>;
 using BRNG = nut::Buffer_RNG<fp_t>;
-using OpB = nut::Opacity<fp_t>;
 using p_t = nut::Particle<fp_t, BRNG, nut::Vector1>;
 using mesh_t = nut::Sphere_1D<cell_t, geom_t, descriptor>;
 using vector_t = nut::Vector1;
-using vec_vec = std::vector<vector_t>;
-using v_t = nut::Velocity<fp_t, vector_t>;
+using OpB = nut::Opacity<fp_t, vector_t>;
+using cell_data_t = nut::Cell_Data<fp_t, vector_t>;
+using vec_cell_data_t = std::vector<cell_data_t>;
 
 using face_t = mesh_t::face_handle_t;
 
@@ -46,14 +41,6 @@ size_t ncells(10);
 vf nullv(ncells, fp_t(0));
 
 fp_t const pmg = 1.67262e-24;  // proton mass in gram
-
-// create empty Density and Temperature objects: tests can copy
-// and modify these.
-rho_t const rho(nullv, nullv, nullv, nullv, nullv, nullv);
-T_t const T(nullv, nullv, nullv);
-
-vec_vec zerovs(ncells);
-v_t const vel0s(zerovs);
 
 /* This test uses the setup of Python test_2 of decide_event to test
  * decide_scatter_event. We use the same random seeds, starting at the
@@ -66,16 +53,13 @@ TEST(nut_decide_event, decide_scatter_event_nucleon_abs)
 
   using nut::decide_scatter_event;
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1e14 / pmg;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
   // from Python test_2 of decide_event
   fp_t const rns[] = {// 0.30897681610609407, 1st seed burned for d_coll
                       // 0.92436920169905545,
                       0.21932404923057958};
-  BRNG rng(rns, 3);
+  BRNG rng(rns, 1);
   fp_t const e = 5.0;
   cell_t const cell = 1;
   Species const s(nut::nu_e);
@@ -175,11 +159,8 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
   using nut::decide_scatter_event;
   using nut::events::Event;
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1.0;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
   fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
                       0.21932404923057958};
   BRNG rng(rns, 3);
@@ -200,7 +181,7 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
+  auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
 
   Event const event_exp = cell_boundary;
   // auto [event, fc_out] = nut::events::decode_face<uint32_t>(e_n_d.first);
@@ -224,13 +205,19 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
   using nut::decide_scatter_event;
   using nut::events::Event;
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1.0;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}},
+                       {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
   fp_t const rns[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  BRNG rng(rns, 3);
+  BRNG rng(rns, 10);
   fp_t const x = 0.5, omega = 1.0, e = 5.0, t = 1.0, wt = 1.0;
   cell_t const cell = 1;
   Species const s(nut::nu_e);
@@ -249,15 +236,13 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
   for(size_t i = 0; i < 9; ++i) {
-    auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
-    std::cout << nut::events::event_name(event) << ", d = " << distance
-              << std::endl;
+    auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
+    // std::cout << nut::events::event_name(event) << ", d = " << distance
+    //           << std::endl;
     p.x[0] += distance;
     p.cell += 1;
   }
-
-  auto [event, distance, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
-
+  auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
   Event const event_exp = escape;
   passed = event == event_exp;
   if(!passed) {
@@ -284,16 +269,13 @@ TEST(nut_decide_event, decide_scatter_event_nucleon_elastic_scatter)
 
   using nut::decide_scatter_event;
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1e14 / pmg;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
   // from Python test_2 of decide_event
   fp_t const rns[] = {// 0.21932404923057958, 1st used for d_coll
                       // 0.20867489035315723,
                       0.91525579001682567};
-  BRNG rng(rns, 3);
+  BRNG rng(rns, 1);
   fp_t const e = 5.0;
   cell_t const cell = 1;
   Species const s(nut::nu_e);
@@ -321,16 +303,13 @@ TEST(nut_decide_event, decide_scatter_event_electron_scatter)
 
   using nut::decide_scatter_event;
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = nut::tiny;
-  rho1.rho_e_minus[0] = 1e14 / pmg;
-  T1.T_e_minus[0] = 1.0;
+  vec_cell_data_t data{
+      {nut::tiny, 1e14 / pmg, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
 
-  OpB op(rho1, T1);
   // from Python test_2 of decide_event
   fp_t const rns[] = {0.9, 0.1};
-  BRNG rng(rns, 3);
+  BRNG rng(rns, 2);
   fp_t const e = 5.0;
   cell_t const cell = 1;
   Species const s(nut::nu_e);
@@ -372,16 +351,12 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   // generate opacity
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1e14 / pmg;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
 
   // create particle
   // from Python test_2 of decide_event
-  fp_t const rns[] = {0.30897681610609407,  // 1st seed burned for d_coll
-                                            // 0.92436920169905545,
+  fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
                       0.21932404923057958};
   BRNG rng(rns, 3);
   fp_t const e = 5.0;
@@ -393,7 +368,7 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  auto [event, d, fc_out] = decide_event(p, mesh, op, vel0s, bcs);
+  auto [event, d, fc_out] = decide_event(p, mesh, op, bcs);
 
   Event event_exp = nucleon_abs;
 
@@ -438,11 +413,9 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
   mesh_t mesh(bounds, b_types);
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = 1e14 / pmg;
+  vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
 
-  OpB op(rho1, T1);
   // from Python test_2 of decide_event
   fp_t const rns[] = {0.21932404923057958,  // 1st used for d_coll
                       0.20867489035315723, 0.91525579001682567};
@@ -456,7 +429,7 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, vel0s, bcs);
+  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, bcs);
 
   Event const event_exp = nucleon_elastic_scatter;
 
@@ -494,13 +467,9 @@ TEST(nut_decide_event, decide_event_electron_scatter)
   mesh_t mesh(bounds, b_types);
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
-  rho_t rho1(rho);
-  T_t T1(T);
-  rho1.rho_p[0] = nut::tiny;
-  rho1.rho_e_minus[0] = 1e14 / pmg;
-  T1.T_e_minus[0] = 1.0;
-
-  OpB op(rho1, T1);
+  vec_cell_data_t data{
+      {nut::tiny, 1e14 / pmg, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, {0}}};
+  OpB op(std::move(data));
   // from Python test_2 of decide_event
   fp_t const rns[] = {0.9, 0.9, 0.1};
   BRNG rng(rns, 3);
@@ -513,7 +482,7 @@ TEST(nut_decide_event, decide_event_electron_scatter)
   fp_t const wt = 1.0;
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
-  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, vel0s, bcs);
+  auto [event, d, fc_out] = nut::decide_event(p, mesh, op, bcs);
 
   Event const event_exp = electron_scatter;
   passed = event == event_exp;

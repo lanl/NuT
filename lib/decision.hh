@@ -78,13 +78,11 @@ decide_boundary_event(MeshT const & mesh,
 
 template <typename particle_t,
           typename mesh_t,
-          typename opacity_t,
-          typename velocity_t>
+          typename opacity_t>
 event_data<typename mesh_t::face_handle_t>
 decide_event(particle_t & p,  // non-const b/c of RNG
              mesh_t const & mesh,
              opacity_t const & opacity,
-             velocity_t const & velocity,
              Boundary_Cond<typename mesh_t::face_handle_t> const & bcs)
 {
   using vector_t = typename mesh_t::Vector;
@@ -107,38 +105,33 @@ decide_event(particle_t & p,  // non-const b/c of RNG
 
   // compute distance to events, push onto vector
   // compute cross-section in comoving frame
-
-  vector_t v = velocity.v(cell);
+  auto v = opacity.velocity(cell);
   // TO DO vector velocity
   vector_t vtmp(v);
   geom_t const eli = p.e;
   vector_t const oli = p.omega;
   // LT to comoving frame (compute interaction comoving).
+
   vector4_t eno_cmi = mesh_t::LT_to_comoving(vtmp, eli, oli);
   geom_t const eci = eno_cmi[0];
-
   fp_t const sig_coll = opacity.sigma_collide(cell, eci, species);
 
   fp_t const random_dev = p.rng.random();
   /* fp_t const ignored    =*/p.rng.random();  // to keep pace with McPhD
-
   // collision distance
   geom_t const d_coll =
       (sig_coll != fp_t(0)) ? -std::log(random_dev) / sig_coll : huge;
 
   e_n_ds[0] = event_data(events::collision, d_coll, mesh_t::null_face());
-
   // boundary distance
   typename mesh_t::intersect_t dnf =
       mesh.intersection({x, oli}, typename mesh_t::Cell{cell});
   geom_t const d_bdy = mesh.get_distance(dnf);
   typename mesh_t::face_handle_t face = mesh.get_face(dnf);
   e_n_ds[1] = event_data(events::boundary, d_bdy, face);
-
   // time step end distance
   geom_t const d_step_end = c * tleft;
   e_n_ds[2] = event_data(events::step_end, d_step_end, mesh_t::null_face());
-
   // pick (event,dist) pair with shortest distance
   event_data closest =
       *(std::min_element(e_n_ds, e_n_ds + 3, tuple_min_2nd<event_data>));
@@ -201,6 +194,11 @@ decide_scatter_event(rng_t & rng,
     event = events::positron_scatter;
   }
   else {
+    printf(
+        "%s:%i p_type_sel = %f, prob_abs = %f, prob_nucleon = %f, "
+        "prob_electron = %f, prob_positron = %f\n",
+        __FUNCTION__, __LINE__, p_type_sel, prob_abs, prob_nucleon,
+        prob_electron, prob_positron);
     unresolved_event(__LINE__, "scatter");
   }
   return event;

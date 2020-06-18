@@ -3,25 +3,23 @@
 #define USING_HFBC_SIGMAS
 #include "Opacity.hh"
 #undef USING_HFBC_SIGMAS
-
-#include "Density.hh"
-#include "Temperature.hh"
+#include "Mesh.hh"
 #include "gtest/gtest.h"
+#include <vector>
 
+using nut::Cell_Data;
 using nut::Opacity;
 
 TEST(nut_opacity, instantiation)
 {
   typedef double fp_t;
   // bogus random number gen type: ok to test instantiation
-  typedef Opacity<fp_t> op_t;
-  typedef nut::Density<fp_t> rho_t;
-  typedef nut::Temperature<fp_t> temp_t;
+  using vector_t = nut::Spherical_1D_Mesh::Vector;
+  using op_t = Opacity<fp_t, vector_t>;
+  using cell_data_t = Cell_Data<fp_t, vector_t>;
 
-  std::vector<fp_t> nil(10, 0);
-  rho_t rho(nil, nil, nil, nil, nil, nil);
-  temp_t T(nil, nil, nil);
-  op_t op(rho, T);
+  std::vector<cell_data_t> nil{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
+  op_t op(std::move(nil));
   EXPECT_TRUE(true);
   return;
 }  // test_1
