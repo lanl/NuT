@@ -28,6 +28,7 @@ struct Particle {
   using fp_t = fpt;
   using rng_t = rngt;
   using vec_t = vectort;
+  using cell_t = uint32_t;
   static constexpr size_t dim = vectort::dim;
 
   vec_t x;

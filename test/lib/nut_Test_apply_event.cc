@@ -32,13 +32,13 @@ using fp_t = double;
 using rng_t = nut::Buffer_RNG<fp_t>;
 
 using vector_t = murmeln_mesh::Vector1;
-using p_t = nut::Particle<fp_t, rng_t, vector_t>;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
-using c_t = nut::Census<p_t>;
-using v_t = nut::Velocity<fp_t, vector_t>;
 using mesh_t = murmeln::Spherical_Mesh_Interface;
 using mesh_impl_t = murmeln_mesh::Spherical_1D_Mesh;
+using p_t = nut::Particle<fp_t, rng_t, vector_t>;
+using c_t = nut::Census<p_t>;
+using v_t = nut::Velocity<fp_t, vector_t>;
 
 // bits for std particle
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
@@ -246,7 +246,9 @@ TEST(nut_apply_event, apply_cell_boundary)
 
   // mesh_t mesh(bdys, bdy_types);
 
+  printf("%s:%i \n", __FUNCTION__, __LINE__);
   mesh_t mesh{mk_mesh_1()};
+  printf("%s:%i \n",__FUNCTION__,__LINE__);
   {
     bool passed(false);
 
@@ -259,6 +261,7 @@ TEST(nut_apply_event, apply_cell_boundary)
     ref.n_cell_bdy[idx] = 1;
 
     mesh_t::face_handle_t f_low{nut::Sphere_1D_Faces::LOW};
+    mesh_t::cell_handle_t orig_cell{idx};
     nut::apply_cell_boundary<p_t, tally_t, mesh_t, mesh_t::face_handle_t>(
         mesh, f_low, p, tally);
 
@@ -269,7 +272,8 @@ TEST(nut_apply_event, apply_cell_boundary)
       cerr << "did not tally correctly, line " << __LINE__ << endl;
     }
     // check particle status
-    bool const p_passed = p.cell == 1;
+    mesh_t::cell_handle_t const pcell{p.cell};
+    bool const p_passed = pcell == mesh.null_cell();
     if(!p_passed) {
       cerr << __LINE__ << ": incorrect cell: " << p.cell << endl;
     }
@@ -298,7 +302,10 @@ TEST(nut_apply_event, apply_cell_boundary)
     }
     // check particle status
     bool const p_passed = p.cell == cell + 1;
-    if(!p_passed) { cerr << "incorrect cell: " << p.cell << __LINE__ << endl; }
+    if(!p_passed) {
+      printf("%s:%i incorrect cell: %u, expected %u\n", __FUNCTION__, __LINE__,
+             p.cell, (cell + 1));
+    }
     passed = t_passed && p_passed;
     EXPECT_TRUE(passed);
   }
