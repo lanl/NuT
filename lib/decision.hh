@@ -9,7 +9,7 @@
 #include "Boundary_Cond.hh"
 #include "constants.hh"
 #include "events.hh"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "types.hh"
 #include <algorithm>
 #include <array>

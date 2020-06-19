@@ -8,7 +8,7 @@
 
 #include "Assert.hh"
 #include "Planck.hh"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "utilities.hh"
 #include <algorithm>
 #include <numeric>

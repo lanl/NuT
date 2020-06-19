@@ -11,7 +11,7 @@
 #include "Tally.hh"
 #include "constants.hh"
 #include "events.hh"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "types.hh"
 #include <iomanip>
 #include <sstream>

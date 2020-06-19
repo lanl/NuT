@@ -10,7 +10,7 @@
 #include "Assert.hh"
 #include "constants.hh"
 #include "detail/Vector.h"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "soft_equiv.hh"
 #include "types.hh"
 #include "utilities_io.hh"
