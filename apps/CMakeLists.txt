@@ -10,6 +10,7 @@ add_library(bh-3_support ${bh-3_support_SOURCES})
 target_include_directories(bh-3_support
   PUBLIC
     "${PROJECT_SOURCE_DIR}/lib"
+    "${PROJECT_SOURCE_DIR}/lib/meshes"
   )
 
 add_executable(bh-3 bh-3.cc)
@@ -24,7 +25,7 @@ if(NUT_ENABLE_ASSERTIONS)
     PRIVATE
       REQUIRE_ON=1)
 endif()
-target_link_libraries(bh-3 bh-3_support nut ${Murmeln_LIB})
+target_link_libraries(bh-3 bh-3_support nut nut-meshes ${Murmeln_LIB})
 
 add_executable(bh-3-cart bh-3-cartesian-3D.cc)
 

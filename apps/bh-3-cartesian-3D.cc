@@ -43,13 +43,8 @@ constexpr size_t dim = 3;
 
 using nut::geom_t;
 
-#ifdef HAVE_MURMELN
 using Mesh_Interface_T = murmeln::Cartesian_Mesh_Interface;
 using Mesh_T = Mesh_Interface_T::mesh_t;
-#else
-using Mesh_T = nut::Cartesian_Mesh;
-using Mesh_Interface_T = Mesh_T;
-#endif
 
 using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::face_handle_t>;
 using vector_t = Mesh_T::Vector;
@@ -136,13 +131,6 @@ run_cycle(src_stat_t const & stats,
     Chunk const & chunk = chunks[chkId];
     src_stat_t const & ss = *schunks[chkId];
     PtclId curr(chunk.pstart);
-
-    // std::cout << "Processing chunk " << chkId
-    //           << ", pstart: " << chunk.pstart
-    //           << ", pend: "  << chunk.pend
-    //           // << ", taken by thread " << tid
-    //           // << " of " << n_threads
-    //           << std::endl;
 
     // for each cell in the chunk, process the particles that
     // originate in that cell.
@@ -357,8 +345,7 @@ get_mat_state(std::string const filename,
   std::copy(&rows[llimitIdx], &rows[ulimitIdx], limitedRows.begin());
   // return the mesh & mat state within the limits
   cell_data_t cell_data{make_cell_data(limitedRows)};
-  return cons_state_t(cell_data, mesh);
-  // return state_t(MatState_t(limitedRows), mesh);
+  return state_t(cell_data, mesh);
 }  // get_mat_state
 
 void
@@ -366,8 +353,9 @@ run_one_species(nut::Species const spec, args_t const & args, state_t & state)
 {
   using nut::Check;
   Mesh_Interface_T const & mesh = state.second;
-  Boundary_Cond_T bcs{nut::make_vacuum_boundary_3D(mesh)};
-//using state_t = std::pair<cell_data_t, Mesh_Interface_T>;
+  Mesh_T const & m_impl{mesh.get_mesh()};
+  Boundary_Cond_T bcs{nut::make_vacuum_boundary_3D(m_impl)};
+  // using state_t = std::pair<cell_data_t, Mesh_Interface_T>;
 
   op_t const op(std::move(state.first));
 

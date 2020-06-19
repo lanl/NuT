@@ -11,6 +11,7 @@
 #include "detail/Vector.h"
 #include "expect.hh"
 #include "gtest/gtest.h"
+#include "meshes/mesh_adaptors/Spherical_Mesh_Interface.h"
 #include "test_aux.hh"
 #include "types.hh"
 
@@ -30,13 +31,14 @@ using test_aux::comp_verb_iter;
 using fp_t = double;
 using rng_t = nut::Buffer_RNG<fp_t>;
 
-using vector_t = nut::Vector1;
+using vector_t = murmeln_mesh::Vector1;
 using p_t = nut::Particle<fp_t, rng_t, vector_t>;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
 using c_t = nut::Census<p_t>;
 using v_t = nut::Velocity<fp_t, vector_t>;
-using mesh_t = nut::Sphere_1D<cell_t, geom_t, nut::bdy_types::descriptor>;
+using mesh_t = murmeln::Spherical_Mesh_Interface;
+using mesh_impl_t = murmeln_mesh::Spherical_1D_Mesh;
 
 // bits for std particle
 fp_t const rns[] = {0.30897681610609407, 0.92436920169905545,
@@ -46,6 +48,22 @@ vector_t const x = {0.5}, omega = {1.0};
 fp_t e = 5.0, t = 1.0, wt = 1.0;
 cell_t const cell = 1;
 Species const s(nut::nu_e);
+
+mesh_t
+mk_mesh_1()
+{
+  // might be useful to keep these around
+  // mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
+  // nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+  //     nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+  //     nut::bdy_types::VACUUM};
+
+  geom_t const bdys_in[4] = {0.0, 1.0, 2.0, 35.0};
+  std::vector<geom_t> bdys(&bdys_in[0], &bdys_in[4]);
+  mesh_impl_t m(std::move(bdys));
+  mesh_t mesh(m);
+  return mesh;
+}
 
 p_t
 make_std_particle_c1()
@@ -75,7 +93,7 @@ TEST(nut_apply_event, apply_nucleon_abs)
   tally_t tally(n_cells), ref(n_cells);
 
   cell_t const idx = cell - 1;
-  ref.momentum[idx] = {omega * wt * e};
+  ref.momentum[idx] = omega * wt * e;
   ref.energy[idx] = wt * e;
   ref.n_nu_e_nucl_abs[idx] = 1;
   ref.ew_nu_e_nucl_abs[idx] = wt;
@@ -217,17 +235,18 @@ TEST(nut_apply_event, apply_lepton_scatter_nu_e_bar__positron)
 
 TEST(nut_apply_event, apply_cell_boundary)
 {
-  size_t constexpr n_cells(3);
-  size_t constexpr n_bdys(n_cells + 1);
-  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
-  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
-      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
-      nut::bdy_types::VACUUM};
-  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
-  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
+  // size_t constexpr n_cells(3);
+  // size_t constexpr n_bdys(n_cells + 1);
+  // geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  // nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+  //     nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+  //     nut::bdy_types::VACUUM};
+  // mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  // mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
 
-  mesh_t mesh(bdys, bdy_types);
+  // mesh_t mesh(bdys, bdy_types);
 
+  mesh_t mesh{mk_mesh_1()};
   {
     bool passed(false);
 
@@ -325,16 +344,19 @@ TEST(nut_apply_event, apply_reflect)
 
   p_t p(make_std_particle_c1());
 
-  size_t constexpr n_cells(3);
-  size_t constexpr n_bdys(n_cells + 1);
-  geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
-  nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
-      nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
-      nut::bdy_types::VACUUM};
-  mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
-  mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
+  // size_t constexpr n_cells(3);
+  // size_t constexpr n_bdys(n_cells + 1);
+  // geom_t const bdys_in[n_bdys] = {0.0, 1.0, 2.0, 35.0};
+  // nut::bdy_types::descriptor const bdy_ts[n_bdys] = {
+  //     nut::bdy_types::REFLECTIVE, nut::bdy_types::CELL, nut::bdy_types::CELL,
+  //     nut::bdy_types::VACUUM};
+  // mesh_t::vb bdys(&bdys_in[0], &bdys_in[n_bdys]);
+  // mesh_t::vbd bdy_types(&bdy_ts[0], &bdy_ts[n_bdys]);
 
-  mesh_t mesh(bdys, bdy_types);
+  // mesh_t mesh(bdys, bdy_types);
+
+  mesh_t mesh{mk_mesh_1()};
+  size_t const n_cells{mesh.num_cells()};
 
   // size_t const n_cells(100);
   tally_t tally(n_cells), ref(n_cells);

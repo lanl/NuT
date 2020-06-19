@@ -21,7 +21,7 @@ TEST(Cell_Data, 1D_instantiation_and_initialization)
 {
   // cf nut_Test_fileio.cc, test_3:
   typedef double fp_t;
-  using vector_t = nut::Spherical_1D_Mesh::Vector;
+  using vector_t = murmeln_mesh::Spherical_1D_Mesh::Vector;
   using Cell_Data_T = nut::Cell_Data<double, vector_t>;
   typedef nut::MatStateRowP<fp_t, vector_t> row_t;
   typedef std::vector<row_t> vecrow;

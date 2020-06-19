@@ -125,7 +125,7 @@ decide_event(particle_t & p,  // non-const b/c of RNG
   e_n_ds[0] = event_data(events::collision, d_coll, mesh_t::null_face());
   // boundary distance
   typename mesh_t::intersect_t dnf =
-      mesh.intersection({x, oli}, typename mesh_t::Cell{cell});
+      mesh.intersection({x, oli}, typename mesh_t::cell_handle_t{cell});
   geom_t const d_bdy = mesh.get_distance(dnf);
   typename mesh_t::face_handle_t face = mesh.get_face(dnf);
   e_n_ds[1] = event_data(events::boundary, d_bdy, face);
