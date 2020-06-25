@@ -8,7 +8,6 @@
 ##ARG DEBIAN_FRONTEND=noninteractive
 ##
 ### Copy the current directory contents into the container at /app
-##ADD . /app
 ##
 ### Install any needed packages specified in requirements.txt
 ##RUN apt-get update && apt-get -y install cmake git clang-10 libtinfo5 \
@@ -25,6 +24,8 @@
 ## Run the rest to create tkzdockerid/nut-testenv:clang-10-0-B
 FROM tkzdockerid/nut-testenv:clang-10-0-B-base
 
+ADD . /app
+
 # Define environment variable
 ENV RANDOM123_DIR /usr
 ENV CC clang-10
@@ -32,15 +33,16 @@ ENV CXX clang++-10
 ENV GTEST_SRC_DIR /app/master
 ENV GTEST_ROOT /app/master/install
 ENV PATH="/app/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04/bin:${PATH}"
+ENV http_proxy=""
+ENV https_proxy=""
+ENV HTTP_PROXY=""
+ENV HTTPS_PROXY=""
 
 # Now build googletest
 # make and go to /app/master/build
 RUN mkdir -p ${GTEST_SRC_DIR}/build && cd ${GTEST_SRC_DIR}/build && \
   cmake ${GTEST_SRC_DIR} -DCMAKE_INSTALL_PREFIX=$GTEST_ROOT -DCMAKE_BUILD_TYPE=Release && \
   make -j 4 install 2>&1 | tee make.out
-
-# To build tkzdockerid/nut-testenv:clang-10-0-A
-# FROM tkzdockerid/nut-testenv:clang-10-0-A-base
 
 
 # End of file

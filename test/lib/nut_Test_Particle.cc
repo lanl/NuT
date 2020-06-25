@@ -2,8 +2,8 @@
 
 #include "Particle.hh"
 #include "RNG.hh"
-#include "Vec3D.hh"
 #include "gtest/gtest.h"
+#include "meshes/mesh_common/Vector.h"
 
 TEST(nut_Particle, instantiation)
 {
@@ -11,8 +11,7 @@ TEST(nut_Particle, instantiation)
   typedef uint32_t rng_t;
   typedef double fp_t;
 
-  constexpr size_t dim = 1;
-  using Vector = nut::Vec_T<double, dim>;
+  using Vector = murmeln_mesh::Vector;
 
   typedef nut::Particle<fp_t, rng_t, Vector> part_t;
 

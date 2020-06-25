@@ -36,6 +36,7 @@ target_include_directories(nut_unittests
   PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../lib
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../lib/meshes
   )
 
 target_link_libraries(nut_unittests

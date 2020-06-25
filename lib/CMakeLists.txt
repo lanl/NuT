@@ -7,8 +7,6 @@
 set(NUT_HEADERS
   Assert.hh
   Boundary_Cond.hh
-  Cartesian_Mesh.h
-  Cartesian_Mesh.i.h
   Census.hh
   Density.hh
   Fates.hh
@@ -31,7 +29,6 @@ set(NUT_HEADERS
   decision.hh
   events.hh
   fileio.hh
-  lorentz.hh
   mpi_helpers.hh
   partition.hh
   serialize.hh
@@ -55,7 +52,6 @@ set(NUT_HEADERS
 )
 
 set(NUT_SRC
-  Cartesian_Mesh.cc
   RNG.cc
   copyright.cc
   events.cc
@@ -63,13 +59,23 @@ set(NUT_SRC
   types.cc
  )
 
+add_subdirectory(meshes)
+
 add_library(nut ${NUT_SRC} )
 
 target_include_directories(nut
   PUBLIC
     ${RANDOM123_INCLUDE_DIR}
     ${MURMELN_INCLUDE_DIR}
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/meshes
+  )
+
+target_link_libraries(nut
+  PUBLIC
+    nut-meshes
+  )
 
 if(NUT_ENABLE_ASSERTIONS)
   target_compile_definitions(

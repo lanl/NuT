@@ -2,24 +2,27 @@
 // Apr 04, 2019
 // (c) Copyright 2019 Triad National Security, all rights reserved
 
-#include "Cartesian_Mesh.h"
+#include "base/soft_equiv.h"
+#include "base/test_common.h"
+#include "cartesian/Cartesian_Mesh.h"
 #include "gtest/gtest.h"
-#include "soft_equiv.hh"
-#include "test_common.h"
 #include <array>
 
-using namespace nut;
-using Cell = Cartesian_Mesh::Cell;
+using murmeln::soft_equiv_os;
+using murmeln_mesh::geom_t;
+using namespace murmeln_mesh;
+using cell_handle_t = Cartesian_Mesh::cell_handle_t;
 using Face_Name = Cartesian_Mesh::Face_Name;
 using Vector = Cartesian_Mesh::Vector;
 using Point = Cartesian_Mesh::Point;
+using geometron = Cartesian_Mesh::Geom_State;
 
-Cartesian_Face const f_l_x{Cartesian_Mesh::LOW_X};
-Cartesian_Face const f_l_y{Cartesian_Mesh::LOW_Y};
-Cartesian_Face const f_l_z{Cartesian_Mesh::LOW_Z};
-Cartesian_Face const f_h_x{Cartesian_Mesh::HIGH_X};
-Cartesian_Face const f_h_y{Cartesian_Mesh::HIGH_Y};
-Cartesian_Face const f_h_z{Cartesian_Mesh::HIGH_Z};
+murmeln_mesh::Cartesian_Face const f_l_x{Cartesian_Mesh::LOW_X};
+murmeln_mesh::Cartesian_Face const f_l_y{Cartesian_Mesh::LOW_Y};
+murmeln_mesh::Cartesian_Face const f_l_z{Cartesian_Mesh::LOW_Z};
+murmeln_mesh::Cartesian_Face const f_h_x{Cartesian_Mesh::HIGH_X};
+murmeln_mesh::Cartesian_Face const f_h_y{Cartesian_Mesh::HIGH_Y};
+murmeln_mesh::Cartesian_Face const f_h_z{Cartesian_Mesh::HIGH_Z};
 
 Face_Name const fn_l_x{Cartesian_Mesh::LOW_X};
 Face_Name const fn_l_y{Cartesian_Mesh::LOW_Y};
@@ -29,9 +32,7 @@ Face_Name const fn_h_y{Cartesian_Mesh::HIGH_Y};
 Face_Name const fn_h_z{Cartesian_Mesh::HIGH_Z};
 
 // A 1x1x1 Cartesian_Mesh
-Cartesian_Mesh
-one_cell_cmi()
-{
+Cartesian_Mesh one_cell_cmi() {
   index_t const nx = 1, ny = 1, nz = 1;
   geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
@@ -40,9 +41,7 @@ one_cell_cmi()
 }
 
 // A 2x2x2 Cartesian_Mesh
-Cartesian_Mesh
-eight_cell_cmi()
-{
+Cartesian_Mesh eight_cell_cmi() {
   index_t const nx = 2, ny = 2, nz = 2;
   geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
@@ -51,18 +50,17 @@ eight_cell_cmi()
 }
 
 // A 3x5x7 Cartesian_Mesh
-Cartesian_Mesh
-the_other_cmi()
-{
+namespace {
+Cartesian_Mesh the_other_cmi() {
   index_t const nx = 3, ny = 5, nz = 7;
   geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
   Cartesian_Mesh m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
   return m;
 }
+} // namespace
 
-TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
-{
+TEST(default_mesh_Cartesian_mesh, boundary_face_iterators) {
   using i_t = Cartesian_Mesh::boundary_face_iterator;
   Cartesian_Mesh m{one_cell_cmi()};
   {
@@ -76,12 +74,12 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     EXPECT_EQ(i_l_x_b.zmax, 1u);
     auto big_diff{std::distance(i_l_x_b, i_l_x_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_l_x_b);  // iterator converts to true when not at end
-    for(; i_l_x_b != i_l_x_e; ++i_l_x_b) {
+    EXPECT_TRUE(i_l_x_b); // iterator converts to true when not at end
+    for (; i_l_x_b != i_l_x_e; ++i_l_x_b) {
       Cartesian_Face f{*i_l_x_b};
-      EXPECT_EQ(f.as_id(), 0u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 0u); // there's only one, so...
     }
-    EXPECT_FALSE(i_l_x_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_l_x_b); // iterator converts to false when at end
   }
   {
     // low-y
@@ -89,12 +87,12 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     i_t const i_l_y_e = m.boundary_faces_end(Cartesian_Mesh::LOW_Y);
     auto big_diff{std::distance(i_l_y_b, i_l_y_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_l_y_b);  // iterator converts to true when not at end
-    for(; i_l_y_b != i_l_y_e; ++i_l_y_b) {
+    EXPECT_TRUE(i_l_y_b); // iterator converts to true when not at end
+    for (; i_l_y_b != i_l_y_e; ++i_l_y_b) {
       Cartesian_Face f{*i_l_y_b};
-      EXPECT_EQ(f.as_id(), 2u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 2u); // there's only one, so...
     }
-    EXPECT_FALSE(i_l_y_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_l_y_b); // iterator converts to false when at end
   }
   {
     // low-z
@@ -102,12 +100,12 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     i_t const i_l_z_e = m.boundary_faces_end(Cartesian_Mesh::LOW_Z);
     auto big_diff{std::distance(i_l_z_b, i_l_z_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_l_z_b);  // iterator converts to true when not at end
-    for(; i_l_z_b != i_l_z_e; ++i_l_z_b) {
+    EXPECT_TRUE(i_l_z_b); // iterator converts to true when not at end
+    for (; i_l_z_b != i_l_z_e; ++i_l_z_b) {
       Cartesian_Face f{*i_l_z_b};
-      EXPECT_EQ(f.as_id(), 4u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 4u); // there's only one, so...
     }
-    EXPECT_FALSE(i_l_z_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_l_z_b); // iterator converts to false when at end
   }
   {
     // high-x
@@ -115,12 +113,12 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     i_t const i_h_x_e = m.boundary_faces_end(Cartesian_Mesh::HIGH_X);
     auto big_diff{std::distance(i_h_x_b, i_h_x_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_h_x_b);  // iterator converts to true when not at end
-    for(; i_h_x_b != i_h_x_e; ++i_h_x_b) {
+    EXPECT_TRUE(i_h_x_b); // iterator converts to true when not at end
+    for (; i_h_x_b != i_h_x_e; ++i_h_x_b) {
       Cartesian_Face f{*i_h_x_b};
-      EXPECT_EQ(f.as_id(), 1u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 1u); // there's only one, so...
     }
-    EXPECT_FALSE(i_h_x_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_h_x_b); // iterator converts to false when at end
   }
   {
     // high-y
@@ -128,12 +126,12 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     i_t const i_h_y_e = m.boundary_faces_end(Cartesian_Mesh::HIGH_Y);
     auto big_diff{std::distance(i_h_y_b, i_h_y_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_h_y_b);  // iterator converts to true when not at end
-    for(; i_h_y_b != i_h_y_e; ++i_h_y_b) {
+    EXPECT_TRUE(i_h_y_b); // iterator converts to true when not at end
+    for (; i_h_y_b != i_h_y_e; ++i_h_y_b) {
       Cartesian_Face f{*i_h_y_b};
-      EXPECT_EQ(f.as_id(), 3u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 3u); // there's only one, so...
     }
-    EXPECT_FALSE(i_h_y_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_h_y_b); // iterator converts to false when at end
   }
   {
     // high-z
@@ -141,18 +139,17 @@ TEST(default_mesh_Cartesian_mesh, boundary_face_iterators)
     i_t const i_h_z_e = m.boundary_faces_end(Cartesian_Mesh::HIGH_Z);
     auto big_diff{std::distance(i_h_z_b, i_h_z_e)};
     EXPECT_EQ(big_diff, 1);
-    EXPECT_TRUE(i_h_z_b);  // iterator converts to true when not at end
-    for(; i_h_z_b != i_h_z_e; ++i_h_z_b) {
+    EXPECT_TRUE(i_h_z_b); // iterator converts to true when not at end
+    for (; i_h_z_b != i_h_z_e; ++i_h_z_b) {
       Cartesian_Face f{*i_h_z_b};
-      EXPECT_EQ(f.as_id(), 5u);  // there's only one, so...
+      EXPECT_EQ(f.as_id(), 5u); // there's only one, so...
     }
-    EXPECT_FALSE(i_h_z_b);  // iterator converts to false when at end
+    EXPECT_FALSE(i_h_z_b); // iterator converts to false when at end
   }
   return;
-}  // TEST(default_mesh_Cartesian_mesh, boundary_face_iterators){
+} // TEST(default_mesh_Cartesian_mesh, boundary_face_iterators){
 
-TEST(default_mesh_Cartesian_mesh, boundary_faces)
-{
+TEST(default_mesh_Cartesian_mesh, boundary_faces) {
   using r_t = std::vector<Cartesian_Mesh::face_handle_t>;
   // one cell mesh
   {
@@ -182,47 +179,46 @@ TEST(default_mesh_Cartesian_mesh, boundary_faces)
     r_t v_l_x = m.boundary_faces(Cartesian_Mesh::LOW_X);
     r_t v_l_x_exp{0u, 3u, 6u, 9u};
     EXPECT_EQ(v_l_x.size(), v_l_x_exp.size());
-    for(size_t i = 0; i < v_l_x_exp.size(); ++i) {
+    for (size_t i = 0; i < v_l_x_exp.size(); ++i) {
       EXPECT_EQ(v_l_x[i], v_l_x_exp[i]);
     }
     r_t v_l_y = m.boundary_faces(Cartesian_Mesh::LOW_Y);
     r_t v_l_y_exp{12u, 13u, 18u, 19u};
     EXPECT_EQ(v_l_y.size(), v_l_y_exp.size());
-    for(size_t i = 0; i < v_l_y_exp.size(); ++i) {
+    for (size_t i = 0; i < v_l_y_exp.size(); ++i) {
       EXPECT_EQ(v_l_y[i], v_l_y_exp[i]);
     }
     r_t v_l_z = m.boundary_faces(Cartesian_Mesh::LOW_Z);
     r_t v_l_z_exp{24u, 25u, 26u, 27u};
     EXPECT_EQ(v_l_z.size(), v_l_z_exp.size());
-    for(size_t i = 0; i < v_l_z_exp.size(); ++i) {
+    for (size_t i = 0; i < v_l_z_exp.size(); ++i) {
       EXPECT_EQ(v_l_z[i].as_id(), v_l_z_exp[i].as_id());
     }
     r_t v_h_x = m.boundary_faces(Cartesian_Mesh::HIGH_X);
     r_t v_h_x_exp{2u, 5u, 8u, 11u};
     EXPECT_EQ(v_h_x.size(), v_h_x_exp.size());
-    for(size_t i = 0; i < v_h_x_exp.size(); ++i) {
+    for (size_t i = 0; i < v_h_x_exp.size(); ++i) {
       EXPECT_EQ(v_h_x[i], v_h_x_exp[i]);
     }
     r_t v_h_y = m.boundary_faces(Cartesian_Mesh::HIGH_Y);
     r_t v_h_y_exp{16u, 17u, 22u, 23u};
     EXPECT_EQ(v_h_y.size(), v_h_y_exp.size());
-    for(size_t i = 0; i < v_h_y_exp.size(); ++i) {
+    for (size_t i = 0; i < v_h_y_exp.size(); ++i) {
       EXPECT_EQ(v_h_y[i], v_h_y_exp[i]);
     }
     r_t v_h_z = m.boundary_faces(Cartesian_Mesh::HIGH_Z);
     r_t v_h_z_exp{32u, 33u, 34u, 35u};
     EXPECT_EQ(v_h_z.size(), v_h_z_exp.size());
-    for(size_t i = 0; i < v_h_z_exp.size(); ++i) {
+    for (size_t i = 0; i < v_h_z_exp.size(); ++i) {
       EXPECT_EQ(v_h_z[i], v_h_z_exp[i]);
     }
   }
   // EXPECT_TRUE(false);  // Failed 11/22/2019
   return;
-}  // TEST(default_mesh_Cartesian_mesh, boundary_faces){
+} // TEST(default_mesh_Cartesian_mesh, boundary_faces){
 
-TEST(default_mesh_Cartesian_mesh, linear_to_cartesian)
-{
-  using nut::linear_to_cartesian;
+TEST(default_mesh_Cartesian_mesh, linear_to_cartesian) {
+  using murmeln_mesh::linear_to_cartesian;
   {
     index_t nx = 1;
     index_t ny = 1;
@@ -260,11 +256,10 @@ TEST(default_mesh_Cartesian_mesh, linear_to_cartesian)
   return;
 }
 
-TEST(default_mesh_Cartesian_mesh, cell_to_face)
-{
+TEST(default_mesh_Cartesian_mesh, cell_to_face) {
   {
     Cartesian_Mesh m{the_other_cmi()};
-    Cell c0{0};
+    cell_handle_t c0{0};
     /* First, test face indices of lowest X, Y, and Z faces*/
     {
       Face_Name lx{Cartesian_Mesh::LOW_X};
@@ -287,22 +282,30 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
     // etc.
     index_t max_x{0}, max_y{0};
     index_t min_y{100000}, min_z{100000};
-    for(index_t i = 0; i < m.num_cells(); ++i) {
-      Cell c{i};
+    for (index_t i = 0; i < m.num_cells(); ++i) {
+      cell_handle_t c{i};
       Cartesian_Face flx = m.cell_to_face(c, fn_l_x);
       Cartesian_Face fly = m.cell_to_face(c, fn_l_y);
       Cartesian_Face flz = m.cell_to_face(c, fn_l_z);
       Cartesian_Face fhx = m.cell_to_face(c, fn_h_x);
       Cartesian_Face fhy = m.cell_to_face(c, fn_h_y);
       Cartesian_Face fhz = m.cell_to_face(c, fn_h_z);
-      if(flx.as_id() > max_x) max_x = flx.as_id();
-      if(fhx.as_id() > max_x) max_x = fhx.as_id();
-      if(fly.as_id() > max_y) max_y = fly.as_id();
-      if(fhy.as_id() > max_y) max_y = fhy.as_id();
-      if(fly.as_id() < min_y) min_y = fly.as_id();
-      if(fhy.as_id() < min_y) min_y = fhy.as_id();
-      if(flz.as_id() < min_z) min_z = flz.as_id();
-      if(fhz.as_id() < min_z) min_z = fhz.as_id();
+      if (flx.as_id() > max_x)
+        max_x = flx.as_id();
+      if (fhx.as_id() > max_x)
+        max_x = fhx.as_id();
+      if (fly.as_id() > max_y)
+        max_y = fly.as_id();
+      if (fhy.as_id() > max_y)
+        max_y = fhy.as_id();
+      if (fly.as_id() < min_y)
+        min_y = fly.as_id();
+      if (fhy.as_id() < min_y)
+        min_y = fhy.as_id();
+      if (flz.as_id() < min_z)
+        min_z = flz.as_id();
+      if (fhz.as_id() < min_z)
+        min_z = fhz.as_id();
     }
     EXPECT_TRUE(max_x < min_y);
     EXPECT_TRUE(max_x < min_z);
@@ -317,20 +320,20 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
      * faces as the low face in the cell that's DIM + 1.  */
     index_t n_cells{m.num_cells()};
     index_t const nx = 3, ny = 5;
-    for(index_t i = 0; i < n_cells; ++i) {
-      Cell c{i};
+    for (index_t i = 0; i < n_cells; ++i) {
+      cell_handle_t c{i};
       auto faces = m.get_faces(c);
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-      Cell plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
-      Cartesian_Face f0 = m.cell_to_face(c, fn_l_x);  // low-x
-      Cartesian_Face f1 = m.cell_to_face(c, fn_l_y);  // low-y
-      Cartesian_Face f2 = m.cell_to_face(c, fn_l_z);  // low-z
-      Cartesian_Face f3 = m.cell_to_face(c, fn_h_x);  // high-x
-      Cartesian_Face f4 = m.cell_to_face(c, fn_h_y);  // high-y
-      Cartesian_Face f5 = m.cell_to_face(c, fn_h_z);  // high-z
+      cell_handle_t plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      Cartesian_Face f0 = m.cell_to_face(c, fn_l_x); // low-x
+      Cartesian_Face f1 = m.cell_to_face(c, fn_l_y); // low-y
+      Cartesian_Face f2 = m.cell_to_face(c, fn_l_z); // low-z
+      Cartesian_Face f3 = m.cell_to_face(c, fn_h_x); // high-x
+      Cartesian_Face f4 = m.cell_to_face(c, fn_h_y); // high-y
+      Cartesian_Face f5 = m.cell_to_face(c, fn_h_z); // high-z
       EXPECT_EQ(f0, faces[0]);
       EXPECT_EQ(f1, faces[1]);
       EXPECT_EQ(f2, faces[2]);
@@ -346,7 +349,7 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
     size_t const nx{2u};
     size_t const ny{2u};
     {
-      Cell c0{0};
+      cell_handle_t c0{0};
       auto faces1 = m.get_faces(c0);
       // name those faces!
       EXPECT_EQ(faces1[0].as_id(), 0u);
@@ -355,18 +358,18 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(faces1[3].as_id(), 1u);
       EXPECT_EQ(faces1[4].as_id(), 14u);
       EXPECT_EQ(faces1[5].as_id(), 28u);
-      Cartesian_Face f0 = m.cell_to_face(c0, fn_l_x);  // low-x
-      Cartesian_Face f1 = m.cell_to_face(c0, fn_l_y);  // low-x
-      Cartesian_Face f2 = m.cell_to_face(c0, fn_l_z);  // low-x
+      Cartesian_Face f0 = m.cell_to_face(c0, fn_l_x); // low-x
+      Cartesian_Face f1 = m.cell_to_face(c0, fn_l_y); // low-x
+      Cartesian_Face f2 = m.cell_to_face(c0, fn_l_z); // low-x
       /* the high x face for cell ix is the low-x face for ix + 1, etc. */
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c0.as_id(), nx, ny);
-      Cell plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
-      Cartesian_Face f3 = m.cell_to_face(plus_x_cell, fn_l_x);  // low-x
-      Cartesian_Face f4 = m.cell_to_face(plus_y_cell, fn_l_y);  // low-x
-      Cartesian_Face f5 = m.cell_to_face(plus_z_cell, fn_l_z);  // low-x
+      cell_handle_t plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      Cartesian_Face f3 = m.cell_to_face(plus_x_cell, fn_l_x); // low-x
+      Cartesian_Face f4 = m.cell_to_face(plus_y_cell, fn_l_y); // low-x
+      Cartesian_Face f5 = m.cell_to_face(plus_z_cell, fn_l_z); // low-x
       EXPECT_EQ(f0, faces1[0]);
       EXPECT_EQ(f1, faces1[1]);
       EXPECT_EQ(f2, faces1[2]);
@@ -375,7 +378,7 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(f5, faces1[5]);
     }
     {
-      Cell c1{1};
+      cell_handle_t c1{1};
       auto faces1 = m.get_faces(c1);
       // name those faces!
       EXPECT_EQ(faces1[0].as_id(), 1u);
@@ -384,18 +387,18 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(faces1[3].as_id(), 2u);
       EXPECT_EQ(faces1[4].as_id(), 15u);
       EXPECT_EQ(faces1[5].as_id(), 29u);
-      Cartesian_Face f0 = m.cell_to_face(c1, fn_l_x);  // low-x
-      Cartesian_Face f1 = m.cell_to_face(c1, fn_l_y);  // low-y
-      Cartesian_Face f2 = m.cell_to_face(c1, fn_l_z);  // low-z
+      Cartesian_Face f0 = m.cell_to_face(c1, fn_l_x); // low-x
+      Cartesian_Face f1 = m.cell_to_face(c1, fn_l_y); // low-y
+      Cartesian_Face f2 = m.cell_to_face(c1, fn_l_z); // low-z
       /* the high x face for cell ix is the low-x face for ix + 1, etc. */
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c1.as_id(), nx, ny);
-      Cell plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
-      Cartesian_Face f3 = m.cell_to_face(c1, fn_h_x);  // high-x
-      Cartesian_Face f4 = m.cell_to_face(c1, fn_h_y);  // high-y
-      Cartesian_Face f5 = m.cell_to_face(c1, fn_h_z);  // high-z
+      cell_handle_t plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      Cartesian_Face f3 = m.cell_to_face(c1, fn_h_x); // high-x
+      Cartesian_Face f4 = m.cell_to_face(c1, fn_h_y); // high-y
+      Cartesian_Face f5 = m.cell_to_face(c1, fn_h_z); // high-z
       EXPECT_EQ(f0.as_id(), faces1[0].as_id());
       EXPECT_EQ(f1.as_id(), faces1[1].as_id());
       EXPECT_EQ(f2.as_id(), faces1[2].as_id());
@@ -404,7 +407,7 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(f5.as_id(), faces1[5].as_id());
     }
     {
-      Cell c2{2};
+      cell_handle_t c2{2};
       auto faces1 = m.get_faces(c2);
       // name those faces!
       EXPECT_EQ(faces1[0].as_id(), 3u);
@@ -413,18 +416,18 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(faces1[3].as_id(), 4u);
       EXPECT_EQ(faces1[4].as_id(), 16u);
       EXPECT_EQ(faces1[5].as_id(), 30u);
-      Cartesian_Face f0 = m.cell_to_face(c2, fn_l_x);  // low-x
-      Cartesian_Face f1 = m.cell_to_face(c2, fn_l_y);  // low-y
-      Cartesian_Face f2 = m.cell_to_face(c2, fn_l_z);  // low-z
+      Cartesian_Face f0 = m.cell_to_face(c2, fn_l_x); // low-x
+      Cartesian_Face f1 = m.cell_to_face(c2, fn_l_y); // low-y
+      Cartesian_Face f2 = m.cell_to_face(c2, fn_l_z); // low-z
       /* the high x face for cell ix is the low-x face for ix + 1, etc. */
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c2.as_id(), nx, ny);
-      Cell plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
-      Cartesian_Face f3 = m.cell_to_face(c2, fn_h_x);  // high-x
-      Cartesian_Face f4 = m.cell_to_face(c2, fn_h_y);  // high-y
-      Cartesian_Face f5 = m.cell_to_face(c2, fn_h_z);  // high-z
+      cell_handle_t plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      Cartesian_Face f3 = m.cell_to_face(c2, fn_h_x); // high-x
+      Cartesian_Face f4 = m.cell_to_face(c2, fn_h_y); // high-y
+      Cartesian_Face f5 = m.cell_to_face(c2, fn_h_z); // high-z
       EXPECT_EQ(f0.as_id(), faces1[0].as_id());
       EXPECT_EQ(f1.as_id(), faces1[1].as_id());
       EXPECT_EQ(f2.as_id(), faces1[2].as_id());
@@ -433,7 +436,7 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(f5.as_id(), faces1[5].as_id());
     }
     {
-      Cell c7{7};
+      cell_handle_t c7{7};
       auto faces1 = m.get_faces(c7);
       // name those faces!
       EXPECT_EQ(faces1[0].as_id(), 10u);
@@ -442,18 +445,18 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
       EXPECT_EQ(faces1[3].as_id(), 11u);
       EXPECT_EQ(faces1[4].as_id(), 23u);
       EXPECT_EQ(faces1[5].as_id(), 35u);
-      Cartesian_Face f0 = m.cell_to_face(c7, fn_l_x);  // low-x
-      Cartesian_Face f1 = m.cell_to_face(c7, fn_l_y);  // low-y
-      Cartesian_Face f2 = m.cell_to_face(c7, fn_l_z);  // low-z
+      Cartesian_Face f0 = m.cell_to_face(c7, fn_l_x); // low-x
+      Cartesian_Face f1 = m.cell_to_face(c7, fn_l_y); // low-y
+      Cartesian_Face f2 = m.cell_to_face(c7, fn_l_z); // low-z
       /* the high x face for cell ix is the low-x face for ix + 1, etc. */
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c7.as_id(), nx, ny);
-      Cell plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
-      Cartesian_Face f3 = m.cell_to_face(c7, fn_h_x);  // high-x
-      Cartesian_Face f4 = m.cell_to_face(c7, fn_h_y);  // high-y
-      Cartesian_Face f5 = m.cell_to_face(c7, fn_h_z);  // high-z
+      cell_handle_t plus_x_cell{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t plus_y_cell{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t plus_z_cell{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      Cartesian_Face f3 = m.cell_to_face(c7, fn_h_x); // high-x
+      Cartesian_Face f4 = m.cell_to_face(c7, fn_h_y); // high-y
+      Cartesian_Face f5 = m.cell_to_face(c7, fn_h_z); // high-z
       EXPECT_EQ(f0.as_id(), faces1[0].as_id());
       EXPECT_EQ(f1.as_id(), faces1[1].as_id());
       EXPECT_EQ(f2.as_id(), faces1[2].as_id());
@@ -463,108 +466,107 @@ TEST(default_mesh_Cartesian_mesh, cell_to_face)
     }
   }
   return;
-}  // cell_to_face
+} // cell_to_face
 
-TEST(default_mesh_Cartesian_mesh, face_to_cell)
-{
+TEST(default_mesh_Cartesian_mesh, face_to_cell) {
   {
     Cartesian_Mesh m{one_cell_cmi()};
 
     index_t const nx = 1, ny = 1;
-    // for (index_t i = 0; i < n_cells; ++i) {
     for(index_t i = 0; i < 1; ++i) {
-      Cell c{i};
+      cell_handle_t c{i};
       auto faces = m.get_faces(c);
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-      Cell c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      cell_handle_t c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
 
-      Cell c0 = m.face_to_cell(faces[0]);
+      cell_handle_t c0 = m.face_to_cell(faces[0]);
       // EXPECT_EQ(faces[0].as_id(), 0u);
       EXPECT_EQ(c0.as_id(), c.as_id());
-      Cell c1 = m.face_to_cell(faces[1]);
+      cell_handle_t c1 = m.face_to_cell(faces[1]);
       EXPECT_EQ(c1.as_id(), c.as_id());
-      Cell c2 = m.face_to_cell(faces[2]);
+      cell_handle_t c2 = m.face_to_cell(faces[2]);
       EXPECT_EQ(c2.as_id(), c.as_id());
-      Cell c3 = m.face_to_cell(faces[3]);
+      cell_handle_t c3 = m.face_to_cell(faces[3]);
       EXPECT_EQ(c3.as_id(), c3_exp.as_id());
-      Cell c4 = m.face_to_cell(faces[4]);
+      cell_handle_t c4 = m.face_to_cell(faces[4]);
       EXPECT_EQ(c4.as_id(), c4_exp.as_id());
-      Cell c5 = m.face_to_cell(faces[5]);
+      cell_handle_t c5 = m.face_to_cell(faces[5]);
       EXPECT_EQ(c5.as_id(), c5_exp.as_id());
-    }  // for(index_t i = 0; i < 1; ++i)
-  }    // scope: one cell cartesian mesh iface
+    } // for(index_t i = 0; i < 1; ++i)
+  }   // scope: one cell cartesian mesh iface
   {
     Cartesian_Mesh m{eight_cell_cmi()};
 
     index_t const nx = 2, ny = 2;
-    for(index_t i = 0; i < 1; ++i) {
-      Cell c{i};
+    // for (index_t i = 0; i < n_cells; ++i) {
+    for (index_t i = 0; i < 1; ++i) {
+      cell_handle_t c{i};
       auto faces = m.get_faces(c);
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-      Cell c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      cell_handle_t c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
 
-      Cell c0 = m.face_to_cell(faces[0]);
+      cell_handle_t c0 = m.face_to_cell(faces[0]);
       // EXPECT_EQ(faces[0].as_id(), 0u);
       EXPECT_EQ(c0.as_id(), c.as_id());
-      Cell c1 = m.face_to_cell(faces[1]);
+      cell_handle_t c1 = m.face_to_cell(faces[1]);
       EXPECT_EQ(c1.as_id(), c.as_id());
-      Cell c2 = m.face_to_cell(faces[2]);
+      cell_handle_t c2 = m.face_to_cell(faces[2]);
       EXPECT_EQ(c2.as_id(), c.as_id());
-      Cell c3 = m.face_to_cell(faces[3]);
+      cell_handle_t c3 = m.face_to_cell(faces[3]);
       EXPECT_EQ(c3.as_id(), c3_exp.as_id());
-      Cell c4 = m.face_to_cell(faces[4]);
+      cell_handle_t c4 = m.face_to_cell(faces[4]);
       EXPECT_EQ(c4.as_id(), c4_exp.as_id());
-      Cell c5 = m.face_to_cell(faces[5]);
+      cell_handle_t c5 = m.face_to_cell(faces[5]);
       EXPECT_EQ(c5.as_id(), c5_exp.as_id());
-    }  // for(index_t i = 0; i < 1; ++i)
-  }    // scope: eight cell cartesian mesh iface
+    } // for(index_t i = 0; i < 1; ++i)
+  }   // scope: eight cell cartesian mesh iface
   {
     Cartesian_Mesh m{the_other_cmi()};
 
     index_t const nx = 3, ny = 5;
-    for(index_t i = 0; i < 1; ++i) {
-      Cell c{i};
+    // for (index_t i = 0; i < n_cells; ++i) {
+    for (index_t i = 0; i < 1; ++i) {
+      cell_handle_t c{i};
       auto faces = m.get_faces(c);
-      index_t ix, iy, iz;  // Intel doesn't do structured init til I18
+      index_t ix, iy, iz; // Intel doesn't do structured init til I18
       std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-      Cell c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
-      Cell c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
-      Cell c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
+      cell_handle_t c3_exp{cartesian_to_linear(ix + 1, iy, iz, nx, ny)};
+      cell_handle_t c4_exp{cartesian_to_linear(ix, iy + 1, iz, nx, ny)};
+      cell_handle_t c5_exp{cartesian_to_linear(ix, iy, iz + 1, nx, ny)};
 
-      Cell c0 = m.face_to_cell(faces[0]);
+      cell_handle_t c0 = m.face_to_cell(faces[0]);
       // EXPECT_EQ(faces[0].as_id(), 0u);
       EXPECT_EQ(c0.as_id(), c.as_id());
-      Cell c1 = m.face_to_cell(faces[1]);
+      cell_handle_t c1 = m.face_to_cell(faces[1]);
       EXPECT_EQ(c1.as_id(), c.as_id());
-      Cell c2 = m.face_to_cell(faces[2]);
+      cell_handle_t c2 = m.face_to_cell(faces[2]);
       EXPECT_EQ(c2.as_id(), c.as_id());
-      Cell c3 = m.face_to_cell(faces[3]);
+      cell_handle_t c3 = m.face_to_cell(faces[3]);
       EXPECT_EQ(c3.as_id(), c3_exp.as_id());
-      Cell c4 = m.face_to_cell(faces[4]);
+      cell_handle_t c4 = m.face_to_cell(faces[4]);
       EXPECT_EQ(c4.as_id(), c4_exp.as_id());
-      Cell c5 = m.face_to_cell(faces[5]);
+      cell_handle_t c5 = m.face_to_cell(faces[5]);
       EXPECT_EQ(c5.as_id(), c5_exp.as_id());
-    }  // for(index_t i = 0; i < 1; ++i)
-  }    // scope: 105 cell cartesian mesh iface
+    } // for(index_t i = 0; i < 1; ++i)
+  }   // scope: 105 cell cartesian mesh iface
   return;
-}  // face_to_cell
+} // face_to_cell
 
 /* This is just a smaller version of the original instantiate test (below)
  * ... less to read in the error reporting :) */
-TEST(default_mesh_Cartesian_mesh, instantiate_tiny)
-{
+TEST(default_mesh_Cartesian_mesh, instantiate_tiny) {
   index_t const nx = 2, ny = 2, nz = 2;
   index_t const n_yz_faces(num_yz_faces(nx, ny, nz));
   index_t const n_xz_faces(num_xz_faces(nx, ny, nz));
   Cartesian_Mesh m(nx, ny, nz);
   index_t exp_n_cells = nx * ny * nz;
-  auto & cells = m.cells();
+  auto &cells = m.cells();
   EXPECT_EQ(cells.size(), exp_n_cells);
 
   // offsets in face arrays
@@ -572,22 +574,22 @@ TEST(default_mesh_Cartesian_mesh, instantiate_tiny)
   index_t const vertex_offset_y = nx + 1;
   index_t const vertex_offset_z = (nx + 1) * (ny + 1);
 
-  auto valid_cell = [&cells](Cell const & c) {
+  auto valid_cell = [&cells](cell_handle_t const &c) {
     return cells.find(c) != cells.end();
   };
 
-  for(index_t i = 0; i < 1; ++i) {
+  for (index_t i = 0; i < 1; ++i) {
     // We expect each cell from [0,n_cells) to be in the mesh and no others
-    Cell c(i);
+    cell_handle_t c(i);
     bool c_ok(valid_cell(c));
     EXPECT_TRUE(c_ok);
-    if(!c_ok) {
-      printf("%s:%i cell %u not ok\n", __FUNCTION__, __LINE__, c.as_id());
-    }
+    // if (!c_ok) {
+    //   printf("%s:%i cell %lu not ok\n", __FUNCTION__, __LINE__, c.as_id());
+    // }
     // Each cell should have the six neighbor faces you'd expect. This is
     // reimplementing the logic in Mesh.h ll. 157-66, and 177-80. If those
     // change, this needs to change.
-    auto & faces = m.get_faces(c);
+    auto &faces = m.get_faces(c);
     EXPECT_EQ(faces.size(), 6u);
     // The first face should have the same value as the cell index
     EXPECT_EQ(c.as_id(), faces[0].as_id());
@@ -610,7 +612,7 @@ TEST(default_mesh_Cartesian_mesh, instantiate_tiny)
     EXPECT_EQ(plus_z_cell + n_yz_faces + n_xz_faces, faces[5].as_id());
 
     // same thing for vertices
-    auto & vs = m.get_vertices(c);
+    auto &vs = m.get_vertices(c);
     EXPECT_EQ(vs.size(), 8u);
     // vertices just have the same numbering as the cell that "owns" each
     // vertex. That is, they aren't 'striped' the way faces are.
@@ -627,17 +629,16 @@ TEST(default_mesh_Cartesian_mesh, instantiate_tiny)
               vs[7].as_id());
   }
   return;
-}  // TEST(default_mesh_Cartesian_mesh, instantiate_tiny) {
+} // TEST(default_mesh_Cartesian_mesh, instantiate_tiny) {
 
-TEST(default_mesh_Cartesian_mesh, instantiate)
-{
+TEST(default_mesh_Cartesian_mesh, instantiate) {
   {
     index_t const nx = 5, ny = 3, nz = 2;
     index_t const n_yz_faces(num_yz_faces(nx, ny, nz));
     index_t const n_xz_faces(num_xz_faces(nx, ny, nz));
     index_t exp_n_cells = nx * ny * nz;
     Cartesian_Mesh m(nx, ny, nz);
-    auto & cells = m.cells();
+    auto &cells = m.cells();
     EXPECT_EQ(cells.size(), exp_n_cells);
 
     // offsets in face arrays
@@ -645,20 +646,20 @@ TEST(default_mesh_Cartesian_mesh, instantiate)
     index_t const vertex_offset_y = nx + 1;
     index_t const vertex_offset_z = (nx + 1) * (ny + 1);
 
-    auto valid_cell = [&cells](Cell const & c) {
+    auto valid_cell = [&cells](cell_handle_t const &c) {
       return cells.find(c) != cells.end();
     };
 
-    for(index_t i = 0; i < exp_n_cells; ++i) {
+    for (index_t i = 0; i < exp_n_cells; ++i) {
       // We expect each cell from [0,n_cells) to be in the mesh and no others
-      Cell c(i);
+      cell_handle_t c(i);
       bool c_ok(valid_cell(c));
       EXPECT_TRUE(c_ok);
-      if(!c_ok) {
-        printf("%s:%i cell %u not ok\n", __FUNCTION__, __LINE__, c.as_id());
-      }
+      // if (!c_ok) {
+      //   printf("%s:%i cell %lu not ok\n", __FUNCTION__, __LINE__, c.as_id());
+      // }
       // Assert that each cell should have the six neighbor faces you'd expect.
-      auto & faces = m.get_faces(c);
+      auto &faces = m.get_faces(c);
       EXPECT_EQ(faces.size(), 6u);
       // Faces are numbered as if they belong to a mesh that is one greater
       // than the number of cells in that dimension.
@@ -666,11 +667,12 @@ TEST(default_mesh_Cartesian_mesh, instantiate)
       std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
       index_t c0_eff = cartesian_to_linear(ix, iy, iz, (nx + 1), ny);
       bool f0_ok{c0_eff == faces[0].as_id()};
-      if(!f0_ok) {
+      if (!f0_ok) {
         index_t ix, iy, iz;
         std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-        printf("%s:%i ix=%u, iy=%u, iz=%u, cell_id = %u, f0 = %u\n",
-               __FUNCTION__, __LINE__, ix, iy, iz, c.as_id(), faces[0].as_id());
+        // printf("%s:%i ix=%lu, iy=%lu, iz=%lu, cell_id = %llu, f0 = %llu\n",
+        //        __FUNCTION__, __LINE__, ix, iy, iz, c.as_id(),
+        //        faces[0].as_id());
       }
       EXPECT_TRUE(f0_ok);
       // The next face should be the XZ plane above, it should be
@@ -685,7 +687,7 @@ TEST(default_mesh_Cartesian_mesh, instantiate)
       index_t c5_eff = cartesian_to_linear(ix, iy, iz + 1, nx, ny);
       EXPECT_EQ(c5_eff + n_yz_faces + n_xz_faces, faces[5].as_id());
       // similar thing for vertices
-      auto & vs = m.get_vertices(c);
+      auto &vs = m.get_vertices(c);
       EXPECT_EQ(vs.size(), 8u);
       // vertices just have the same numbering as the cell that "owns" each
       // vertex. That is, they aren't 'striped' the way faces are.
@@ -700,13 +702,12 @@ TEST(default_mesh_Cartesian_mesh, instantiate)
       EXPECT_EQ(vid + vertex_offset_y + vertex_offset_z, vs[6].as_id());
       EXPECT_EQ(vid + vertex_offset_x + vertex_offset_y + vertex_offset_z,
                 vs[7].as_id());
-    }  // for c in cells
-  }    // scope 5x3x2 mesh
+    } // for c in cells
+  }   // scope 5x3x2 mesh
   return;
-}  // TEST(default_mesh_Cartesian_mesh,instantiate){
+} // TEST(default_mesh_Cartesian_mesh,instantiate){
 
-TEST(default_mesh_Cartesian_mesh, num_faces)
-{
+TEST(default_mesh_Cartesian_mesh, num_faces) {
   index_t nx = 5, ny = 3, nz = 2;
   index_t exp_n_xy_faces = 45;
   index_t n_xy_faces = num_xy_faces(nx, ny, nz);
@@ -719,8 +720,7 @@ TEST(default_mesh_Cartesian_mesh, num_faces)
   EXPECT_EQ(n_xz_faces, exp_n_xz_faces);
 }
 
-TEST(default_mesh_Cartesian_mesh, cartesian_to_linear)
-{
+TEST(default_mesh_Cartesian_mesh, cartesian_to_linear) {
   /* Case 1: nx = 5, ny = 3, nz = 2 */
   {
     index_t nx = 5, ny = 3;
@@ -733,7 +733,7 @@ TEST(default_mesh_Cartesian_mesh, cartesian_to_linear)
     EXPECT_EQ(ix, exp_ix);
     EXPECT_EQ(iy, exp_iy);
     EXPECT_EQ(iz, exp_iz);
-  }  // scope
+  } // scope
   {
     index_t nx = 5, ny = 3;
     index_t ix = 1, iy = 0, iz = 0;
@@ -745,7 +745,7 @@ TEST(default_mesh_Cartesian_mesh, cartesian_to_linear)
     EXPECT_EQ(ix, exp_ix);
     EXPECT_EQ(iy, exp_iy);
     EXPECT_EQ(iz, exp_iz);
-  }  // scope
+  } // scope
   {
     index_t nx = 5, ny = 3;
     index_t ix = 4, iy = 1, iz = 1;
@@ -757,7 +757,7 @@ TEST(default_mesh_Cartesian_mesh, cartesian_to_linear)
     EXPECT_EQ(ix, exp_ix);
     EXPECT_EQ(iy, exp_iy);
     EXPECT_EQ(iz, exp_iz);
-  }  // scope
+  } // scope
   {
     index_t nx = 5, ny = 3;
     index_t ix = 4, iy = 2, iz = 1;
@@ -769,18 +769,17 @@ TEST(default_mesh_Cartesian_mesh, cartesian_to_linear)
     EXPECT_EQ(ix, exp_ix);
     EXPECT_EQ(iy, exp_iy);
     EXPECT_EQ(iz, exp_iz);
-  }  // scope
-}  // TEST(default_mesh,cartesian_to_linear){
+  } // scope
+} // TEST(default_mesh,cartesian_to_linear){
 
-TEST(default_mesh_Cartesian_mesh, get_extents)
-{
+TEST(default_mesh_Cartesian_mesh, get_extents) {
   {
     index_t const nx = 5, ny = 3, nz = 2;
     Cartesian_Mesh m(nx, ny, nz);
     // check x extents
-    for(index_t i = 0; i < nx; ++i) {
+    for (index_t i = 0; i < nx; ++i) {
       index_t idx = cartesian_to_linear(i, 0, 0, nx, ny);
-      auto [x_lo, x_hi] = m.get_x_extents(Cell(idx));
+      auto [x_lo, x_hi] = m.get_x_extents(cell_handle_t(idx));
       geom_t x_lo_exp = static_cast<double>(i);
       geom_t x_hi_exp = static_cast<double>(i + 1);
       bool x_lo_ok = soft_equiv_os(x_lo, x_lo_exp, "x_lo");
@@ -788,9 +787,9 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
       EXPECT_TRUE(x_lo_ok);
       EXPECT_TRUE(x_hi_ok);
     }
-    for(index_t i = 0; i < ny; ++i) {
+    for (index_t i = 0; i < ny; ++i) {
       index_t idx = cartesian_to_linear(0, i, 0, nx, ny);
-      auto [y_lo, y_hi] = m.get_y_extents(Cell(idx));
+      auto [y_lo, y_hi] = m.get_y_extents(cell_handle_t(idx));
       geom_t y_lo_exp = static_cast<double>(i);
       geom_t y_hi_exp = static_cast<double>(i + 1);
       bool y_lo_ok = soft_equiv_os(y_lo, y_lo_exp, "y_lo");
@@ -798,9 +797,9 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
       EXPECT_TRUE(y_lo_ok);
       EXPECT_TRUE(y_hi_ok);
     }
-    for(index_t i = 0; i < nz; ++i) {
+    for (index_t i = 0; i < nz; ++i) {
       index_t idx = cartesian_to_linear(0, 0, i, nx, ny);
-      auto [z_lo, z_hi] = m.get_z_extents(Cell(idx));
+      auto [z_lo, z_hi] = m.get_z_extents(cell_handle_t(idx));
       geom_t z_lo_exp = static_cast<double>(i);
       geom_t z_hi_exp = static_cast<double>(i + 1);
       bool z_lo_ok = soft_equiv_os(z_lo, z_lo_exp, "z_lo");
@@ -815,9 +814,9 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
     geom_t dx = 2.0, dy = 3.0, dz = 4.0;
     Cartesian_Mesh m(nx, ny, nz, dx, dy, dz);
     // check x extents
-    for(index_t i = 0; i < nx; ++i) {
+    for (index_t i = 0; i < nx; ++i) {
       index_t idx = cartesian_to_linear(i, 0, 0, nx, ny);
-      auto [x_lo, x_hi] = m.get_x_extents(Cell(idx));
+      auto [x_lo, x_hi] = m.get_x_extents(cell_handle_t(idx));
       geom_t x_lo_exp = 2.0 * static_cast<double>(i);
       geom_t x_hi_exp = 2.0 * static_cast<double>(i + 1);
       bool x_lo_ok = soft_equiv_os(x_lo, x_lo_exp, "x_lo");
@@ -825,9 +824,9 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
       EXPECT_TRUE(x_lo_ok);
       EXPECT_TRUE(x_hi_ok);
     }
-    for(index_t i = 0; i < ny; ++i) {
+    for (index_t i = 0; i < ny; ++i) {
       index_t idx = cartesian_to_linear(0, i, 0, nx, ny);
-      auto [y_lo, y_hi] = m.get_y_extents(Cell(idx));
+      auto [y_lo, y_hi] = m.get_y_extents(cell_handle_t(idx));
       geom_t y_lo_exp = 3.0 * static_cast<double>(i);
       geom_t y_hi_exp = 3.0 * static_cast<double>(i + 1);
       bool y_lo_ok = soft_equiv_os(y_lo, y_lo_exp, "y_lo");
@@ -835,9 +834,9 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
       EXPECT_TRUE(y_lo_ok);
       EXPECT_TRUE(y_hi_ok);
     }
-    for(index_t i = 0; i < nz; ++i) {
+    for (index_t i = 0; i < nz; ++i) {
       index_t idx = cartesian_to_linear(0, 0, i, nx, ny);
-      auto [z_lo, z_hi] = m.get_z_extents(Cell(idx));
+      auto [z_lo, z_hi] = m.get_z_extents(cell_handle_t(idx));
       geom_t z_lo_exp = 4.0 * static_cast<double>(i);
       geom_t z_hi_exp = 4.0 * static_cast<double>(i + 1);
       bool z_lo_ok = soft_equiv_os(z_lo, z_lo_exp, "z_lo");
@@ -847,16 +846,18 @@ TEST(default_mesh_Cartesian_mesh, get_extents)
     }
   }
   return;
-}  // TEST(default_mesh,get_extents)
+} // TEST(default_mesh,get_extents)
 
-TEST(default_mesh_Cartesian_mesh, in_cell)
-{
+TEST(default_mesh_Cartesian_mesh, in_cell) {
+  Vector const dir{1.0, 0.0, 0.0};
+  cell_handle_t c{1};
+  auto ray = [&](Vector const &v) { return geometron{Ray{v, dir}, c}; };
   {
     index_t const nx = 1, ny = 1, nz = 1;
     Cartesian_Mesh const m(nx, ny, nz);
-    Cell c{0};
+    cell_handle_t c{0};
     Vector const v1{0.5, 0.5, 0.5};
-    bool const v1_ok = m.in_cell(v1, c);
+    bool const v1_ok = m.in_cell(ray(v1), c);
     EXPECT_TRUE(v1_ok);
 
     // in cell if on a lower boundary
@@ -876,7 +877,7 @@ TEST(default_mesh_Cartesian_mesh, in_cell)
     geom_t const xmin = 0.2, ymin = 0.0, zmin = -1.0;
     Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
     Vector const v1{0.15, 0.5, 0.5};
-    Cell const c0{0};
+    cell_handle_t const c0{0};
     bool const v1_ok{m.in_cell(v1, c0)};
     EXPECT_FALSE(v1_ok);
 
@@ -885,18 +886,17 @@ TEST(default_mesh_Cartesian_mesh, in_cell)
     EXPECT_TRUE(v2_ok);
 
     Vector const v3{0.15, 0.5, 2.300000001};
-    Cell const c6{6};
+    cell_handle_t const c6{6};
     bool const v3_ok{m.in_cell(v3, c6)};
     EXPECT_FALSE(v3_ok);
   }
-}  // TEST(default_mesh_Cartesian_mesh,in_cell)
+} // TEST(default_mesh_Cartesian_mesh,in_cell)
 
-TEST(default_mesh_Cartesian_mesh, intersection)
-{
+TEST(default_mesh_Cartesian_mesh, intersection) {
   {
     index_t const nx = 1, ny = 1, nz = 1;
     Cartesian_Mesh const m(nx, ny, nz);
-    Cell const c{0};
+    cell_handle_t const c{0};
 
     // Headed toward HIGH_X
     Ray const r1{{0.5, 0.5, 0.5}, {1.0, 0.0, 0.0}};
@@ -966,42 +966,41 @@ TEST(default_mesh_Cartesian_mesh, intersection)
     EXPECT_TRUE(f11 == Cartesian_Face(1));
     EXPECT_TRUE(soft_equiv_os(d11, s2 / 2.0, "distance to face (11)"));
   }
-}  // TEST(default_mesh_Cartesian_mesh,intersection)
+} // TEST(default_mesh_Cartesian_mesh,intersection)
 
 // Here is a list of randomly generated tests for example 2 in the next test
 size_t constexpr n_example2_points{20};
 extern const std::tuple<index_t, index_t, index_t, Cartesian_Mesh::Point>
     example2_points[n_example2_points];
 
-size_t constexpr n_example3_points{300};
+size_t constexpr n_example3_points_a{300};
 extern const std::tuple<index_t, index_t, index_t, Cartesian_Mesh::Point>
-    example3_points[n_example3_points];
+    example3_points_a[n_example3_points_a];
 
-TEST(default_mesh_Cartesian_mesh, find_cell)
-{
+TEST(default_mesh_Cartesian_mesh, find_cell) {
   // example one: one cell mesh
   {
     index_t const nx = 1, ny = 1, nz = 1;
     Cartesian_Mesh const m(nx, ny, nz);
-    Cell c0{0};
+    cell_handle_t c0{0};
     Point p1{0.25, 0.25, 0.25};
     auto c1{m.find_cell(p1)};
     EXPECT_TRUE(m.in_cell(p1, c1));
-    EXPECT_EQ(c1, Cell(0));
+    EXPECT_EQ(c1, cell_handle_t(0));
 
     Point p2{0.0, 0.0, 0.0};
     auto c2{m.find_cell(p2)};
     EXPECT_TRUE(m.in_cell(p2, c2));
-    EXPECT_EQ(c2, Cell(0));
+    EXPECT_EQ(c2, cell_handle_t(0));
 
-  }  // scope (one-cell mesh)
+  } // scope (one-cell mesh)
   // example two: two cell mesh
   {
     index_t const nx = 1, ny = 1, nz = 2;
     geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
     geom_t const xmin = 0.0, ymin = 0.0, zmin = -1.0;
     Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
-    Cell const c0{0}, c1{1};
+    cell_handle_t const c0{0}, c1{1};
     Point const p1{0.25, 0.25, 0.25};
     auto const result1{m.find_cell(p1)};
     EXPECT_TRUE(m.in_cell(p1, result1));
@@ -1014,97 +1013,95 @@ TEST(default_mesh_Cartesian_mesh, find_cell)
     EXPECT_TRUE(m.in_cell(p2, c1));
     EXPECT_EQ(result2, c1);
 
-    for(size_t i = 0; i < n_example2_points; ++i) {
+    for (size_t i = 0; i < n_example2_points; ++i) {
       auto [ix, iy, iz, p] = example2_points[i];
-      Cell expected_cell{m.make_cell(ix, iy, iz)};
+      cell_handle_t expected_cell{m.make_cell(ix, iy, iz)};
       auto const result{m.find_cell(p)};
       EXPECT_TRUE(m.in_cell(p, result));
       EXPECT_TRUE(m.in_cell(p, expected_cell));
       EXPECT_EQ(result, expected_cell);
     }
-  }  // scope (two-cell mesh)
+  } // scope (two-cell mesh)
   // example 3: many cell mesh
   {
     index_t const nx = 2, ny = 3, nz = 5;
     geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
     geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
     Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
-    for(size_t i = 0; i < n_example3_points; ++i) {
-      auto [ix, iy, iz, p] = example3_points[i];
-      Cell expected_cell{m.make_cell(ix, iy, iz)};
+    for (size_t i = 0; i < n_example3_points_a; ++i) {
+      auto [ix, iy, iz, p] = example3_points_a[i];
+      cell_handle_t expected_cell{m.make_cell(ix, iy, iz)};
       auto const result{m.find_cell(p)};
       EXPECT_TRUE(m.in_cell(p, result));
       EXPECT_TRUE(m.in_cell(p, expected_cell));
       EXPECT_EQ(result, expected_cell);
     }
   }
-}  // TEST(default_mesh_Cartesian_mesh,find_cell)
+} // TEST(default_mesh_Cartesian_mesh,find_cell)
 
-TEST(default_mesh_Cartesian_mesh, cell_across)
-{
+TEST(default_mesh_Cartesian_mesh, cell_across) {
   {
     index_t const nx = 3, ny = 5, nz = 7;
     geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
     geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
     Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
     Cartesian_Mesh::Point punused{0.0, 0.0, 0.0};
-    Cell const & null_cell = Cartesian_Mesh::null_cell();
-    auto run_test = [&](Cell const & cin, Cartesian_Face const & f,
-                        Cell const & cexp, const char * name) {
+    cell_handle_t const &null_cell = Cartesian_Mesh::null_cell();
+    auto run_test = [&](cell_handle_t const &cin, Cartesian_Face const &f,
+                        cell_handle_t const &cexp, const char *name) {
       SCOPED_TRACE(name);
-      Cell ca = m.cell_across(cin, f, punused);
+      cell_handle_t ca = m.cell_across(cin, f, punused);
       EXPECT_EQ(ca, cexp);
     };
     {
-      Cell c0{0};
+      cell_handle_t c0{0};
       run_test(c0, f_l_x, null_cell, "c0 low x");
       run_test(c0, f_l_y, null_cell, "c0 low y");
       run_test(c0, f_l_z, null_cell, "c0 low z");
-      run_test(c0, f_h_x, Cell{1}, "c0 high x");
-      run_test(c0, f_h_y, Cell{3}, "c0 high y");
-      run_test(c0, f_h_z, Cell{15}, "c0 high z");
+      run_test(c0, f_h_x, cell_handle_t{1}, "c0 high x");
+      run_test(c0, f_h_y, cell_handle_t{3}, "c0 high y");
+      run_test(c0, f_h_z, cell_handle_t{15}, "c0 high z");
     }
     {
-      Cell c4{4};
-      run_test(c4, f_l_x, Cell{3}, "c4 low x");
-      run_test(c4, f_l_y, Cell{1}, "c4 low y");
+      cell_handle_t c4{4};
+      run_test(c4, f_l_x, cell_handle_t{3}, "c4 low x");
+      run_test(c4, f_l_y, cell_handle_t{1}, "c4 low y");
       run_test(c4, f_l_z, null_cell, "c4 low z");
-      run_test(c4, f_h_x, Cell{5}, "c4 high x");
-      run_test(c4, f_h_y, Cell{7}, "c4 high y");
-      run_test(c4, f_h_z, Cell{19}, "c4 high z");
+      run_test(c4, f_h_x, cell_handle_t{5}, "c4 high x");
+      run_test(c4, f_h_y, cell_handle_t{7}, "c4 high y");
+      run_test(c4, f_h_z, cell_handle_t{19}, "c4 high z");
     }
     {
-      Cell c19{19};
-      run_test(c19, f_l_x, Cell{18}, "c19 low x");
-      run_test(c19, f_l_y, Cell{16}, "c19 low y");
-      run_test(c19, f_l_z, Cell{4}, "c19 low z");
-      run_test(c19, f_h_x, Cell{20}, "c19 high x");
-      run_test(c19, f_h_y, Cell{22}, "c19 high y");
-      run_test(c19, f_h_z, Cell{34}, "c19 high z");
+      cell_handle_t c19{19};
+      run_test(c19, f_l_x, cell_handle_t{18}, "c19 low x");
+      run_test(c19, f_l_y, cell_handle_t{16}, "c19 low y");
+      run_test(c19, f_l_z, cell_handle_t{4}, "c19 low z");
+      run_test(c19, f_h_x, cell_handle_t{20}, "c19 high x");
+      run_test(c19, f_h_y, cell_handle_t{22}, "c19 high y");
+      run_test(c19, f_h_z, cell_handle_t{34}, "c19 high z");
     }
     {
-      Cell c104{104};
-      run_test(c104, f_l_x, Cell{103}, "c104 low x");
-      run_test(c104, f_l_y, Cell{101}, "c104 low y");
-      run_test(c104, f_l_z, Cell{89}, "c104 low z");
+      cell_handle_t c104{104};
+      run_test(c104, f_l_x, cell_handle_t{103}, "c104 low x");
+      run_test(c104, f_l_y, cell_handle_t{101}, "c104 low y");
+      run_test(c104, f_l_z, cell_handle_t{89}, "c104 low z");
       run_test(c104, f_h_x, null_cell, "c104 high x");
       run_test(c104, f_h_y, null_cell, "c104 high y");
       run_test(c104, f_h_z, null_cell, "c104 high z");
     }
   }
   return;
-}  // TEST(default_mesh_Cartesian_mesh,cell_across)
+} // TEST(default_mesh_Cartesian_mesh,cell_across)
 
-TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_3_cell_line)
-{
+TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_3_cell_line) {
   index_t const nx = 1, ny = 3, nz = 1;
   // geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   // geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
   Cartesian_Mesh const m(nx, ny, nz);
 
   {
-    Cell c0{0};
-    auto const & faces{m.get_faces(c0)};
+    cell_handle_t c0{0};
+    auto const &faces{m.get_faces(c0)};
     // per face, only the high-y is not a boundary face in this cell
     EXPECT_TRUE(m.is_boundary(faces[0]));
     EXPECT_TRUE(m.is_boundary(faces[1]));
@@ -1114,8 +1111,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_3_cell_line)
     EXPECT_TRUE(m.is_boundary(faces[5]));
   }
   {
-    Cell c1{1};
-    auto const & faces{m.get_faces(c1)};
+    cell_handle_t c1{1};
+    auto const &faces{m.get_faces(c1)};
     // per face, only the low-y & high-y are not a boundary face in this cell
     EXPECT_TRUE(m.is_boundary(faces[0]));
     EXPECT_FALSE(m.is_boundary(faces[1]));
@@ -1125,8 +1122,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_3_cell_line)
     EXPECT_TRUE(m.is_boundary(faces[5]));
   }
   {
-    Cell c2{2};
-    auto const & faces{m.get_faces(c2)};
+    cell_handle_t c2{2};
+    auto const &faces{m.get_faces(c2)};
     // per face, only the low-y is not a boundary face in this cell
     EXPECT_TRUE(m.is_boundary(faces[0]));
     EXPECT_FALSE(m.is_boundary(faces[1]));
@@ -1138,27 +1135,28 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_3_cell_line)
   return;
 }
 
-TEST(default_mesh_Cartesian_mesh, is_boundary_cell_large_mesh)
-{
+TEST(default_mesh_Cartesian_mesh, is_boundary_cell_large_mesh) {
+
   index_t const nx = 3, ny = 5, nz = 7;
   // geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   // geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
   Cartesian_Mesh const m(nx, ny, nz /*, dx, dy, dz, xmin, ymin, zmin*/);
 
   // interior cells: is_boundary false
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
-      for(index_t ix = 1; ix < (nx - 1); ++ix) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
+      for (index_t ix = 1; ix < (nx - 1); ++ix) {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << iy << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
+        // index_t cidx = cartesian_to_linear(ix, iy, iz, nx, ny);
       }
     }
   }
 
   // exterior cells: is_boundary is true
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
       {
         std::stringstream serr;
         serr << "ix = " << 0 << ", iy = " << iy << ", iz = " << iz;
@@ -1171,8 +1169,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_large_mesh)
       }
     }
   }
-  for(index_t ix = 1; ix < (nx - 1); ++ix) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
+  for (index_t ix = 1; ix < (nx - 1); ++ix) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
       {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << iy << ", iz = " << 0;
@@ -1185,8 +1183,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_large_mesh)
       }
     }
   }
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t ix = 1; ix < (nx - 1); ++ix) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t ix = 1; ix < (nx - 1); ++ix) {
       {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << 0 << ", iz = " << iz;
@@ -1200,41 +1198,42 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_large_mesh)
     }
   }
   return;
-}  // TEST(default_mesh_Cartesian_mesh,is_boundary)
+} // TEST(default_mesh_Cartesian_mesh,is_boundary)
 
-TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
-{
+TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh) {
   index_t const nx = 3, ny = 5, nz = 7;
   geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
   geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
   Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
 
   // interior cells: is_boundary false
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
-      for(index_t ix = 1; ix < (nx - 1); ++ix) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
+      for (index_t ix = 1; ix < (nx - 1); ++ix) {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << iy << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(ix, iy, iz, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
-        for(auto & f : faces) { EXPECT_FALSE(m.is_boundary(f)); }
-      }  // for ix
-    }    // for iy
-  }      // for iz
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
+        for (auto &f : faces) {
+          EXPECT_FALSE(m.is_boundary(f));
+        }
+      } // for ix
+    }   // for iy
+  }     // for iz
 
   // boundary cells: is_boundary is true for some, false for others
   // low-x & high-x faces
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
       {
         std::stringstream serr;
         serr << "ix = " << 0 << ", iy = " << iy << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(0, iy, iz, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_TRUE(m.is_boundary(faces[0]));
         EXPECT_FALSE(m.is_boundary(faces[1]));
         EXPECT_FALSE(m.is_boundary(faces[2]));
@@ -1247,8 +1246,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         serr << "ix = " << (nx - 1) << ", iy = " << iy << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear((nx - 1), iy, iz, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_FALSE(m.is_boundary(faces[0]));
         EXPECT_FALSE(m.is_boundary(faces[1]));
         EXPECT_FALSE(m.is_boundary(faces[2]));
@@ -1256,18 +1255,18 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         EXPECT_FALSE(m.is_boundary(faces[4]));
         EXPECT_FALSE(m.is_boundary(faces[5]));
       }
-    }  // for iy
-  }    // for iz
+    } // for iy
+  }   // for iz
   // low-z and high-z faces
-  for(index_t ix = 1; ix < (nx - 1); ++ix) {
-    for(index_t iy = 1; iy < (ny - 1); ++iy) {
+  for (index_t ix = 1; ix < (nx - 1); ++ix) {
+    for (index_t iy = 1; iy < (ny - 1); ++iy) {
       {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << iy << ", iz = " << 0;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(ix, iy, 0, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_FALSE(m.is_boundary(faces[0]));
         EXPECT_FALSE(m.is_boundary(faces[1]));
         EXPECT_TRUE(m.is_boundary(faces[2]));
@@ -1280,8 +1279,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         serr << "ix = " << ix << ", iy = " << iy << ", iz = " << (nz - 1);
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(ix, iy, (nz - 1), nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_FALSE(m.is_boundary(faces[0]));
         EXPECT_FALSE(m.is_boundary(faces[1]));
         EXPECT_FALSE(m.is_boundary(faces[2]));
@@ -1289,18 +1288,18 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         EXPECT_FALSE(m.is_boundary(faces[4]));
         EXPECT_TRUE(m.is_boundary(faces[5]));
       }
-    }  // for iy
-  }    // for ix
+    } // for iy
+  }   // for ix
   // low-y and high-y faces
-  for(index_t iz = 1; iz < (nz - 1); ++iz) {
-    for(index_t ix = 1; ix < (nx - 1); ++ix) {
+  for (index_t iz = 1; iz < (nz - 1); ++iz) {
+    for (index_t ix = 1; ix < (nx - 1); ++ix) {
       {
         std::stringstream serr;
         serr << "ix = " << ix << ", iy = " << 0 << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(ix, 0, iz, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_FALSE(m.is_boundary(faces[0]));
         EXPECT_TRUE(m.is_boundary(faces[1]));
         EXPECT_FALSE(m.is_boundary(faces[2]));
@@ -1313,8 +1312,8 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         serr << "ix = " << ix << ", iy = " << (ny - 1) << ", iz = " << iz;
         SCOPED_TRACE(serr.str());
         index_t cidx = cartesian_to_linear(ix, (ny - 1), iz, nx, ny);
-        Cell c{cidx};
-        auto const & faces{m.get_faces(c)};
+        cell_handle_t c{cidx};
+        auto const &faces{m.get_faces(c)};
         EXPECT_FALSE(m.is_boundary(faces[0]));
         EXPECT_FALSE(m.is_boundary(faces[1]));
         EXPECT_FALSE(m.is_boundary(faces[2]));
@@ -1322,13 +1321,12 @@ TEST(default_mesh_Cartesian_mesh, is_boundary_cell_face_large_mesh)
         EXPECT_TRUE(m.is_boundary(faces[4]));
         EXPECT_FALSE(m.is_boundary(faces[5]));
       }
-    }  // for ix
-  }    // for iz
+    } // for ix
+  }   // for iz
   return;
-}  // TEST(default_mesh_Cartesian_mesh,is_boundary_cell_face_large_mesh)
+} // TEST(default_mesh_Cartesian_mesh,is_boundary_cell_face_large_mesh)
 
-TEST(default_mesh_Cartesian_mesh, sample_position)
-{
+TEST(default_mesh_Cartesian_mesh, sample_position) {
   geom_t urds[]{0.1, 0.2, 0.3};
 
   index_t const nx = 3, ny = 5, nz = 7;
@@ -1340,8 +1338,8 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
    * same RNG, since it should just roll over every three calls. But, this
    * is simpler. */
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[3]);
-    Cell c0{0};
+    Buffer_RNG<3> rng(&urds[0], &urds[3]);
+    cell_handle_t c0{0};
     auto p = m.sample_position(rng, c0);
     bool p0_ok = soft_equiv_os(p[0], 10.25, "x-component");
     bool p1_ok = soft_equiv_os(p[1], 5.72, "y-component");
@@ -1351,8 +1349,8 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
     EXPECT_TRUE(p2_ok);
   }
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[3]);
-    Cell c1{1};
+    Buffer_RNG<3> rng(&urds[0], &urds[3]);
+    cell_handle_t c1{1};
     auto p = m.sample_position(rng, c1);
     bool p0_ok = soft_equiv_os(p[0], 12.75, "x-component");
     bool p1_ok = soft_equiv_os(p[1], 5.72, "y-component");
@@ -1362,8 +1360,8 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
     EXPECT_TRUE(p2_ok);
   }
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[3]);
-    Cell c3{3};
+    Buffer_RNG<3> rng(&urds[0], &urds[3]);
+    cell_handle_t c3{3};
     auto p = m.sample_position(rng, c3);
     bool p0_ok = soft_equiv_os(p[0], 10.25, "x-component");
     bool p1_ok = soft_equiv_os(p[1], 9.32, "y-component");
@@ -1373,8 +1371,8 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
     EXPECT_TRUE(p2_ok);
   }
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[3]);
-    Cell c18{18};
+    Buffer_RNG<3> rng(&urds[0], &urds[3]);
+    cell_handle_t c18{18};
     auto p = m.sample_position(rng, c18);
     bool p0_ok = soft_equiv_os(p[0], 10.25, "x-component");
     bool p1_ok = soft_equiv_os(p[1], 9.32, "y-component");
@@ -1384,8 +1382,8 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
     EXPECT_TRUE(p2_ok);
   }
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[3]);
-    Cell c104{104};
+    Buffer_RNG<3> rng(&urds[0], &urds[3]);
+    cell_handle_t c104{104};
     auto p = m.sample_position(rng, c104);
     bool p0_ok = soft_equiv_os(p[0], 15.25, "x-component");
     bool p1_ok = soft_equiv_os(p[1], 20.119999999999997, "y-component");
@@ -1397,8 +1395,7 @@ TEST(default_mesh_Cartesian_mesh, sample_position)
   return;
 }
 
-TEST(default_mesh_Cartesian_mesh, sample_direction)
-{
+TEST(default_mesh_Cartesian_mesh, sample_direction) {
   geom_t urds[]{0.5, 0.5};
 
   index_t const nx = 3, ny = 5, nz = 7;
@@ -1406,7 +1403,7 @@ TEST(default_mesh_Cartesian_mesh, sample_direction)
   geom_t const xmin = 10.0, ymin = 5.0, zmin = -1.0;
   Cartesian_Mesh const m(nx, ny, nz, dx, dy, dz, xmin, ymin, zmin);
   {
-    nut_test::Buffer_RNG<3> rng(&urds[0], &urds[2]);
+    Buffer_RNG<3> rng(&urds[0], &urds[2]);
     auto omega = m.sample_direction_isotropic(rng);
     /* ctheta = 0
        stheta = 1
@@ -1422,31 +1419,29 @@ TEST(default_mesh_Cartesian_mesh, sample_direction)
   return;
 }
 
-TEST(default_mesh_Cartesian_mesh, face_to_face_name)
-{
+TEST(default_mesh_Cartesian_mesh, face_to_face_name) {
   Cartesian_Mesh m{one_cell_cmi()};
-  Cell c0{0u};
+  cell_handle_t c0{0u};
   auto faces{m.get_faces(c0)};
   Face_Name fname{m.face_to_face_name(c0, faces[0])};
   EXPECT_EQ(fname, Cartesian_Mesh::LOW_X);
   return;
 }
 
-// Randomly generated {Face,Vector} pairs for test of reflect.
+// Randomly generated {face_handle_t,Vector} pairs for test of reflect.
 constexpr size_t n_reflection_cases{600};
-extern const std::
-    tuple<Cartesian_Face, Cartesian_Mesh::Vector, Cartesian_Mesh::Vector>
-        test_reflection_cases[n_reflection_cases];
+extern const std::tuple<murmeln_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
+                        Cartesian_Mesh::Vector>
+    test_reflection_cases[n_reflection_cases];
 
-TEST(default_mesh_Cartesian_mesh, reflect)
-{
+TEST(default_mesh_Cartesian_mesh, reflect) {
   index_t const nx = 1, ny = 1, nz = 1;
   geom_t const dx = 2000.0, dy = 2000.0, dz = 2000.0;
   geom_t const xmin = -1000.0, ymin = -1000.0, zmin = -1000.0;
   Cartesian_Mesh m{nx, ny, nz, dx, dy, dz, xmin, ymin, zmin};
-  Cell c0{0u};
+  cell_handle_t c0{0u};
   uint32_t n_fails(0);
-  for(size_t i = 0; i < n_reflection_cases; ++i) {
+  for (size_t i = 0; i < n_reflection_cases; ++i) {
     // for(size_t i = n_reflection_cases - 4; i < n_reflection_cases; ++i) {
     // for(size_t i = 0; i < 3; ++i) {
     std::string const label(std::to_string(i) + " ");
@@ -1454,7 +1449,7 @@ TEST(default_mesh_Cartesian_mesh, reflect)
     Vector r{m.reflect(f, v)};
     bool refl_ok{
         vec_soft_equiv(r, r_exp, "Cartesian_Mesh::reflect case " + label)};
-    if(!refl_ok) {
+    if (!refl_ok) {
       n_fails++;
       printf("%s:%i That was case %lu, n_fails = %u\n", __FUNCTION__, __LINE__,
              i, n_fails);
@@ -1465,27 +1460,30 @@ TEST(default_mesh_Cartesian_mesh, reflect)
     Vector normal = m.get_normal(c0, f);
     bool comps_ok =
         soft_equiv_os(v.dot(normal), -r.dot(normal), "normals", 1.0e-13);
-    if(!comps_ok) {
+    if (!comps_ok) {
       n_fails++;
       printf("%s:%i That was case %lu, n_fails = %u\n", __FUNCTION__, __LINE__,
              i, n_fails);
     }
-    if(n_fails > 2) { break; }
+    if (n_fails > 2) {
+      break;
+    }
     EXPECT_TRUE(comps_ok);
-  }  // for case in cases
+  } // for case in cases
   return;
-}  // TEST(default_mesh_Cartesian_mesh, reflect)
+} // TEST(default_mesh_Cartesian_mesh, reflect)
 
 //          --------- test problem data ---------
 
-Cartesian_Face face_lx{0};
-Cartesian_Face face_hx{1};
-Cartesian_Face face_ly{2};
-Cartesian_Face face_hy{3};
-Cartesian_Face face_lz{4};
-Cartesian_Face face_hz{5};
+murmeln_mesh::Cartesian_Face face_lx{0};
+murmeln_mesh::Cartesian_Face face_hx{1};
+murmeln_mesh::Cartesian_Face face_ly{2};
+murmeln_mesh::Cartesian_Face face_hy{3};
+murmeln_mesh::Cartesian_Face face_lz{4};
+murmeln_mesh::Cartesian_Face face_hz{5};
 
-const std::tuple<Cartesian_Face, Cartesian_Mesh::Vector, Cartesian_Mesh::Vector>
+const std::tuple<murmeln_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
+                 Cartesian_Mesh::Vector>
     test_reflection_cases[n_reflection_cases] = {
         {face_lx,
          {-209.751039716082, 225.626549503419, -108.744639537191},
@@ -3312,7 +3310,7 @@ const std::tuple<index_t, index_t, index_t, Cartesian_Mesh::Point>
         {0, 0, 1, {0.361884, 1.0122, 5.22487}}};
 
 const std::tuple<index_t, index_t, index_t, Cartesian_Mesh::Point>
-    example3_points[n_example3_points] = {
+    example3_points_a[n_example3_points_a] = {
         {0, 0, 0, {12.4499, 7.88437, 1.72463}},
         {0, 0, 0, {11.0627, 7.8388, 3.57411}},
         {0, 0, 0, {11.5748, 8.55784, -0.0905416}},

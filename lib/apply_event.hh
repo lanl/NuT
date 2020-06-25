@@ -11,7 +11,7 @@
 #include "Tally.hh"
 #include "constants.hh"
 #include "events.hh"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "types.hh"
 #include <iomanip>
 #include <sstream>
@@ -228,7 +228,7 @@ void
 apply_cell_boundary(mesh_t const & m, face_t const & face, p_t & p, tally_t & t)
 {
   t.count_cell_bdy(p.cell);
-  typename mesh_t::Cell mcell{p.cell};
+  typename mesh_t::cell_handle_t mcell{p.cell};
   if constexpr(std::is_class<decltype(
                    m.cell_across(mcell, face, p.x))>::value) {
     auto new_mcell = m.cell_across(mcell, face, p.x);
@@ -260,7 +260,7 @@ apply_reflect(p_t & p,
   using vector_t = typename mesh_t::Vector;
   t.count_reflect(p.cell);
   vector_t unused{0.0};
-  vector_t reflected = m.reflect(face, p.omega, unused);
+  vector_t reflected = m.reflect(p.omega, face, unused);
   p.omega = reflected;
   return;
 }
