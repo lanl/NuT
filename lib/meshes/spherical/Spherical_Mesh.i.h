@@ -13,20 +13,22 @@
 namespace murmeln_mesh {
 
 inline Spherical_1D_Mesh::Geom_T
-Spherical_1D_Mesh::volume(Cell const cell) const {
+Spherical_1D_Mesh::volume(Cell const cell) const
+{
   // cellOK(cell);
   index_t const index(cell.as_id());
-  geom_t const lo = m_cell_bounds.at(index);
-  geom_t const hi = m_cell_bounds.at(index + 1);
+  geom_t const lo = m_cell_bounds.at(index - 1);
+  geom_t const hi = m_cell_bounds.at(index);
   geom_t const vol =
       4. / 3. * murmeln::constants::pi * (hi * hi * hi - lo * lo * lo);
   // GreaterThan(vol, geom_t(0.0), "volume");
   return vol;
-} // volume
+}  // volume
 
 template <typename RNG_T>
 Spherical_1D_Mesh::Vector
-Spherical_1D_Mesh::sample_position(RNG_T &rng, Cell const &c) const {
+Spherical_1D_Mesh::sample_position(RNG_T & rng, Cell const & c) const
+{
   auto [lo, hi] = this->get_extents(c);
   // Geom_T const lo = extents.first;
   // Geom_T const hi = extents.second;
@@ -34,26 +36,33 @@ Spherical_1D_Mesh::sample_position(RNG_T &rng, Cell const &c) const {
   Geom_T const hi3 = hi * hi * hi;
   Geom_T const r = std::pow(lo3 + (hi3 - lo3) * rng.random(), 1.0 / 3.0);
   return Vector{r};
-} // sample_position
+}  // sample_position
 
 template <typename RNG_T>
 Spherical_1D_Mesh::Vector
-Spherical_1D_Mesh::sample_direction_isotropic(RNG_T &r) {
+Spherical_1D_Mesh::sample_direction_isotropic(RNG_T & r)
+{
   geom_t const ctheta = geom_t(2) * r.random() - geom_t(1);
   return {ctheta};
-} // sample_direction_isotropic
+}  // sample_direction_isotropic
 
 inline Spherical_1D_Mesh::Intersection_T
-Spherical_1D_Mesh::intersection(Ray const &r, Cell const &c) const {
+Spherical_1D_Mesh::intersection(Ray const & r, Cell const & c) const
+{
   auto [rlo, rhi] = this->get_extents(c);
   geom_t const x{r.position()[0]};
   geom_t const omega{r.direction()[0]};
-  return dist_to_bdy_impl(x, omega, rlo, rhi);
+  index_t cidx{c.as_id()};
+  return dist_to_bdy_impl(x, omega, rlo, rhi, cidx);
 }
 
 inline Spherical_1D_Mesh::Intersection_T
-Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x, geom_t omega, geom_t rlo,
-                                    geom_t rhi) {
+Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x,
+                                    geom_t omega,
+                                    geom_t rlo,
+                                    geom_t rhi,
+                                    index_t cell_idx)
+{
   using murmeln::soft_equiv;
   using murmeln::constants::Max_Dbl;
   using murmeln::constants::pi;
@@ -96,7 +105,6 @@ Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x, geom_t omega, geom_t rlo,
   geom_t const xhi = (theta < pi / 2) ? xhip : xhim;
   geom_t const yhi = (theta < pi / 2) ? yhip : yhim;
   geom_t const d_hi = std::sqrt((xhi - x) * (xhi - x) + (yhi * yhi));
-
   // 2. Look for intersection with inner sphere
   // There is if the absolute value of the polar angle is
   // less than atan(1/(b^2 -1)), where b = x/r_lo. In this case, we can
@@ -104,17 +112,16 @@ Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x, geom_t omega, geom_t rlo,
   // Note that you may want to know a real solution exists before
   // computing it--complicates branch removal.
   geom_t d_lo = Max_Dbl;
-  if (rlo > 0.0) {
+  if(rlo > 0.0) {
     geom_t const b = x / rlo;
     // if the particle is on the inner sphere, and headed inward...
-    if (soft_equiv(b, 1.0, 1e-11)) {
-      if (theta > pi / 2) {
-        d_lo = 0.0;
-      }
-    } else {
+    if(soft_equiv(b, 1.0, 1e-11)) {
+      if(theta > pi / 2) { d_lo = 0.0; }
+    }
+    else {
       geom_t const tan_theta_lim = std::sqrt(1 / (b * b - 1));
       geom_t const theta_lim = std::atan(tan_theta_lim);
-      if (abs_theta <= theta_lim and theta > pi / 2) {
+      if(abs_theta <= theta_lim and theta > pi / 2) {
         geom_t const detlo =
             std::sqrt(rlosq * one_plus_tsq - xsq * tsq) * one_on_one_plus_tsq;
         geom_t const xlo = xterm1 + detlo;
@@ -126,30 +133,32 @@ Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x, geom_t omega, geom_t rlo,
   // now select the shorter distance and the corresponding face
   geom_t d_bdy = Max_Dbl;
   Face face{null_face_};
-  if (d_hi < d_lo) {
+  if(d_hi < d_lo) {
     d_bdy = d_hi;
-    face = Face{1}; // will intersect outer sphere
-  } else {
+    face = Face{cell_idx};  // will intersect outer sphere
+  }
+  else {
     d_bdy = d_lo;
-    face = Face{0}; // will intersect inner sphere
+    face = Face{cell_idx - 1};  // will intersect inner sphere
   }
   Intersection_T d2b{face, d_bdy};
   return d2b;
 
-} // dist_to_bdy_impl
+}  // dist_to_bdy_impl
 
 inline Spherical_1D_Mesh::Face
-Spherical_1D_Mesh::cell_to_face(Cell const &c, Face_Name fn) const {
+Spherical_1D_Mesh::cell_to_face(Cell const & c, Face_Name fn) const
+{
   index_t the_index{c.as_id()};
-  if (fn == HIGH) {
-    the_index++;
-  }
+  if(fn == HIGH) { the_index++; }
   return Face{the_index};
 }
 
 inline Spherical_1D_Mesh::Ray
-Spherical_1D_Mesh::advance_point(Point const &x, Vector const &dir,
-                                 double const dist) const {
+Spherical_1D_Mesh::advance_point(Point const & x,
+                                 Vector const & dir,
+                                 double const dist) const
+{
   geom_t const theta = std::acos(dir[0]);
   geom_t const s = std::sin(theta);
   geom_t const new_x = x[0] + dist * dir[0];
@@ -161,7 +170,8 @@ Spherical_1D_Mesh::advance_point(Point const &x, Vector const &dir,
 }
 
 inline Spherical_1D_Mesh::Cell
-Spherical_1D_Mesh::find_cell(Point const &p) const {
+Spherical_1D_Mesh::find_cell(Point const & p) const
+{
   // search through bin boundaries to find the pair that bracket p
   auto const it =
       std::lower_bound(m_cell_bounds.begin(), m_cell_bounds.end(), p[0]);
@@ -171,79 +181,97 @@ Spherical_1D_Mesh::find_cell(Point const &p) const {
   return c;
 }
 
-inline bool Spherical_1D_Mesh::in_cell(Vector const &p, Cell const &c) const {
+inline bool
+Spherical_1D_Mesh::in_cell(Vector const & p, Cell const & c) const
+{
   auto [lo, hi] = get_extents(c);
   return (lo < p[0] && hi > p[0]);
 }
 
-inline bool Spherical_1D_Mesh::is_low_face(Cell const &c, Face const &f) {
+inline bool
+Spherical_1D_Mesh::is_low_face(Cell const & c, Face const & f)
+{
   index_t face_id = f.as_id();
   index_t cell_id = c.as_id();
   return face_id == cell_id;
 }
 
 inline Spherical_1D_Mesh::Cell
-Spherical_1D_Mesh::cell_across(Cell const &c, Face const &f,
-                               Point const & /*p*/) const {
+Spherical_1D_Mesh::cell_across(Cell const & c,
+                               Face const & f,
+                               Point const & /*p*/) const
+{
   index_t const cidx{c.as_id()};
-  if (is_low_face(c, f)) {
-    if (cidx == 0) {
-      return null_cell_;
-    }
+  bool const face_is_low_face{is_low_face(c, f)};
+  if(face_is_low_face) {
+    if(cidx == 0) { return null_cell_; }
     Cell c_ret{cidx - 1};
     // Check(c.as_id() < null_cell.as_id());
     return c_ret;
   }
-  if (cidx >= m_num_cells - 1) {
-    return null_cell_;
-  }
+  if(cidx >= m_num_cells - 1) { return null_cell_; }
   Cell c_ret{cidx + 1};
   // Check(c.as_id() < null_cell_.as_id());
   return c_ret;
-} // cell_across
+}  // cell_across
 
-inline bool Spherical_1D_Mesh::is_boundary(Face f) const {
+inline bool
+Spherical_1D_Mesh::is_boundary(Face f) const
+{
   bool const is_bdy_face{f.as_id() == 0ull || f.as_id() == m_num_cells};
   return is_bdy_face;
 }
 
 inline Spherical_1D_Mesh::Extents_T
-Spherical_1D_Mesh::get_extents(Cell const &c) const {
-  // Require(is_valid_cell(c))
+Spherical_1D_Mesh::get_extents(Cell const & c) const
+{
   index_t const cidx{c.as_id()};
-  return {m_cell_bounds[cidx], m_cell_bounds[cidx + 1]};
+  return {m_cell_bounds[cidx - 1], m_cell_bounds[cidx]};
 }
 
-inline index_t Spherical_1D_Mesh::num_cells() const { return m_num_cells; }
+inline index_t
+Spherical_1D_Mesh::num_cells() const
+{
+  return m_num_cells;
+}
 
-inline geom_t Spherical_1D_Mesh::get_distance(Intersection_T const &i) {
+inline geom_t
+Spherical_1D_Mesh::get_distance(Intersection_T const & i)
+{
   return i.second;
 }
 
 inline Spherical_1D_Mesh::Face
-Spherical_1D_Mesh::get_face(Intersection_T const &i) {
+Spherical_1D_Mesh::get_face(Intersection_T const & i)
+{
   return i.first;
 }
 
-inline geom_t Spherical_1D_Mesh::get_low(Extents_T const &e) { return e.first; }
+inline geom_t
+Spherical_1D_Mesh::get_low(Extents_T const & e)
+{
+  return e.first;
+}
 
-inline geom_t Spherical_1D_Mesh::get_high(Extents_T const &e) {
+inline geom_t
+Spherical_1D_Mesh::get_high(Extents_T const & e)
+{
   return e.second;
 }
 
-inline Spherical_1D_Mesh::Vector Spherical_1D_Mesh::reflect(Face const & /*f*/,
-                                                            Vector const &v) {
+inline Spherical_1D_Mesh::Vector
+Spherical_1D_Mesh::reflect(Face const & /*f*/, Vector const & v)
+{
   return Vector{-v[0]};
 }
 
-inline Spherical_1D_Mesh::Vector Spherical_1D_Mesh::get_normal(Cell const &c,
-                                                               Face const &f) {
-  if (is_low_face(c, f)) {
-    return Vector{1.0};
-  }
+inline Spherical_1D_Mesh::Vector
+Spherical_1D_Mesh::get_normal(Cell const & c, Face const & f)
+{
+  if(is_low_face(c, f)) { return Vector{1.0}; }
   return Vector{-1.0};
 }
 
-} // namespace murmeln_mesh
+}  // namespace murmeln_mesh
 
 // End of file

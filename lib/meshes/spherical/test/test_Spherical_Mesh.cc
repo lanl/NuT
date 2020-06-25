@@ -151,7 +151,8 @@ TEST(default_mesh_Spherical_1D_mesh, dist_to_boundary_impl_100_random_tests) {
     // for (size_t i = 0; i < 3; ++i) {
     auto [x, o, rl, rh, d, f] = d2b_test_cases[i];
 
-    S1::Intersection_T dnf = S1::dist_to_bdy_impl(x, o, rl, rh);
+    index_t const cell_idx{0u};
+    S1::Intersection_T dnf = S1::dist_to_bdy_impl(x, o, rl, rh, cell_idx);
     SCOPED_TRACE(label + std::to_string(i));
     bool passed_dist = soft_equiv_os(S1::get_distance(dnf), d, "distance", tol);
     EXPECT_TRUE(passed_dist);

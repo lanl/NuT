@@ -45,7 +45,7 @@ make_vacuum_boundary_1D(Mesh_1D const & mesh)
   Boundary_Cond<face_t> bcs;
   face_t low{0u};
   bcs.set_boundary_type(low, bdy_types::REFLECTIVE);
-  face_t high{mesh.num_cells() + 1};
+  face_t high{mesh.num_cells() };
   bcs.set_boundary_type(high, bdy_types::VACUUM);
   return bcs;
 }  // make_vacuum_boundary(Mesh_1D)

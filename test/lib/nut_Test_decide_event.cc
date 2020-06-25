@@ -102,7 +102,9 @@ struct gen_bounds {
   cell_t ctr;
 };  // gen_bdy_types
 
-mesh_t mk_mesh_1(double dx = 1.0){
+mesh_impl_t
+mk_mesh_1(double dx = 1.0)
+{
   using vb = std::vector<geom_t>;
   // generate uniform mesh
   cell_t n_cells(10);
@@ -112,7 +114,7 @@ mesh_t mk_mesh_1(double dx = 1.0){
   std::generate(bounds.begin(), bounds.end(), gen_bounds(dx));
   // reflect from innermost face
   mesh_impl_t m(std::move(bounds));
-  return mesh_t(m);
+  return m;
 }
 
 TEST(nut_decide_event, decide_boundary_event)
@@ -121,8 +123,8 @@ TEST(nut_decide_event, decide_boundary_event)
 
   using nut::decide_boundary_event;
 
-  mesh_t mesh{mk_mesh_1()};
-
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
   cell_t const c1(1);
   face_t const f1(0);
@@ -173,7 +175,8 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
   cell_t const cell = 1;
   Species const s(nut::nu_e);
 
-  mesh_t mesh{mk_mesh_1()};
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
@@ -216,29 +219,36 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
   cell_t const cell = 1;
   Species const s(nut::nu_e);
 
-  mesh_t mesh{mk_mesh_1()};
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
   for(size_t i = 0; i < 9; ++i) {
     auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
-    // std::cout << nut::events::event_name(event) << ", d = " << distance
-    //           << std::endl;
     p.x[0] += distance;
     p.cell += 1;
   }
+
   auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
   Event const event_exp = escape;
   passed = event == event_exp;
   if(!passed) {
-    std::cout << "event was " << event << ", AKA "
+    std::cout << __FUNCTION__ << ":" << __LINE__ << ":"
+              << "event was " << event << ", AKA "
               << nut::events::event_name(event) << ", should have been "
               << event_exp << ", AKA " << nut::events::event_name(event_exp)
               << std::endl;
   }
   geom_t const d_exp = 1.0;
-  passed = distance == d_exp and passed;
+  bool d_passed{distance == d_exp};
+  if(!d_passed) {
+    printf("%s:%i distance = %e, expected %e\n", __FUNCTION__, __LINE__,
+           distance, d_exp);
+  }
+  EXPECT_TRUE(d_passed);
+  passed = d_passed && passed;
   EXPECT_TRUE(passed);
   return;
 }  // test_4
@@ -325,7 +335,8 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
 
   using namespace nut::events;
 
-  mesh_t mesh{mk_mesh_1(1.0e6)};
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   // generate opacity
@@ -380,7 +391,8 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
 
   using namespace nut::events;
 
-  mesh_t mesh{mk_mesh_1(1.0e6)};
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
@@ -426,7 +438,8 @@ TEST(nut_decide_event, decide_event_electron_scatter)
 
   using namespace nut::events;
 
-  mesh_t mesh{mk_mesh_1(1.0e6)};
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   vec_cell_data_t data{

@@ -49,7 +49,7 @@ fp_t e = 5.0, t = 1.0, wt = 1.0;
 cell_t const cell = 1;
 Species const s(nut::nu_e);
 
-mesh_t
+inline mesh_impl_t
 mk_mesh_1()
 {
   // might be useful to keep these around
@@ -61,8 +61,7 @@ mk_mesh_1()
   geom_t const bdys_in[4] = {0.0, 1.0, 2.0, 35.0};
   std::vector<geom_t> bdys(&bdys_in[0], &bdys_in[4]);
   mesh_impl_t m(std::move(bdys));
-  mesh_t mesh(m);
-  return mesh;
+  return m;
 }
 
 p_t
@@ -246,14 +245,12 @@ TEST(nut_apply_event, apply_cell_boundary)
 
   // mesh_t mesh(bdys, bdy_types);
 
-  printf("%s:%i \n", __FUNCTION__, __LINE__);
-  mesh_t mesh{mk_mesh_1()};
-  printf("%s:%i \n",__FUNCTION__,__LINE__);
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   {
     bool passed(false);
 
     p_t p(make_std_particle_c2());
-
     size_t const n_cells(100);
     tally_t tally(n_cells), ref(n_cells);
 
@@ -291,7 +288,9 @@ TEST(nut_apply_event, apply_cell_boundary)
     cell_t const idx = cell - 1;
     ref.n_cell_bdy[idx] = 1;
 
-    mesh_t::face_handle_t f_high{nut::Sphere_1D_Faces::HIGH};
+    auto const init_cell{p.cell};
+
+    mesh_t::face_handle_t f_high{2};
     nut::apply_cell_boundary<p_t, tally_t>(mesh, f_high, p, tally);
 
     // check tally energy deposition, momentum deposition, and counts.
@@ -303,8 +302,9 @@ TEST(nut_apply_event, apply_cell_boundary)
     // check particle status
     bool const p_passed = p.cell == cell + 1;
     if(!p_passed) {
-      printf("%s:%i incorrect cell: %u, expected %u\n", __FUNCTION__, __LINE__,
-             p.cell, (cell + 1));
+      printf(
+          "%s:%i incorrect cell: %u, expected %u (note: initial cell was %u)\n",
+          __FUNCTION__, __LINE__, p.cell, (cell + 1), init_cell);
     }
     passed = t_passed && p_passed;
     EXPECT_TRUE(passed);
