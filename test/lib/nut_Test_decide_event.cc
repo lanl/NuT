@@ -3,7 +3,7 @@
 #define USING_HFBC_SIGMAS
 
 #include "Boundary_Cond.hh"
-#include "Mesh.hh"
+// #include "Mesh.hh"
 #include "Opacity.hh"
 #include "Particle.hh"
 #include "RNG.hh"
@@ -11,6 +11,7 @@
 #include "detail/Vector.h"
 #include "events.hh"
 #include "gtest/gtest.h"
+#include "meshes/mesh_adaptors/Spherical_Mesh_Interface.h"
 #include "soft_equiv.hh"
 #include "test_aux.hh"
 #include "types.hh"
@@ -28,14 +29,16 @@ using nut::bdy_types::descriptor;
 using fp_t = double;
 using vf = std::vector<fp_t>;
 using BRNG = nut::Buffer_RNG<fp_t>;
+using mesh_t = murmeln::Spherical_Mesh_Interface;
+using mesh_impl_t = murmeln_mesh::Spherical_1D_Mesh;
 using p_t = nut::Particle<fp_t, BRNG, nut::Vector1>;
-using mesh_t = nut::Sphere_1D<cell_t, geom_t, descriptor>;
 using vector_t = nut::Vector1;
 using OpB = nut::Opacity<fp_t, vector_t>;
 using cell_data_t = nut::Cell_Data<fp_t, vector_t>;
 using vec_cell_data_t = std::vector<cell_data_t>;
 
 using face_t = mesh_t::face_handle_t;
+using nut::make_vacuum_boundary_1D;
 
 size_t ncells(10);
 vf nullv(ncells, fp_t(0));
@@ -99,22 +102,29 @@ struct gen_bounds {
   cell_t ctr;
 };  // gen_bdy_types
 
+mesh_impl_t
+mk_mesh_1(double dx = 1.0)
+{
+  using vb = std::vector<geom_t>;
+  // generate uniform mesh
+  cell_t n_cells(10);
+  vb bounds(n_cells + 1);
+  // vbd b_types(n_cells + 1);
+  // std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
+  std::generate(bounds.begin(), bounds.end(), gen_bounds(dx));
+  // reflect from innermost face
+  mesh_impl_t m(std::move(bounds));
+  return m;
+}
+
 TEST(nut_decide_event, decide_boundary_event)
 {
   using nut::events::Event;
 
   using nut::decide_boundary_event;
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0));
 
-  // reflect from innermost face
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
   cell_t const c1(1);
   face_t const f1(0);
@@ -135,13 +145,13 @@ TEST(nut_decide_event, decide_boundary_event)
   EXPECT_EQ(exp_ev3, ev3);
   // transmit: low face of cell 10
   cell_t const c4(10);
-  face_t const f4(10);
+  face_t const f4(9);
   Event const exp_ev4(cell_boundary);
   Event ev4 = decide_boundary_event(mesh, c4, f4, bcs);
   EXPECT_EQ(exp_ev4, ev4);
   // escape: high face of cell 10
   cell_t const c5(10);
-  face_t const f5(11);
+  face_t const f5(10);
   Event const exp_ev5(escape);
   Event ev5 = decide_boundary_event(mesh, c5, f5, bcs);
   EXPECT_EQ(exp_ev5, ev5);
@@ -152,9 +162,6 @@ TEST(nut_decide_event, decide_boundary_event)
 TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
 {
   bool passed(true);
-
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
 
   using nut::decide_scatter_event;
   using nut::events::Event;
@@ -168,15 +175,8 @@ TEST(nut_decide_event, decide_event_stream_to_cell_boundary)
   cell_t const cell = 1;
   Species const s(nut::nu_e);
 
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0));
-
-  // reflect from innermost face
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
@@ -199,9 +199,6 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
 {
   bool passed(true);
 
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
-
   using nut::decide_scatter_event;
   using nut::events::Event;
 
@@ -222,37 +219,36 @@ TEST(nut_decide_event, decide_event_stream_through_10_steps)
   cell_t const cell = 1;
   Species const s(nut::nu_e);
 
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0));
-
-  // reflect from innermost face
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1()};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   p_t p({x}, {omega}, e, t, wt, cell, rng, s);
 
   for(size_t i = 0; i < 9; ++i) {
     auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
-    // std::cout << nut::events::event_name(event) << ", d = " << distance
-    //           << std::endl;
     p.x[0] += distance;
     p.cell += 1;
   }
+
   auto [event, distance, fc_out] = decide_event(p, mesh, op, bcs);
   Event const event_exp = escape;
   passed = event == event_exp;
   if(!passed) {
-    std::cout << "event was " << event << ", AKA "
+    std::cout << __FUNCTION__ << ":" << __LINE__ << ":"
+              << "event was " << event << ", AKA "
               << nut::events::event_name(event) << ", should have been "
               << event_exp << ", AKA " << nut::events::event_name(event_exp)
               << std::endl;
   }
   geom_t const d_exp = 1.0;
-  passed = distance == d_exp and passed;
+  bool d_passed{distance == d_exp};
+  if(!d_passed) {
+    printf("%s:%i distance = %e, expected %e\n", __FUNCTION__, __LINE__,
+           distance, d_exp);
+  }
+  EXPECT_TRUE(d_passed);
+  passed = d_passed && passed;
   EXPECT_TRUE(passed);
   return;
 }  // test_4
@@ -339,15 +335,8 @@ TEST(nut_decide_event, decide_event_nucleon_abs)
 
   using namespace nut::events;
 
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   // generate opacity
@@ -402,15 +391,8 @@ TEST(nut_decide_event, decide_event_nucleon_elastic_scatter)
 
   using namespace nut::events;
 
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   vec_cell_data_t data{{1e14 / pmg, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}}};
@@ -456,15 +438,8 @@ TEST(nut_decide_event, decide_event_electron_scatter)
 
   using namespace nut::events;
 
-  using vb = mesh_t::vb;
-  using vbd = mesh_t::vbd;
-  // generate uniform mesh
-  cell_t n_cells(10);
-  vb bounds(n_cells + 1);
-  vbd b_types(n_cells + 1);
-  std::generate(b_types.begin(), b_types.end(), gen_bdy_types(n_cells + 1));
-  std::generate(bounds.begin(), bounds.end(), gen_bounds(1.0e6));
-  mesh_t mesh(bounds, b_types);
+  mesh_impl_t m{mk_mesh_1(1.0e6)};
+  mesh_t mesh{m};
   Boundary_Cond<mesh_t::face_handle_t> bcs{make_vacuum_boundary_1D(mesh)};
 
   vec_cell_data_t data{

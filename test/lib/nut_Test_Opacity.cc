@@ -3,8 +3,8 @@
 #define USING_HFBC_SIGMAS
 #include "Opacity.hh"
 #undef USING_HFBC_SIGMAS
-#include "Mesh.hh"
 #include "gtest/gtest.h"
+#include "meshes/mesh_adaptors/Spherical_Mesh_Interface.h"
 #include <vector>
 
 using nut::Cell_Data;
@@ -14,7 +14,7 @@ TEST(nut_opacity, instantiation)
 {
   typedef double fp_t;
   // bogus random number gen type: ok to test instantiation
-  using vector_t = nut::Spherical_1D_Mesh::Vector;
+  using vector_t = murmeln_mesh::Spherical_1D_Mesh::Vector;
   using op_t = Opacity<fp_t, vector_t>;
   using cell_data_t = Cell_Data<fp_t, vector_t>;
 

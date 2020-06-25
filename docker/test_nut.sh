@@ -1,6 +1,7 @@
 #!/bin/sh
 
- git clone https://github.com/lanl/nut.git -b master nut
+ branch=$1
+ git clone https://github.com/lanl/nut.git -b $branch nut
  cd nut
  mkdir build
  cd build

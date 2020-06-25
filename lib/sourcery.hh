@@ -8,7 +8,7 @@
 
 #include "Assert.hh"
 #include "Planck.hh"
-#include "lorentz.hh"
+#include "meshes/geometry/lorentz.h"
 #include "utilities.hh"
 #include <algorithm>
 #include <numeric>
@@ -131,7 +131,7 @@ gen_init_particle(mesh_t const & mesh,
   // Prefactor ~3.15137
   geom_t const ebar = 3.15137 * T;
   // geom_t const urd = rng.random();
-  typename mesh_t::Cell mesh_cell{cell};
+  typename mesh_t::cell_handle_t mesh_cell{cell};
   vector_t const r{mesh.sample_position(rng, mesh_cell)};
   vector_t const oc{mesh.sample_direction_isotropic(rng)};
 

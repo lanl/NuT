@@ -10,14 +10,11 @@
 
 #include "Assert.hh"
 #include "Cell_Data.hh"
-#include "Mesh.hh"
 #include "constants.hh"
 #include "fileio.hh"
 #include <algorithm>
 
-#ifdef HAVE_MURMELN
-#include "murmeln/mesh_adaptors/Spherical_Mesh_Interface.h"
-#endif
+#include "meshes/mesh_adaptors/Spherical_Mesh_Interface.h"
 
 namespace nut {
 
@@ -61,73 +58,10 @@ make_cell_data(std::vector<MatStateRowP<fp_t, vector_t>> const & rows)
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
 template <typename fp_t>
-Spherical_1D_Mesh
-rows_to_mesh(
-    std::vector<MatStateRowP<fp_t, Spherical_1D_Mesh::Vector>> const & rows,
-    fp_t const llimit,
-    fp_t const ulimit,
-    size_t & llimitIdx,
-    size_t & ulimitIdx)
-{
-  using mesh_t = Spherical_1D_Mesh;
-  using vector_t = mesh_t::Vector;
-  using row_t = MatStateRowP<fp_t, vector_t>;
-  // bool const  lims_ok = (ulimit > llimit);
-  // Require(lims_ok , "rows_to_mesh: lower limit >= upper limit");
-  size_t nrows = rows.size();
-  std::vector<typename mesh_t::geom_t> bndsTmp(nrows + 1);
-  size_t lIdx = 0;
-  size_t uIdx = nrows;
-  // get radii from rows
-  std::vector<fp_t> rads(nrows);
-  std::transform(rows.begin(), rows.end(), rads.begin(),
-                 [](row_t const & row) { return row.radius; });
-  bndsTmp[0] = rads[0] - (rads[1] - rads[0]) / 2;
-  for(size_t i = 0; i < nrows - 1; ++i) {
-    bndsTmp[i + 1] = rads[i] + (rads[i + 1] - rads[i]) / 2;
-  }
-  bndsTmp[nrows] = rads[nrows - 1] + (rads[nrows - 1] - rads[nrows - 2]) / 2;
-
-  // would use STL algs here, but need a actual indices
-  // find limiting indices: want the greatest index such that
-  // bndsTmp[i] < llimit
-  while(bndsTmp[lIdx + 1] < llimit && lIdx < nrows) { lIdx++; }
-  if(lIdx == nrows) {
-    std::stringstream errstr;
-    errstr << "rows_to_mesh: lower bound (" << llimit
-           << ") not within range of input (max input radius: "
-           << rads[nrows - 1] << ", which comes out to upper bdy of "
-           << bndsTmp[nrows] << std::endl;
-    throw(std::runtime_error(errstr.str()));
-  }
-  // now look for the least upper index such that
-  // bndsTmp[uIdx] > ulimit
-  uIdx = lIdx;
-  while(bndsTmp[uIdx] < ulimit && uIdx < nrows) { uIdx++; }
-
-  // outputs
-  ulimitIdx = uIdx;
-  llimitIdx = lIdx;
-  size_t const ncells = uIdx - lIdx;
-  std::vector<typename mesh_t::geom_t> bounds(ncells + 1);
-  std::vector<typename mesh_t::bdy_desc_t> descs(ncells + 1);
-
-  std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
-  descs[0] = bdy_types::REFLECTIVE;
-  descs[ncells] = bdy_types::VACUUM;
-  for(size_t i = 1; i < ncells; ++i) { descs[i] = bdy_types::NONE; }
-  return mesh_t(bounds, descs);
-}  // rows_to_mesh
-
-#ifdef HAVE_MURMELN
-/*!\brief: create a mesh within the given limits; identify the limiting
- * indices in the rows vector. The limiting indices use STL begin,end
- * convention. */
-template <typename fp_t>
 murmeln_mesh::Spherical_1D_Mesh
 rows_to_murmeln_mesh(
     std::vector<
-        MatStateRowP<fp_t, murmeln::Spherical_Mesh_Interface::Vector>> const &
+        MatStateRowP<fp_t, murmeln_mesh::Spherical_1D_Mesh::Vector>> const &
         rows,
     fp_t const llimit,
     fp_t const ulimit,
@@ -180,8 +114,6 @@ rows_to_murmeln_mesh(
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
   return mesh_t(std::move(bounds));
 }  // rows_to_murmeln_mesh
-#endif
-// HAVE_MURMELN
 
 }  // namespace nut
 
