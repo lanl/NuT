@@ -12,4 +12,4 @@ before_install:
   - docker pull tkzdockerid/nut-testenv:clang-10-0-B
 
 script:
-  - docker run -it tkzdockerid/nut-testenv:clang-10-0-B /bin/bash test_nut.sh
+  - docker run -it tkzdockerid/nut-testenv:clang-10-0-B /bin/bash test_nut.sh $TRAVIS_BRANCH
