@@ -10,7 +10,7 @@ compiler:
 
 
 before_install:
-  - docker pull tkzdockerid/nut-testenv:clang-10-0-B
+  - docker pull tkzdockerid/nut-testenv:clang-10-0-C
 
 script:
-  - docker run -it tkzdockerid/nut-testenv:clang-10-0-B /bin/bash test_nut.sh $TRAVIS_BRANCH
+  - docker run -it tkzdockerid/nut-testenv:clang-10-0-C /bin/bash test_nut.sh $TRAVIS_BRANCH
