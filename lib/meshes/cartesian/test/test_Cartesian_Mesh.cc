@@ -583,9 +583,9 @@ TEST(default_mesh_Cartesian_mesh, instantiate_tiny) {
     cell_handle_t c(i);
     bool c_ok(valid_cell(c));
     EXPECT_TRUE(c_ok);
-    if (!c_ok) {
-      printf("%s:%i cell %llu not ok\n", __FUNCTION__, __LINE__, c.as_id());
-    }
+    // if (!c_ok) {
+    //   printf("%s:%i cell %lu not ok\n", __FUNCTION__, __LINE__, c.as_id());
+    // }
     // Each cell should have the six neighbor faces you'd expect. This is
     // reimplementing the logic in Mesh.h ll. 157-66, and 177-80. If those
     // change, this needs to change.
@@ -655,9 +655,9 @@ TEST(default_mesh_Cartesian_mesh, instantiate) {
       cell_handle_t c(i);
       bool c_ok(valid_cell(c));
       EXPECT_TRUE(c_ok);
-      if (!c_ok) {
-        printf("%s:%i cell %llu not ok\n", __FUNCTION__, __LINE__, c.as_id());
-      }
+      // if (!c_ok) {
+      //   printf("%s:%i cell %lu not ok\n", __FUNCTION__, __LINE__, c.as_id());
+      // }
       // Assert that each cell should have the six neighbor faces you'd expect.
       auto &faces = m.get_faces(c);
       EXPECT_EQ(faces.size(), 6u);
@@ -670,8 +670,9 @@ TEST(default_mesh_Cartesian_mesh, instantiate) {
       if (!f0_ok) {
         index_t ix, iy, iz;
         std::tie(ix, iy, iz) = linear_to_cartesian(c.as_id(), nx, ny);
-        printf("%s:%i ix=%llu, iy=%llu, iz=%llu, cell_id = %llu, f0 = %llu\n",
-               __FUNCTION__, __LINE__, ix, iy, iz, c.as_id(), faces[0].as_id());
+        // printf("%s:%i ix=%lu, iy=%lu, iz=%lu, cell_id = %llu, f0 = %llu\n",
+        //        __FUNCTION__, __LINE__, ix, iy, iz, c.as_id(),
+        //        faces[0].as_id());
       }
       EXPECT_TRUE(f0_ok);
       // The next face should be the XZ plane above, it should be

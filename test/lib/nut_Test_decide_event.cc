@@ -145,13 +145,13 @@ TEST(nut_decide_event, decide_boundary_event)
   EXPECT_EQ(exp_ev3, ev3);
   // transmit: low face of cell 10
   cell_t const c4(10);
-  face_t const f4(10);
+  face_t const f4(9);
   Event const exp_ev4(cell_boundary);
   Event ev4 = decide_boundary_event(mesh, c4, f4, bcs);
   EXPECT_EQ(exp_ev4, ev4);
   // escape: high face of cell 10
   cell_t const c5(10);
-  face_t const f5(11);
+  face_t const f5(10);
   Event const exp_ev5(escape);
   Event ev5 = decide_boundary_event(mesh, c5, f5, bcs);
   EXPECT_EQ(exp_ev5, ev5);
