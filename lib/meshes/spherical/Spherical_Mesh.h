@@ -15,7 +15,7 @@
 #include <map>
 #include <vector>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 class Spherical_1D_Mesh {
   /* Implementation notes:
@@ -24,10 +24,10 @@ class Spherical_1D_Mesh {
    */
 public:
   // types
-  using Ray = murmeln_mesh::Ray1;
-  using Vector = murmeln_mesh::Vector1;
-  using Point = murmeln_mesh::Vector1;
-  using Cell = murmeln_mesh::Cell;
+  using Ray = nut_mesh::Ray1;
+  using Vector = nut_mesh::Vector1;
+  using Point = nut_mesh::Vector1;
+  using Cell = nut_mesh::Cell;
   using Face = Spherical_1D_Face;
   using Intersection_T = std::pair<Face, geom_t>;
 
@@ -174,7 +174,7 @@ private:
   index_t m_num_cells;
 };  // class Spherical_1D_Mesh
 
-}  // namespace murmeln_mesh
+}  // namespace nut_mesh
 
 #define IM_ALLOWED_TO_INCLUDE_Spherical_MESH_I_H
 #include "Spherical_Mesh.i.h"

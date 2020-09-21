@@ -19,19 +19,6 @@ namespace nut {
 
 namespace bdy_types {
 
-// #ifdef HAVE_MURMELN
-// using namespace murmeln_mesh::boundary;
-// using descriptor = BDY_TYPE;
-// using descriptor = murmeln::Cartesian_Mesh_Interface::Boundary;
-// enum descriptor {
-//   NONE = murmeln::Cartesian_Mesh_Interface::Boundary::NONE,
-//   CELL = murmeln::Cartesian_Mesh_Interface::Boundary::CELL,
-//   VACUUM = murmeln::Cartesian_Mesh_Interface::Boundary::VACUUM,
-//   REFLECTIVE = murmeln::Cartesian_Mesh_Interface::Boundary::REFLECTIVE,
-//   PERIODIC = murmeln::Cartesian_Mesh_Interface::Boundary::PERIODIC,
-//   PROCESSOR = murmeln::Cartesian_Mesh_Interface::Boundary::PROCESSOR,
-// };
-// #else
 enum descriptor {
   NONE = 0,
   CELL = NONE,
@@ -40,7 +27,6 @@ enum descriptor {
   PERIODIC = 3,
   PROCESSOR = 4,
 };
-// #endif  // HAVE_MURMELN
 
 }  // namespace bdy_types
 

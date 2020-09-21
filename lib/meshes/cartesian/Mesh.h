@@ -14,12 +14,12 @@
 #include <unordered_set>
 #include <vector>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**\class Mesh A fairly simple mesh class: it contains sets of mesh elements,
  * and the relations between them.
  */
-template <class Face_T = murmeln_mesh::Face> class Mesh {
+template <class Face_T = nut_mesh::Face> class Mesh {
 public:
   // types
   using cell_list_t = std::unordered_set<Cell>;
@@ -84,6 +84,6 @@ private:
 
 }; // class Mesh
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

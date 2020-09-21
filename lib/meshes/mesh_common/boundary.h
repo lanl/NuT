@@ -7,7 +7,7 @@
 #include "mesh_common/types.h"
 #include <string>
 
-namespace murmeln_mesh::boundary {
+namespace nut_mesh::boundary {
 
 // Cell boundary maps
 enum BDY_TYPE : index_t {
@@ -41,6 +41,6 @@ inline std::string to_string(BDY_TYPE b) {
   return s;
 }
 
-} // namespace murmeln_mesh::boundary
+} // namespace nut_mesh::boundary
 
 // End of file

@@ -8,14 +8,14 @@
 #include "gtest/gtest.h"
 #include <tuple>
 
-using murmeln::Cartesian_Mesh_Interface;
-using murmeln::soft_equiv_os;
+using nut::Cartesian_Mesh_Interface;
+using nut_mesh::soft_equiv_os;
 using Ray = Cartesian_Mesh_Interface::Ray;
 using cell_handle_t = Cartesian_Mesh_Interface::cell_handle_t;
-using murmeln_mesh::Cartesian_Face;
-using murmeln_mesh::Cartesian_Mesh;
-using murmeln_mesh::geom_t;
-using murmeln_mesh::index_t;
+using nut_mesh::Cartesian_Face;
+using nut_mesh::Cartesian_Mesh;
+using nut_mesh::geom_t;
+using nut_mesh::index_t;
 using mesh_t = Cartesian_Mesh;
 
 TEST(mesh_adaptors_Cartesian_Interface, instantiate) {
@@ -211,7 +211,7 @@ extern const std::tuple<index_t, index_t, index_t, Cartesian_Mesh::Point>
     example3_points[n_example3_points];
 
 TEST(mesh_adaptors_Interface, Cartesian_find_cell) {
-  using murmeln_mesh::Vector;
+  using nut_mesh::Vector;
   using geometron_t = Cartesian_Mesh_Interface::geometron_t;
   index_t const nx = 2, ny = 3, nz = 5;
   geom_t const dx = 2.5, dy = 3.6, dz = 4.7;
@@ -225,7 +225,7 @@ TEST(mesh_adaptors_Interface, Cartesian_find_cell) {
   for (size_t i = 0; i < n_example3_points; ++i) {
     auto [ix, iy, iz, p] = example3_points[i];
     cell_handle_t expected_cell{
-        murmeln_mesh::cartesian_to_linear(ix, iy, iz, nx, ny)};
+        nut_mesh::cartesian_to_linear(ix, iy, iz, nx, ny)};
     auto const result{m.find_cell(p)};
     EXPECT_TRUE(m.in_cell(geomo(p), result));
     EXPECT_TRUE(m.in_cell(geomo(p), expected_cell));
@@ -422,7 +422,7 @@ TEST(mesh_adaptors_Cartesian_Interface, sample_direction_isotropic) {
   Cartesian_Mesh_Interface m{mesh};
   {
     Buffer_RNG<3> rng(&urds[0], &urds[n_urds]);
-    murmeln_mesh::Vector omega = m.sample_direction_isotropic(rng);
+    nut_mesh::Vector omega = m.sample_direction_isotropic(rng);
     /* ctheta = 0
        stheta = 1
        phi = pi, cphi = -1, sphi = 0

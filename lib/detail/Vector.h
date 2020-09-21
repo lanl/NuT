@@ -14,10 +14,10 @@
 
 namespace nut {
 
-using Vector = murmeln_mesh::Vector;
-using Vector4 = murmeln_mesh::Vector4<double>;
-using Vector2 = murmeln_mesh::Vector2<double>;
-using Vector1 = murmeln_mesh::Vector1;
+using Vector = nut_mesh::Vector;
+using Vector4 = nut_mesh::Vector4<double>;
+using Vector2 = nut_mesh::Vector2<double>;
+using Vector1 = nut_mesh::Vector1;
 
 }
 

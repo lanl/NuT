@@ -8,21 +8,21 @@
 #include "gtest/gtest.h"
 #include <array>
 
-using murmeln::soft_equiv_os;
-using murmeln_mesh::geom_t;
-using namespace murmeln_mesh;
+using nut_mesh::geom_t;
+using nut_mesh::soft_equiv_os;
+using namespace nut_mesh;
 using cell_handle_t = Cartesian_Mesh::cell_handle_t;
 using Face_Name = Cartesian_Mesh::Face_Name;
 using Vector = Cartesian_Mesh::Vector;
 using Point = Cartesian_Mesh::Point;
 using geometron = Cartesian_Mesh::Geom_State;
 
-murmeln_mesh::Cartesian_Face const f_l_x{Cartesian_Mesh::LOW_X};
-murmeln_mesh::Cartesian_Face const f_l_y{Cartesian_Mesh::LOW_Y};
-murmeln_mesh::Cartesian_Face const f_l_z{Cartesian_Mesh::LOW_Z};
-murmeln_mesh::Cartesian_Face const f_h_x{Cartesian_Mesh::HIGH_X};
-murmeln_mesh::Cartesian_Face const f_h_y{Cartesian_Mesh::HIGH_Y};
-murmeln_mesh::Cartesian_Face const f_h_z{Cartesian_Mesh::HIGH_Z};
+nut_mesh::Cartesian_Face const f_l_x{Cartesian_Mesh::LOW_X};
+nut_mesh::Cartesian_Face const f_l_y{Cartesian_Mesh::LOW_Y};
+nut_mesh::Cartesian_Face const f_l_z{Cartesian_Mesh::LOW_Z};
+nut_mesh::Cartesian_Face const f_h_x{Cartesian_Mesh::HIGH_X};
+nut_mesh::Cartesian_Face const f_h_y{Cartesian_Mesh::HIGH_Y};
+nut_mesh::Cartesian_Face const f_h_z{Cartesian_Mesh::HIGH_Z};
 
 Face_Name const fn_l_x{Cartesian_Mesh::LOW_X};
 Face_Name const fn_l_y{Cartesian_Mesh::LOW_Y};
@@ -218,7 +218,7 @@ TEST(default_mesh_Cartesian_mesh, boundary_faces) {
 } // TEST(default_mesh_Cartesian_mesh, boundary_faces){
 
 TEST(default_mesh_Cartesian_mesh, linear_to_cartesian) {
-  using murmeln_mesh::linear_to_cartesian;
+  using nut_mesh::linear_to_cartesian;
   {
     index_t nx = 1;
     index_t ny = 1;
@@ -1430,7 +1430,7 @@ TEST(default_mesh_Cartesian_mesh, face_to_face_name) {
 
 // Randomly generated {face_handle_t,Vector} pairs for test of reflect.
 constexpr size_t n_reflection_cases{600};
-extern const std::tuple<murmeln_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
+extern const std::tuple<nut_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
                         Cartesian_Mesh::Vector>
     test_reflection_cases[n_reflection_cases];
 
@@ -1475,14 +1475,14 @@ TEST(default_mesh_Cartesian_mesh, reflect) {
 
 //          --------- test problem data ---------
 
-murmeln_mesh::Cartesian_Face face_lx{0};
-murmeln_mesh::Cartesian_Face face_hx{1};
-murmeln_mesh::Cartesian_Face face_ly{2};
-murmeln_mesh::Cartesian_Face face_hy{3};
-murmeln_mesh::Cartesian_Face face_lz{4};
-murmeln_mesh::Cartesian_Face face_hz{5};
+nut_mesh::Cartesian_Face face_lx{0};
+nut_mesh::Cartesian_Face face_hx{1};
+nut_mesh::Cartesian_Face face_ly{2};
+nut_mesh::Cartesian_Face face_hy{3};
+nut_mesh::Cartesian_Face face_lz{4};
+nut_mesh::Cartesian_Face face_hz{5};
 
-const std::tuple<murmeln_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
+const std::tuple<nut_mesh::Cartesian_Face, Cartesian_Mesh::Vector,
                  Cartesian_Mesh::Vector>
     test_reflection_cases[n_reflection_cases] = {
         {face_lx,

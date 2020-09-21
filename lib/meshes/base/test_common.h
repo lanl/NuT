@@ -13,7 +13,7 @@ bool vec_soft_equiv(vector_t const &v, vector_t const &v_exp,
   bool passed(true);
   constexpr size_t dim{vector_t::dim};
   for (size_t i = 0; i < dim; ++i) {
-    bool c_ok = murmeln::soft_equiv_os(
+    bool c_ok = nut_mesh::soft_equiv_os(
         v[i], v_exp[i], s + "Component " + std::to_string(i) + " ", tol);
     EXPECT_TRUE(c_ok);
     passed = passed && c_ok;

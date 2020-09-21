@@ -9,12 +9,12 @@
 #include "spherical/Spherical_Mesh.h"
 #include <array>
 
-namespace murmeln {
+namespace nut {
 
 class Spherical_Mesh_Impl {
   // types
 public:
-  using mesh_t = murmeln_mesh::Spherical_1D_Mesh;
+  using mesh_t = nut_mesh::Spherical_1D_Mesh;
   using Ray = mesh_t::Ray;
   using Cell = mesh_t::Cell;
   using Face = mesh_t::Face;
@@ -24,10 +24,10 @@ public:
   using Geom_State = std::pair<Ray, Cell>;
   using Index_T = mesh_t::Index;
   using Geom_T = mesh_t::Geom_T;
-  using EandOmega_T = murmeln_mesh::spec_1D_Spherical::EandOmega_T<Geom_T>;
+  using EandOmega_T = nut_mesh::spec_1D_Spherical::EandOmega_T<Geom_T>;
   using vector4_t = EandOmega_T;
 
-  // types for murmeln interface
+  // types for mesh interface
   using index_t = Index_T;
   // TO DO: make the different indices into distinct types
   using cell_index_t = index_t;
@@ -119,14 +119,14 @@ public:
                                Geom_T const & ec,
                                Vector const & oc)
   {
-    return murmeln_mesh::spec_1D_Spherical::LT_to_lab(v, ec, oc);
+    return nut_mesh::spec_1D_Spherical::LT_to_lab(v, ec, oc);
   }
 
   static EandOmega_T LT_to_comoving(Vector const & v,
                                     Geom_T const el,
                                     Vector const & ol)
   {
-    return murmeln_mesh::spec_1D_Spherical::LT_to_comoving(v, el, ol);
+    return nut_mesh::spec_1D_Spherical::LT_to_comoving(v, el, ol);
   }
 
   static Cell null_cell() { return mesh_t::null_cell(); }
@@ -162,6 +162,6 @@ private:
 
 using Spherical_Mesh_Interface = MeshInterface<Spherical_Mesh_Impl>;
 
-};  // namespace murmeln
+};  // namespace nut
 
 // End of file

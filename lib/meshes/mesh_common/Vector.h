@@ -10,7 +10,7 @@
 #include <cmath>
 #include <type_traits>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 // fwd declarations...
 struct Vector;
@@ -92,7 +92,7 @@ struct Vector {
   inline Vector parallel(Vector const & u) const
   {
     double norm_u_sq{u.dot(u)};
-    if(murmeln::soft_equiv(0.0, norm_u_sq)) { return Vector{0.0, 0.0, 0.0}; }
+    if(nut_mesh::soft_equiv(0.0, norm_u_sq)) { return Vector{0.0, 0.0, 0.0}; }
     double magnitude{this->dot(u)};
     Vector parallel{u.scale(magnitude / norm_u_sq)};
     return parallel;
@@ -241,7 +241,7 @@ struct Vector4 {
   inline Vector4 parallel(Vector4 const & u) const
   {
     FP_T norm_u_sq{u.dot(u)};
-    if(murmeln::soft_equiv(0.0, norm_u_sq)) {
+    if(nut_mesh::soft_equiv(0.0, norm_u_sq)) {
       return Vector4{0.0, 0.0, 0.0, 0.0};
     }
     FP_T magnitude{this->dot(u)};
@@ -394,7 +394,7 @@ struct Vector2 {
   inline Vector2 parallel(Vector2 const & u) const
   {
     FP_T norm_u_sq{u.dot(u)};
-    if(murmeln::soft_equiv(0.0, norm_u_sq)) { return Vector2{0.0, 0.0}; }
+    if(nut_mesh::soft_equiv(0.0, norm_u_sq)) { return Vector2{0.0, 0.0}; }
     FP_T magnitude{this->dot(u)};
     Vector2 parallel{u.scale(magnitude / norm_u_sq)};
     return parallel;
@@ -531,7 +531,7 @@ struct Vector1 {
   inline Vector1 parallel(Vector1 const & u) const
   {
     double norm_u_sq{u.dot(u)};
-    if(murmeln::soft_equiv(0.0, norm_u_sq)) { return Vector1{0.0}; }
+    if(nut_mesh::soft_equiv(0.0, norm_u_sq)) { return Vector1{0.0}; }
     return *this;
   }  // parallel
 
@@ -599,6 +599,6 @@ operator-(Vector1 const & l, Vector1 const & r)
   return {l.data_[0] - r.data_[0]};
 }
 
-}  // namespace murmeln_mesh
+}  // namespace nut_mesh
 
 // End of file

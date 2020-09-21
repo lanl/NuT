@@ -43,7 +43,7 @@ constexpr size_t dim = 3;
 
 using nut::geom_t;
 
-using Mesh_Interface_T = murmeln::Cartesian_Mesh_Interface;
+using Mesh_Interface_T = nut::Cartesian_Mesh_Interface;
 using Mesh_T = Mesh_Interface_T::mesh_t;
 
 using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::face_handle_t>;

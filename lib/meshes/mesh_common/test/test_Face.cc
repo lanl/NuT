@@ -6,13 +6,13 @@
 #include "gtest/gtest.h"
 
 TEST(default_mesh_Face, instantiate) {
-  using namespace murmeln_mesh;
+  using namespace nut_mesh;
   Face f(56);
   EXPECT_EQ(f.as_id(), 56);
 }
 
 TEST(default_mesh_Face, hashable) {
-  using namespace murmeln_mesh;
+  using namespace nut_mesh;
   {
     Spherical_1D_Face f(56);
     std::hash<Spherical_1D_Face> fhash{};

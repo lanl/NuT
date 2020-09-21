@@ -15,7 +15,7 @@
 #include <iterator>
 #include <string>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 // ---------------- Cartesian_Mesh methods ----------------
 inline Cartesian_Mesh::Vector Cartesian_Mesh::reflect(face_handle_t const &f,
@@ -189,7 +189,7 @@ Cartesian_Mesh::sample_position(RNG_T &rng, cell_handle_t const &c) const {
 template <typename RNG_T>
 inline Cartesian_Mesh::Vector
 Cartesian_Mesh::sample_direction_isotropic(RNG_T &rng) {
-  using murmeln::constants::pi;
+  using nut::constants::pi;
   geom_t const ctheta = geom_t(2) * rng.random() - geom_t(1);
   geom_t const phi = geom_t(2) * pi * rng.random();
   geom_t const stheta = std::sqrt(1 - ctheta * ctheta);
@@ -294,7 +294,7 @@ Cartesian_Mesh::get_z_extents(cell_handle_t const &c) const {
 inline geom_t Cartesian_Mesh::compute_distance(geom_t d_cos, geom_t coord,
                                                geom_t face_coord_lo,
                                                geom_t face_coord_hi) {
-  using murmeln::constants::Max_Dbl;
+  using nut::constants::Max_Dbl;
   return d_cos != 0.0 ? (d_cos < 0.0 ? ((face_coord_lo - coord) / d_cos)
                                      : ((face_coord_hi - coord) / d_cos))
                       : Max_Dbl;
@@ -302,13 +302,13 @@ inline geom_t Cartesian_Mesh::compute_distance(geom_t d_cos, geom_t coord,
 
 inline Cartesian_Mesh::intersect_t
 Cartesian_Mesh::intersection(Ray const &r, cell_handle_t const &c) const {
-  using murmeln::constants::Max_Dbl;
+  using nut::constants::Max_Dbl;
   Vector const &pos = r.position();
   // Require( in_cell(pos,c));
   Vector const &dir = r.direction();
   // Require(soft_equiv(dir.norm(),1.0));
   Face_Name f{LOW_X};
-  geom_t dist = murmeln::constants::Max_Dbl;
+  geom_t dist = nut::constants::Max_Dbl;
   auto [x_lo, x_hi] = this->get_x_extents(c);
   auto [y_lo, y_hi] = this->get_y_extents(c);
   auto [z_lo, z_hi] = this->get_z_extents(c);
@@ -591,6 +591,6 @@ Cartesian_Mesh::boundary_faces_end(Face_Name f) const {
                                 zmax, f, *this);
 }
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

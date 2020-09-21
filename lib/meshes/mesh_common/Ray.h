@@ -6,7 +6,7 @@
 
 #include "mesh_common/Vector.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**
  * \class Ray: a point and a direction
@@ -36,6 +36,6 @@ struct Ray1 {
   Vector1 direction_;
 }; // struct Ray
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

@@ -8,12 +8,12 @@
 // #include "mesh_common/Mesh.h"
 #include "base/test_common.h"
 
-using murmeln_mesh::geom_t;
-using murmeln_mesh::index_t;
-using murmeln_mesh::Spherical_1D_Mesh;
+using nut_mesh::geom_t;
+using nut_mesh::index_t;
+using nut_mesh::Spherical_1D_Mesh;
 using Cell = Spherical_1D_Mesh::Cell;
 using Face = Spherical_1D_Mesh::Face;
-using murmeln::soft_equiv_os;
+using nut_mesh::soft_equiv_os;
 
 TEST(default_mesh_Spherical_1D_mesh, instantiate) {
   index_t n_cells{10};

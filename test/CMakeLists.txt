@@ -43,7 +43,6 @@ target_link_libraries(nut_unittests
   GTest::gtest
   GTest::gtest_main
   nut
-  #${Murmeln_LIB}
   )
 
 # Build our tests with DBC assertions turned on.

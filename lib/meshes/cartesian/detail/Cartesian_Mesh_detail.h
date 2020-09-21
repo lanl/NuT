@@ -6,7 +6,7 @@
 
 #include "mesh_common/types.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 using CIndices = std::tuple<index_t, index_t, index_t>;
 
@@ -57,6 +57,6 @@ inline index_t num_xy_faces(index_t nx, index_t ny, index_t nz) {
   return nx * ny * (nz + 1);
 }
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

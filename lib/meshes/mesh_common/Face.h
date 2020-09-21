@@ -10,7 +10,7 @@
 #include "mesh_common/Mesh_Element.h"
 #include <functional> // hash
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 struct Face : public Mesh_Element {
 
@@ -29,22 +29,22 @@ struct Spherical_1D_Face : public Mesh_Element {
   index_t get_index() const { return as_id(); }
 };
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 namespace std {
-template <> struct hash<murmeln_mesh::Spherical_1D_Face> {
-  using argument_type = murmeln_mesh::Spherical_1D_Face;
+template <> struct hash<nut_mesh::Spherical_1D_Face> {
+  using argument_type = nut_mesh::Spherical_1D_Face;
   using result_type = std::size_t;
   result_type operator()(argument_type const &m) const noexcept {
-    return std::hash<murmeln_mesh::index_t>()(m.as_id());
+    return std::hash<nut_mesh::index_t>()(m.as_id());
   } // operator()
 };
 
-template <> struct hash<murmeln_mesh::Cartesian_Face> {
-  using argument_type = murmeln_mesh::Cartesian_Face;
+template <> struct hash<nut_mesh::Cartesian_Face> {
+  using argument_type = nut_mesh::Cartesian_Face;
   using result_type = std::size_t;
   result_type operator()(argument_type const &m) const noexcept {
-    return std::hash<murmeln_mesh::index_t>()(m.as_id());
+    return std::hash<nut_mesh::index_t>()(m.as_id());
   } // operator()
 };
 } // namespace std

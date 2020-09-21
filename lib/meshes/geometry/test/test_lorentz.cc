@@ -8,10 +8,10 @@
 #include "mesh_common/Vector.h"
 #include "gtest/gtest.h"
 
-using murmeln::soft_equiv_os;
-using murmeln_mesh::Vector;
-using namespace murmeln_mesh;
-using Geom_T = murmeln_mesh::Cartesian_Mesh::Geom_T;
+using nut_mesh::soft_equiv_os;
+using nut_mesh::Vector;
+using namespace nut_mesh;
+using Geom_T = nut_mesh::Cartesian_Mesh::Geom_T;
 
 // Test data generated in Mathematica
 constexpr size_t n_lt_test_cases{100};
@@ -30,7 +30,7 @@ extern std::pair<Vector, double> gamma_test_cases[n_gamma_cases];
 TEST(geometry, lorentz_gamma) {
   // try a few cases, then run through a ton of cases.
   for (auto [v, exp_gamma] : gamma_test_cases) {
-    double gamm = murmeln_mesh::gamma<double>(v);
+    double gamm = nut_mesh::gamma<double>(v);
     bool ok = soft_equiv_os(gamm, exp_gamma, "gamma");
     EXPECT_TRUE(ok);
   }

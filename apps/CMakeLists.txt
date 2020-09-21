@@ -25,7 +25,7 @@ if(NUT_ENABLE_ASSERTIONS)
     PRIVATE
       REQUIRE_ON=1)
 endif()
-target_link_libraries(bh-3 bh-3_support nut nut-meshes ${Murmeln_LIB})
+target_link_libraries(bh-3 bh-3_support nut nut-meshes )
 
 add_executable(bh-3-cart bh-3-cartesian-3D.cc)
 
@@ -38,7 +38,7 @@ if(NUT_ENABLE_ASSERTIONS)
     PRIVATE
       REQUIRE_ON=1)
 endif()
-target_link_libraries(bh-3-cart bh-3_support nut ${Murmeln_LIB})
+target_link_libraries(bh-3-cart bh-3_support nut )
 
 # Build with DBC assertions turned on.
 # add_definitions(-DREQUIRE_ON)

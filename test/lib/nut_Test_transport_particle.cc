@@ -28,8 +28,8 @@ using p_t = nut::Particle<fp_t, rng_t, nut::Vector1>;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
 using c_t = nut::Census<p_t>;
-using mesh_t = murmeln::Spherical_Mesh_Interface;
-using mesh_impl_t = murmeln_mesh::Spherical_1D_Mesh;
+using mesh_t = nut::Spherical_Mesh_Interface;
+using mesh_impl_t = nut_mesh::Spherical_1D_Mesh;
 
 namespace {
 // bits for std particle
