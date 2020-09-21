@@ -66,7 +66,6 @@ add_library(nut ${NUT_SRC} )
 target_include_directories(nut
   PUBLIC
     ${RANDOM123_INCLUDE_DIR}
-    ${MURMELN_INCLUDE_DIR}
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/meshes

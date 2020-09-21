@@ -9,7 +9,7 @@
 #include <cmath>
 #include <limits>
 
-namespace murmeln {
+namespace nut {
 namespace constants {
 /// infinity
 const double INF = std::numeric_limits<double>::infinity();
@@ -80,4 +80,4 @@ inline long double planckFct(const long double &_temperaure,
 }
 
 } // namespace constants
-} // namespace murmeln
+}  // namespace nut

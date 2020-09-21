@@ -58,17 +58,17 @@ make_cell_data(std::vector<MatStateRowP<fp_t, vector_t>> const & rows)
  * indices in the rows vector. The limiting indices use STL begin,end
  * convention. */
 template <typename fp_t>
-murmeln_mesh::Spherical_1D_Mesh
-rows_to_murmeln_mesh(
+nut_mesh::Spherical_1D_Mesh
+rows_to_mesh(
     std::vector<
-        MatStateRowP<fp_t, murmeln_mesh::Spherical_1D_Mesh::Vector>> const &
+        MatStateRowP<fp_t, nut_mesh::Spherical_1D_Mesh::Vector>> const &
         rows,
     fp_t const llimit,
     fp_t const ulimit,
     size_t & llimitIdx,
     size_t & ulimitIdx)
 {
-  using murmeln_mesh::Spherical_1D_Mesh;
+  using nut_mesh::Spherical_1D_Mesh;
   using mesh_t = Spherical_1D_Mesh;
   using vector_t = mesh_t::Vector;
   using row_t = MatStateRowP<fp_t, vector_t>;
@@ -113,7 +113,7 @@ rows_to_murmeln_mesh(
 
   std::copy(&bndsTmp[lIdx], &bndsTmp[uIdx + 1], bounds.begin());
   return mesh_t(std::move(bounds));
-}  // rows_to_murmeln_mesh
+}  // rows_to_mesh
 
 }  // namespace nut
 

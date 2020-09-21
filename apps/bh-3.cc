@@ -9,9 +9,9 @@
 // bh-3.cc further differs in attempting OpenMP & MPI execution, as well as
 // changing to the Philox CBRNG (Salmon et al, SC 2011).
 
-#include "mesh_adaptors/Spherical_Mesh_Interface.h"
 #include "RNG.hh"
 #include "constants.hh"
+#include "mesh_adaptors/Spherical_Mesh_Interface.h"
 #include "types.hh"
 #define USING_HFBC_SIGMAS
 #include "Assert.hh"
@@ -40,8 +40,8 @@
 
 using nut::geom_t;
 
-using Mesh_T = murmeln_mesh::Spherical_1D_Mesh;
-using Mesh_Interface_T = murmeln::Spherical_Mesh_Interface;
+using Mesh_T = nut_mesh::Spherical_1D_Mesh;
+using Mesh_Interface_T = nut::Spherical_Mesh_Interface;
 
 using Boundary_Cond_T = nut::Boundary_Cond<Mesh_Interface_T::face_handle_t>;
 using vector_t = Mesh_Interface_T::Vector;
@@ -335,8 +335,8 @@ get_mat_state(std::string const filename,
   // specified limits; also, get back the indices corresponding
   // to the limits.
   size_t llimitIdx(0), ulimitIdx(0);
-  Mesh_T mesh = nut::rows_to_murmeln_mesh<geom_t>(rows, llimit, ulimit,
-                                                  llimitIdx, ulimitIdx);
+  Mesh_T mesh =
+      nut::rows_to_mesh<geom_t>(rows, llimit, ulimit, llimitIdx, ulimitIdx);
   Require(ulimitIdx >= llimitIdx, "invalid limits");
   size_t const nrows(ulimitIdx - llimitIdx);
   Require(mesh.num_cells() == nrows,

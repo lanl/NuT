@@ -8,13 +8,13 @@
 #include "gtest/gtest.h"
 #include <tuple>
 
-using MeshIface = murmeln::Spherical_Mesh_Interface;
+using MeshIface = nut::Spherical_Mesh_Interface;
 using Mesh = MeshIface::mesh_t;
 using geom_t = MeshIface::Geom_T;
 using index_t = MeshIface::Index_T;
 using Cell = MeshIface::Cell;
 using Face = MeshIface::Face;
-using murmeln::soft_equiv_os;
+using nut_mesh::soft_equiv_os;
 
 using mesh_iface_pair = std::tuple<Mesh, MeshIface>;
 

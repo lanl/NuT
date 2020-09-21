@@ -9,11 +9,9 @@
 #include "gtest/gtest.h"
 #include "types.hh"  // boundary types
 
-/* These tests really only work with Murmeln interface */
-#ifdef HAVE_MURMELN
 TEST(nut_Boundary_Condition, init)
 {
-  using Mesh_Iface_T = murmeln::Cartesian_Mesh_Interface;
+  using Mesh_Iface_T = nut::Cartesian_Mesh_Interface;
   using Face = Mesh_Iface_T::face_handle_t;
   using BC_T = nut::Boundary_Cond<Face>;
 
@@ -24,7 +22,7 @@ TEST(nut_Boundary_Condition, init)
 
 TEST(nut_Boundary_Condition, 3D_examples)
 {
-  using Mesh_Iface_T = murmeln::Cartesian_Mesh_Interface;
+  using Mesh_Iface_T = nut::Cartesian_Mesh_Interface;
   using Face = Mesh_Iface_T::face_handle_t;
   using BC_T = nut::Boundary_Cond<Face>;
   using desc_t = BC_T::desc_t;
@@ -49,8 +47,5 @@ TEST(nut_Boundary_Condition, 3D_examples)
   }
   return;
 }  //
-
-#endif
-// HAVE_MURMELN
 
 // End of file

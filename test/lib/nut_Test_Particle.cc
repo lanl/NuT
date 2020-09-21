@@ -11,7 +11,7 @@ TEST(nut_Particle, instantiation)
   typedef uint32_t rng_t;
   typedef double fp_t;
 
-  using Vector = murmeln_mesh::Vector;
+  using Vector = nut_mesh::Vector;
 
   typedef nut::Particle<fp_t, rng_t, Vector> part_t;
 

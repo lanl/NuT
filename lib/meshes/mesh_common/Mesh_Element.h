@@ -7,7 +7,7 @@
 #include "mesh_common/types.h"
 #include <functional> // hash
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 struct Mesh_Element {
 public:
@@ -42,14 +42,14 @@ struct Mesh_Element_Hash {
   }
 };
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 namespace std {
-template <> struct hash<murmeln_mesh::Mesh_Element> {
-  using argument_type = murmeln_mesh::Mesh_Element;
+template <> struct hash<nut_mesh::Mesh_Element> {
+  using argument_type = nut_mesh::Mesh_Element;
   using result_type = std::size_t;
   result_type operator()(argument_type const &m) const noexcept {
-    return std::hash<murmeln_mesh::index_t>()(m.as_id());
+    return std::hash<nut_mesh::index_t>()(m.as_id());
   } // operator()
 };
 } // namespace std

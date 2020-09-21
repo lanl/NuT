@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 TEST(default_mesh_Vertex, instantiate) {
-  using namespace murmeln_mesh;
+  using namespace nut_mesh;
   Vertex v(67);
   EXPECT_EQ(v.as_id(), 67);
 }

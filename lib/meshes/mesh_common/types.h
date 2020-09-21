@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 using index_t = ::uint64_t;
 
@@ -17,6 +17,6 @@ using cell_index_t = index_t;
 
 using geom_t = double;
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

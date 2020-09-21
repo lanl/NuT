@@ -9,12 +9,12 @@
 #include "mesh/mesh_interface.h"
 #include <array>
 
-namespace murmeln {
+namespace nut {
 
 class Cartesian_Mesh_Impl {
   // types
 public:
-  using mesh_t = murmeln_mesh::Cartesian_Mesh;
+  using mesh_t = nut_mesh::Cartesian_Mesh;
   using Ray = mesh_t::Ray;
   using cell_handle_t = mesh_t::cell_handle_t;
   using Vector = mesh_t::Vector;
@@ -23,9 +23,9 @@ public:
   using Geom_State = std::pair<Ray, cell_handle_t>;
   using Index_T = mesh_t::Index;
   using Geom_T = mesh_t::Geom_T;
-  using vector4_t = murmeln_mesh::Vector4<Geom_T>;
+  using vector4_t = nut_mesh::Vector4<Geom_T>;
 
-  // types for murmeln interface
+  // types for mesh interface
   using index_t = Index_T;
   using area_t = Geom_T;
   // TO DO: make the different indices into distinct types
@@ -105,12 +105,12 @@ public:
    * \param*/
   static vector4_t LT_to_lab(Vector const &v, Geom_T const &ec,
                              Vector const &oc) {
-    return murmeln_mesh::spec_3D_Cartesian::LT_to_lab(v, ec, oc);
+    return nut_mesh::spec_3D_Cartesian::LT_to_lab(v, ec, oc);
   }
 
   static vector4_t LT_to_comoving(Vector const &v, Geom_T const el,
                                   Vector const &ol) {
-    return murmeln_mesh::spec_3D_Cartesian::LT_to_comoving(v, el, ol);
+    return nut_mesh::spec_3D_Cartesian::LT_to_comoving(v, el, ol);
   }
 
   static cell_handle_t null_cell() { return mesh_t::null_cell(); }
@@ -165,6 +165,6 @@ private:
 
 using Cartesian_Mesh_Interface = MeshInterface<Cartesian_Mesh_Impl>;
 
-}; // namespace murmeln
+};  // namespace nut
 
 // End of file

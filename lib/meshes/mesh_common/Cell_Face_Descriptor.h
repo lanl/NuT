@@ -7,7 +7,7 @@
 
 #include "mesh_common/boundary.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**\brief A data structure that represents the boundaries, if any, on each of
  * six faces. */
@@ -93,6 +93,6 @@ Cell_Face_Descriptor<Face_Name, mxfcs>::get_boundary(Face_Name const &f) const {
   return boundary::BDY_TYPE{fbase};
 }
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 // End of file

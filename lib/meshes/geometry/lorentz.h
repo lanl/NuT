@@ -9,7 +9,7 @@
 #include "mesh_common/Vector.h"
 #include <cmath>
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**\Compute relativistic gamma
  *\tparam FP_T floating point type
@@ -19,14 +19,14 @@ template <typename FP_T, typename vector_t>
 inline FP_T
 gamma(vector_t const v)
 {
-  using murmeln::constants::SPEED_LIGHT;
+  using nut::constants::SPEED_LIGHT;
   return 1.0 / std::sqrt(1 - v.dot(v) / (SPEED_LIGHT * SPEED_LIGHT));
 }
 
 namespace spec_3D_Cartesian {
 
 template <typename FloatingPoint_T>
-using EandOmega_T = murmeln_mesh::Vector4<FloatingPoint_T>;
+using EandOmega_T = nut_mesh::Vector4<FloatingPoint_T>;
 
 /**\brief Transform massless particle energy and direction to lab frame
  * \tparam FP_T: a floating point type
@@ -40,7 +40,7 @@ LT_to_comoving(Vector const & v_lab,
                FP_T const & e_lab,
                Vector const & omega_lab)
 {
-  using murmeln::constants::SPEED_LIGHT;
+  using nut::constants::SPEED_LIGHT;
   // Require that omega_lab is a unit vector, |v_lab| < c
   EandOmega_T<FP_T> res;
   FP_T & e = res[0];
@@ -67,11 +67,11 @@ LT_to_comoving(Vector const & v_lab,
  * Note that these are naive implementations. It might make sense to switch
  * to a rapidity-based imeplementation at some energy scale? */
 template <typename FP_T>
-EandOmega_T<FP_T> inline LT_to_lab(murmeln_mesh::Vector const & v_lab,
+EandOmega_T<FP_T> inline LT_to_lab(nut_mesh::Vector const & v_lab,
                                    FP_T const & e_com,
-                                   murmeln_mesh::Vector const & omega_com)
+                                   nut_mesh::Vector const & omega_com)
 {
-  using murmeln::constants::SPEED_LIGHT;
+  using nut::constants::SPEED_LIGHT;
   EandOmega_T<FP_T> res;
   FP_T const vdo = v_lab.dot(omega_com);
   FP_T const gam = gamma<FP_T>(v_lab);
@@ -91,16 +91,16 @@ EandOmega_T<FP_T> inline LT_to_lab(murmeln_mesh::Vector const & v_lab,
 namespace spec_1D_Spherical {
 
 template <typename FP_T>
-using EandOmega_T = murmeln_mesh::Vector2<FP_T>;
+using EandOmega_T = nut_mesh::Vector2<FP_T>;
 
-using Vector1 = murmeln_mesh::Vector1;
+using Vector1 = nut_mesh::Vector1;
 
 template <typename FP_T>
 EandOmega_T<FP_T> inline LT_to_comoving(Vector1 const v_lab,
                                         FP_T const e_lab,
                                         Vector1 const omega_lab)
 {
-  using murmeln::constants::SPEED_LIGHT;
+  using nut::constants::SPEED_LIGHT;
   FP_T const voc = v_lab[0] / SPEED_LIGHT;
   FP_T const onemovoc = (1.0 - omega_lab[0] * voc);
   FP_T const e_com = e_lab * gamma<FP_T>(v_lab) * onemovoc;
@@ -115,7 +115,7 @@ EandOmega_T<FP_T> inline LT_to_lab(Vector1 const v_lab,
                                    FP_T const e_com,
                                    Vector1 const omega_com)
 {
-  using murmeln::constants::SPEED_LIGHT;
+  using nut::constants::SPEED_LIGHT;
   FP_T const voc = v_lab[0] / SPEED_LIGHT;
   FP_T const onepovoc = 1.0 + omega_com[0] * voc;
   FP_T const e_lab = e_com * gamma<FP_T>(v_lab) * onepovoc;
@@ -126,6 +126,6 @@ EandOmega_T<FP_T> inline LT_to_lab(Vector1 const v_lab,
 
 }  // namespace spec_1D_Spherical
 
-}  // namespace murmeln_mesh
+}  // namespace nut_mesh
 
 // End of file

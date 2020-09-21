@@ -10,7 +10,7 @@
 
 #include "base/constants.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 inline Spherical_1D_Mesh::Geom_T
 Spherical_1D_Mesh::volume(Cell const cell) const
@@ -20,7 +20,7 @@ Spherical_1D_Mesh::volume(Cell const cell) const
   geom_t const lo = m_cell_bounds.at(index - 1);
   geom_t const hi = m_cell_bounds.at(index);
   geom_t const vol =
-      4. / 3. * murmeln::constants::pi * (hi * hi * hi - lo * lo * lo);
+      4. / 3. * nut::constants::pi * (hi * hi * hi - lo * lo * lo);
   // GreaterThan(vol, geom_t(0.0), "volume");
   return vol;
 }  // volume
@@ -63,9 +63,9 @@ Spherical_1D_Mesh::dist_to_bdy_impl(geom_t x,
                                     geom_t rhi,
                                     index_t cell_idx)
 {
-  using murmeln::soft_equiv;
-  using murmeln::constants::Max_Dbl;
-  using murmeln::constants::pi;
+  using nut::constants::Max_Dbl;
+  using nut::constants::pi;
+  using nut_mesh::soft_equiv;
   geom_t const rhisq = rhi * rhi;
   geom_t const rlosq = rlo * rlo;
   geom_t const xsq = x * x;
@@ -272,6 +272,6 @@ Spherical_1D_Mesh::get_normal(Cell const & c, Face const & f)
   return Vector{-1.0};
 }
 
-}  // namespace murmeln_mesh
+}  // namespace nut_mesh
 
 // End of file

@@ -86,21 +86,6 @@ endif()
 
 set(RANDOM123_INCLUDE_DIR ${RANDOM123_ROOT}/include)
 
-# Find murmeln
-if(DEFINED ENV{MURMELN_DIR})
-  set(MURMELN_INCLUDE_DIR $ENV{MURMELN_DIR}/include)
-  # include_directories(${MURMELN_INCLUDE_DIR})
-  set(MURMELN_LIB_DIR $ENV{MURMELN_DIR}/lib)
-  # message(STATUS "MURMELN_LIB_DIR: " ${MURMELN_LIB_DIR})
-  find_library(Murmeln_LIB
-    NAMES libMurmeln libMurmeln.dylib
-    HINTS  ${MURMELN_LIB_DIR})
-  add_definitions(-DHAVE_MURMELN)
-else()
-  set(Murmeln_LIB "")
-  message(STATUS "Skipping Murmeln; if you wanted to use that, you must set MURMELN_DIR environment variable")
-endif() # if(DEFINED ENV{MURMELN_DIR})
-
 # 2. ---------- Library ----------
 add_subdirectory(lib)
 

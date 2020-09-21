@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 TEST(default_mesh_Edge, instantiate) {
-  using namespace murmeln_mesh;
+  using namespace nut_mesh;
   Edge e(45);
   EXPECT_EQ(e.as_id(), 45);
 }

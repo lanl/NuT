@@ -29,22 +29,22 @@ enum Plane : uint32_t {
   NUM_PLANES = 3
 };
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 class Cartesian_Mesh : public Mesh<Cartesian_Face> {
 
 public:
   // TYPES
-  using Ray = murmeln_mesh::Ray;
-  using Vector = murmeln_mesh::Vector;
-  using Point = murmeln_mesh::Vector;
-  using cell_handle_t = murmeln_mesh::Cell;
+  using Ray = nut_mesh::Ray;
+  using Vector = nut_mesh::Vector;
+  using Point = nut_mesh::Vector;
+  using cell_handle_t = nut_mesh::Cell;
   using intersect_t = std::pair<Cartesian_Face, geom_t>;
   using face_handle_t = Cartesian_Face;
 
   using Index = index_t;
   using Geom_T = double;
-  using vector4_t = murmeln_mesh::Vector4<double>;
+  using vector4_t = nut_mesh::Vector4<double>;
 
   using Geom_State = std::pair<Ray, cell_handle_t>;
 
@@ -328,9 +328,9 @@ private:
   void make_cartesian_mesh();
 
 public:
-}; // namespace murmeln_mesh
+}; // namespace nut_mesh
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
 
 #define IM_ALLOWED_TO_INCLUDE_CARTESIAN_MESH_I_H
 #include "Cartesian_Mesh.i.h"

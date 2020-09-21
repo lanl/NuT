@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 TEST(default_mesh, Mesh_Element) {
-  using murmeln_mesh::Mesh_Element;
+  using nut_mesh::Mesh_Element;
   Mesh_Element e(42u);
   EXPECT_EQ(e.as_id(), 42u);
 

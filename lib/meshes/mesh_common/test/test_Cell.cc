@@ -6,8 +6,7 @@
 #include "gtest/gtest.h"
 
 TEST(default_mesh_cell, instantiate) {
-
-  using namespace murmeln_mesh;
+  using namespace nut_mesh;
   Cell c(420u);
 
   EXPECT_EQ(c.as_id(), 420u);

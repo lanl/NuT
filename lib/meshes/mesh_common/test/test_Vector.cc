@@ -8,10 +8,10 @@
 #include "gtest/gtest.h"
 #include <cmath>
 
-using murmeln::soft_equiv_os;
-using murmeln_mesh::Vector;
-using murmeln_mesh::Vector1;
-using Vector2 = murmeln_mesh::Vector2<double>;
+using nut_mesh::soft_equiv_os;
+using nut_mesh::Vector;
+using nut_mesh::Vector1;
+using Vector2 = nut_mesh::Vector2<double>;
 
 TEST(default_mesh_Vector, instantiate) {
   Vector v1{1.0, 2.0, 3.0};

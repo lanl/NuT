@@ -11,7 +11,7 @@
 #include <limits>
 #include <string>
 
-namespace murmeln {
+namespace nut_mesh {
 
 /**\brief Decide whether a value is within relative error of a reference value.
  * \param value: Value to check
@@ -51,6 +51,6 @@ bool soft_equiv_os(T value, T reference, std::string const &name,
   return ok;
 }
 
-} // namespace murmeln
+}  // namespace nut_mesh
 
 // End of file

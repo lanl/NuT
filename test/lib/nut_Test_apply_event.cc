@@ -31,11 +31,11 @@ using test_aux::comp_verb_iter;
 using fp_t = double;
 using rng_t = nut::Buffer_RNG<fp_t>;
 
-using vector_t = murmeln_mesh::Vector1;
+using vector_t = nut_mesh::Vector1;
 constexpr size_t dim = 1;
 using tally_t = nut::Tally<fp_t, dim>;
-using mesh_t = murmeln::Spherical_Mesh_Interface;
-using mesh_impl_t = murmeln_mesh::Spherical_1D_Mesh;
+using mesh_t = nut::Spherical_Mesh_Interface;
+using mesh_impl_t = nut_mesh::Spherical_1D_Mesh;
 using p_t = nut::Particle<fp_t, rng_t, vector_t>;
 using c_t = nut::Census<p_t>;
 using v_t = nut::Velocity<fp_t, vector_t>;

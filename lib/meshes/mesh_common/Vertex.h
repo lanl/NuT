@@ -6,7 +6,7 @@
 
 #include "mesh_common/Mesh_Element.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**
  * @brief Geometry vertex class
@@ -19,4 +19,4 @@ public:
 
 }; // Vertex
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh

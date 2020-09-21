@@ -8,7 +8,7 @@
 
 #include "mesh_common/Mesh_Element.h"
 
-namespace murmeln_mesh {
+namespace nut_mesh {
 
 /**
  * @class An edge
@@ -18,4 +18,4 @@ struct Edge : public Mesh_Element {
   explicit Edge(index_t id) : Mesh_Element(id) {}
 };
 
-} // namespace murmeln_mesh
+} // namespace nut_mesh
